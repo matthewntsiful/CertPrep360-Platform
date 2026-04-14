@@ -1,10 +1,11 @@
-# AWS360-Platform Restructure Summary
+# CertPrep360-Platform Restructure Summary
 
 ## Changes Made
 
 ### 1. Project Rename
 - **Old:** `SAA-C03_Exam`
-- **New:** `AWS360-Platform`
+- **New:** `CertPrep360-Platform`
+- **Domain:** `certprep360.com` (to be registered)
 - **Reason:** Expanded scope from single SAA-C03 cert to all AWS certifications
 
 ### 2. Website Structure
@@ -59,13 +60,13 @@ archive/
 - ✅ Removed all WAF references (commented code cleaned up)
 
 ### 6. Domain Strategy (Not Yet Applied)
-**Current:**
+**Current (temporary):**
 - Dev: `aws-exams-dev.matthewntsiful.com`
 - Prod: `aws-exams.matthewntsiful.com`
 
-**Future Options:**
-- `aws360.io` (AWS-focused)
-- `cert360.io` (multi-cloud ready)
+**Final (once domain registered):**
+- Dev: `dev.certprep360.com`
+- Prod: `certprep360.com`
 
 ## Git Commits
 1. `5b3c943` - refactor: restructure project - rename to AWS360-Platform and organize certifications
