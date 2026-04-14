@@ -73,12 +73,6 @@
     <!-- Particles Container -->
     <div id="particles" class="fixed inset-0 overflow-hidden pointer-events-none"></div>
 
-    <!-- Install App Button -->
-    <button id="install-button" class="fixed top-6 left-6 z-50 px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
-        Install
-    </button>
-
-    <!-- Fixed Theme Toggle -->
     <!-- Header Navigation -->
   <header class="border-b border-gray-100 dark:border-gray-900 px-4 py-4">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
@@ -86,21 +80,23 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
         All Certifications
       </a>
-      <a href="/associate/saa-c03/resources.html" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-aws-orange transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>
-        Study Resources
-      </a>
-    </div>
-  </header>
+      <div class="flex items-center gap-3">
+        <a href="/certifications/associate/saa-c03/resources.html" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-aws-orange transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>
+          Study Resources
+        </a>
 
-  <button id="theme-toggle" class="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-lg">
+        <button id="theme-toggle" class="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-105 transition-transform">
         <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
         </svg>
         <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
         </svg>
-    </button>
+        </button>
+      </div>
+    </div>
+  </header>
 
     <!-- Hero Section -->
     <section class="relative min-h-screen flex items-center justify-center px-4">
@@ -224,7 +220,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_01.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_01.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-1" style="display: none;">
@@ -262,7 +258,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_02.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_02.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-2" style="display: none;">
@@ -300,7 +296,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_03.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_03.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-3" style="display: none;">
@@ -338,7 +334,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_04.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_04.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-4" style="display: none;">
@@ -376,7 +372,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_05.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_05.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-5" style="display: none;">
@@ -414,7 +410,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_06.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_06.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-6" style="display: none;">
@@ -452,7 +448,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_07.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_07.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-7" style="display: none;">
@@ -490,7 +486,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_08.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_08.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-8" style="display: none;">
@@ -528,7 +524,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_09.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_09.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-9" style="display: none;">
@@ -566,7 +562,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_10.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_10.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-10" style="display: none;">
@@ -604,7 +600,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_11.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_11.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-11" style="display: none;">
@@ -642,7 +638,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_12.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_12.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-12" style="display: none;">
@@ -680,7 +676,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_13.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_13.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-13" style="display: none;">
@@ -718,7 +714,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_14.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_14.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-14" style="display: none;">
@@ -756,7 +752,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_15.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_15.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-15" style="display: none;">
@@ -794,7 +790,7 @@
                     </div>
                 </a>
                 
-                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_16.html" 
+                <a href="/certifications/associate/saa-c03/exams/SAA-C03_Minimal_Exam_16.html" 
                    class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
                     <!-- Completion Badge -->
                     <div class="absolute top-4 right-4 completion-badge-16" style="display: none;">
@@ -1026,23 +1022,6 @@
                 alert('Link copied to clipboard!');
             });
         }
-
-        // PWA Install
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('install-button').classList.remove('hidden');
-        });
-
-        document.getElementById('install-button')?.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                document.getElementById('install-button').classList.add('hidden');
-            }
-        });
 
         // Register Service Worker
         if ('serviceWorker' in navigator) {

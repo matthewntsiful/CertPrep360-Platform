@@ -52,6 +52,14 @@ resource "aws_cloudfront_response_headers_policy" "security_headers" {
   }
 }
 
+resource "aws_cloudfront_function" "url_rewrite" {
+  name    = "${local.name_prefix}-url-rewrite"
+  runtime = "cloudfront-js-2.0"
+  comment = "Rewrite URLs to append index.html for directory paths"
+  publish = true
+  code    = file("${path.module}/url-rewrite-function.js")
+}
+
 resource "aws_cloudfront_distribution" "exam_distribution" {
   origin {
     domain_name              = var.s3_bucket_domain_name
@@ -82,6 +90,11 @@ resource "aws_cloudfront_distribution" "exam_distribution" {
     viewer_protocol_policy     = "redirect-to-https"
     cache_policy_id            = aws_cloudfront_cache_policy.exam_cache_policy.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.url_rewrite.arn
+    }
   }
 
   custom_error_response {

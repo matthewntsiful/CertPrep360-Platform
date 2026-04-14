@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AWS Certification Practice Exams - Free Exam Prep</title>
-  <meta name="description" content="Free AWS certification practice exams. Cloud Practitioner, Solutions Architect, Developer, SysOps, and more. Full-length exams with detailed explanations."/>
+  <title>CertPrep360 - Free AWS Certification Practice Exams</title>
+  <meta name="description" content="Free AWS certification practice exams for all levels. Cloud Practitioner, Solutions Architect, Developer, SysOps, and more. Full-length exams with detailed explanations."/>
   <meta name="keywords" content="AWS certification, practice exams, cloud practitioner, solutions architect, developer associate, AWS exam prep, free practice tests"/>
   <meta name="author" content="Matthew Ntsiful"/>
   <link rel="canonical" href="https://aws-exams.matthewntsiful.com"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://aws-exams.matthewntsiful.com"/>
-  <meta property="og:title" content="AWS Certification Practice Exams - Free Exam Prep"/>
+  <meta property="og:title" content="CertPrep360 - Free AWS Certification Practice Exams"/>
   <meta property="og:description" content="Free AWS certification practice exams covering all levels — Foundational, Associate, Professional, and Specialty."/>
   <meta property="og:image" content="https://aws-exams.matthewntsiful.com/icon-512.png"/>
   <meta property="twitter:card" content="summary_large_image"/>
   <meta property="twitter:url" content="https://aws-exams.matthewntsiful.com"/>
-  <meta property="twitter:title" content="AWS Certification Practice Exams - Free Exam Prep"/>
+  <meta property="twitter:title" content="CertPrep360 - Free AWS Certification Practice Exams"/>
   <meta property="twitter:description" content="Free AWS certification practice exams covering all levels — Foundational, Associate, Professional, and Specialty."/>
   <meta property="twitter:image" content="https://aws-exams.matthewntsiful.com/icon-512.png"/>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -66,30 +66,69 @@
     .fade-in { animation: fadeIn 0.6s ease-out forwards; }
     .card-hover { transition: all 0.2s ease; }
     .card-hover:hover { transform: translateY(-4px); }
+
   </style>
 </head>
 <body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-white min-h-screen">
 
   <div id="particles" class="fixed inset-0 overflow-hidden pointer-events-none"></div>
 
-  <!-- Theme Toggle -->
-  <button id="theme-toggle" class="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-lg">
-    <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
-    </svg>
-    <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/>
-    </svg>
-  </button>
+  <!-- Header -->
+  <header id="header" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80 dark:bg-gray-950/80 border-b border-gray-200/60 dark:border-gray-800/60 transition-all duration-300">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2.5 group">
+          <img src="/favicon.svg" alt="CertPrep360" class="w-8 h-8 group-hover:scale-105 transition-transform"/>
+          <span class="font-bold text-base tracking-tight">CertPrep360</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <div class="hidden md:flex items-center gap-0.5">
+          <a href="/" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 font-medium rounded-lg hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-all">Home</a>
+          <a href="#certifications" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 font-medium rounded-lg hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-all">Certifications</a>
+          <a href="#about" class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 font-medium rounded-lg hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900 transition-all">About</a>
+          <a href="/certifications/associate/saa-c03/" class="ml-3 px-4 py-1.5 text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full hover:opacity-80 transition-opacity">Start Practicing</a>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="flex items-center gap-2">
+          <!-- Install Button -->
+          <button id="install-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border border-aws-orange text-aws-orange hover:bg-aws-orange hover:text-white transition-all duration-200">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Install App
+          </button>
+          <!-- Theme Toggle -->
+          <button id="theme-toggle" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-105 transition-transform">
+            <svg id="sun-icon" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+            <svg id="moon-icon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998Z"/></svg>
+          </button>
+          <!-- Mobile Menu Button -->
+          <button id="mobile-menu-btn" class="md:hidden w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden py-3 border-t border-gray-100 dark:border-gray-900 space-y-1">
+        <a href="/" class="block px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">Home</a>
+        <a href="#certifications" class="block px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">Certifications</a>
+        <a href="#about" class="block px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">About</a>
+        <a href="/certifications/associate/saa-c03/" class="block px-3 py-2 text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-center">Start Practicing</a>
+      </div>
+    </nav>
+  </header>
 
   <!-- Hero -->
-  <section class="relative min-h-screen flex items-center justify-center px-4">
+  <section class="relative min-h-screen flex items-center justify-center px-4 pt-20">
     <div class="max-w-4xl mx-auto text-center fade-in">
       <div class="inline-flex items-center space-x-2 px-4 py-2 bg-aws-orange/10 dark:bg-aws-orange/20 rounded-full mb-6">
         <div class="w-2 h-2 bg-aws-orange rounded-full animate-pulse"></div>
         <span class="text-aws-orange font-medium text-sm">Free AWS Certification Practice Exams</span>
       </div>
-      <h1 class="text-6xl md:text-8xl font-bold mb-6 tracking-tighter">AWS Exams</h1>
+      <h1 class="text-6xl md:text-8xl font-bold mb-6 tracking-tighter">AWS Cert Prep</h1>
       <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
         Practice exams for every AWS certification — from Cloud Practitioner to Specialty level
       </p>
@@ -99,7 +138,7 @@
           <!-- Heroicon: squares-2x2 -->
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>
         </a>
-        <a href="/associate/saa-c03/" class="inline-flex items-center gap-2 border-2 border-gray-300 dark:border-gray-700 px-8 py-4 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+        <a href="/certifications/associate/saa-c03/" class="inline-flex items-center gap-2 border-2 border-gray-300 dark:border-gray-700 px-8 py-4 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
           Start SAA-C03
           <!-- Heroicon: arrow-right -->
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
@@ -144,7 +183,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-          <a href="/foundational/clf-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/foundational/clf-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/clf.png" alt="CLF-C02" class="w-full h-full object-contain"/>
@@ -161,7 +200,7 @@
             </div>
           </a>
 
-          <a href="/foundational/aif-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/foundational/aif-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/aif.png" alt="AIF-C01" class="w-full h-full object-contain"/>
@@ -191,7 +230,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-          <a href="/associate/saa-c03/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/associate/saa-c03/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/saa.png" alt="SAA-C03" class="w-full h-full object-contain"/>
@@ -207,7 +246,7 @@
             </div>
           </a>
 
-          <a href="/associate/dva-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/associate/dva-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/dva.png" alt="DVA-C02" class="w-full h-full object-contain"/>
@@ -223,7 +262,7 @@
             </div>
           </a>
 
-          <a href="/associate/soa-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/associate/soa-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/coe.png" alt="COE-C01" class="w-full h-full object-contain"/>
@@ -253,7 +292,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-          <a href="/professional/sap-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/professional/sap-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/sap.png" alt="SAP-C02" class="w-full h-full object-contain"/>
@@ -269,7 +308,7 @@
             </div>
           </a>
 
-          <a href="/professional/dop-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/professional/dop-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/dop.png" alt="DOP-C02" class="w-full h-full object-contain"/>
@@ -285,7 +324,7 @@
             </div>
           </a>
 
-          <a href="/professional/gdp-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/professional/gdp-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/gdp.png" alt="GDP-C01" class="w-full h-full object-contain"/>
@@ -315,7 +354,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-          <a href="/specialty/ans-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/specialty/ans-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/ans.png" alt="ANS-C01" class="w-full h-full object-contain"/>
@@ -331,7 +370,7 @@
             </div>
           </a>
 
-          <a href="/specialty/scs-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/specialty/scs-c02/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/scs.png" alt="SCS-C02" class="w-full h-full object-contain"/>
@@ -347,7 +386,7 @@
             </div>
           </a>
 
-          <a href="/specialty/mls-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
+          <a href="/certifications/specialty/mls-c01/" class="card-hover group bg-white dark:bg-gray-950 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-aws-orange shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div class="w-14 h-14 bg-transparent dark:bg-white rounded-lg p-0.5">
                 <img src="/assets/badges/mls.png" alt="MLS-C01" class="w-full h-full object-contain"/>
@@ -369,19 +408,117 @@
     </div>
   </section>
 
+  <!-- Features Section -->
+  <section class="relative py-20 px-4 bg-gradient-to-b from-white to-gray-50 dark:from-gray-950 dark:to-gray-900">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">Why Choose AWS Cert Prep?</h2>
+        <p class="text-gray-600 dark:text-gray-400">Everything you need to pass your AWS certification exam</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-aws-orange to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          </div>
+          <h3 class="font-bold text-lg mb-2">100% Free</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">No hidden costs, no subscriptions. All practice exams are completely free forever.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+          </div>
+          <h3 class="font-bold text-lg mb-2">Real Exam Experience</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Full-length exams with 130-minute timer, just like the actual AWS certification.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+          </div>
+          <h3 class="font-bold text-lg mb-2">Track Progress</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Monitor your scores, track attempts, and see your improvement over time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
-  <footer class="py-10 px-4 border-t border-gray-100 dark:border-gray-900">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-      <p>AWS Certification Practice Exams · Educational use only</p>
-      <a href="mailto:matthew@matthewntsiful.com" class="inline-flex items-center gap-2 hover:text-aws-orange transition-colors">
-        <!-- Heroicon: envelope -->
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
-        matthew@matthewntsiful.com
-      </a>
+  <footer id="about" class="relative py-12 px-4 bg-gray-950 border-t border-gray-800/60 text-gray-400">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
+
+        <!-- Brand -->
+        <div class="md:col-span-4">
+          <a href="/" class="flex items-center gap-2.5 mb-4 group">
+            <img src="/favicon.svg" alt="CertPrep360" class="w-8 h-8 group-hover:scale-105 transition-transform"/>
+            <span class="font-bold text-base text-white tracking-tight">CertPrep360</span>
+          </a>
+          <p class="text-sm leading-relaxed mb-5">
+            Free practice exams for every AWS certification. Full-length tests, detailed explanations, and progress tracking.
+          </p>
+          <div class="flex gap-2">
+            <a href="https://twitter.com" target="_blank" rel="noopener" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-aws-orange flex items-center justify-center transition-colors">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-aws-orange flex items-center justify-center transition-colors">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="https://github.com/matthewntsiful" target="_blank" rel="noopener" class="w-8 h-8 rounded-full bg-gray-800 hover:bg-aws-orange flex items-center justify-center transition-colors">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Certifications -->
+        <div class="md:col-span-2">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">Certifications</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#certifications" class="hover:text-white transition-colors">Foundational</a></li>
+            <li><a href="#certifications" class="hover:text-white transition-colors">Associate</a></li>
+            <li><a href="#certifications" class="hover:text-white transition-colors">Professional</a></li>
+            <li><a href="#certifications" class="hover:text-white transition-colors">Specialty</a></li>
+          </ul>
+        </div>
+
+        <!-- Popular Exams -->
+        <div class="md:col-span-3">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">Popular Exams</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="/certifications/associate/saa-c03/" class="hover:text-white transition-colors">SAA-C03 — Solutions Architect</a></li>
+            <li><a href="/certifications/foundational/clf-c02/" class="hover:text-white transition-colors">CLF-C02 — Cloud Practitioner</a></li>
+            <li><a href="/certifications/associate/dva-c02/" class="hover:text-white transition-colors">DVA-C02 — Developer</a></li>
+            <li><a href="/certifications/professional/sap-c02/" class="hover:text-white transition-colors">SAP-C02 — Architect Pro</a></li>
+          </ul>
+        </div>
+
+        <!-- Resources -->
+        <div class="md:col-span-3">
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">Resources</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="/certifications/associate/saa-c03/resources.html" class="hover:text-white transition-colors">Study Resources</a></li>
+            <li><a href="https://aws.amazon.com/certification/" target="_blank" rel="noopener" class="hover:text-white transition-colors">AWS Certification</a></li>
+            <li><a href="https://docs.aws.amazon.com/" target="_blank" rel="noopener" class="hover:text-white transition-colors">AWS Documentation</a></li>
+            <li><a href="mailto:matthew@matthewntsiful.com" class="hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="pt-6 border-t border-gray-800/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
+        <p>© 2024 CertPrep360. Not affiliated with Amazon Web Services.</p>
+        <div class="flex gap-5">
+          <a href="#" class="hover:text-gray-400 transition-colors">Privacy</a>
+          <a href="#" class="hover:text-gray-400 transition-colors">Terms</a>
+          <a href="mailto:matthew@matthewntsiful.com" class="hover:text-gray-400 transition-colors">Contact</a>
+        </div>
+      </div>
     </div>
   </footer>
 
   <script>
+    // Theme toggle
     const toggle = document.getElementById('theme-toggle');
     const html = document.documentElement;
     if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -392,6 +529,51 @@
       localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
     });
 
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuBtn?.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // Header scroll effect
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        header.classList.add('header-scrolled');
+      } else {
+        header.classList.remove('header-scrolled');
+      }
+    });
+
+    // PWA Install
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.classList.remove('hidden');
+      installBtn.classList.add('flex');
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBtn.classList.add('hidden');
+        installBtn.classList.remove('flex');
+      }
+      deferredPrompt = null;
+    });
+    window.addEventListener('appinstalled', () => {
+      installBtn.classList.add('hidden');
+      installBtn.classList.remove('flex');
+    });
+
+    // Particles
     const container = document.getElementById('particles');
     for (let i = 0; i < 15; i++) {
       const p = document.createElement('div');

@@ -1,7 +1,7 @@
 {
-  "name": "AWS Certification Practice Exams",
-  "short_name": "AWS Exams",
-  "description": "Practice exams for AWS certifications - SAA-C03, DVA-C02, SOA-C02, and more",
+  "name": "CertPrep360 - AWS Certification Practice",
+  "short_name": "CertPrep360",
+  "description": "Free practice exams for all AWS certifications - SAA-C03, DVA-C02, SOA-C02, and more",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
