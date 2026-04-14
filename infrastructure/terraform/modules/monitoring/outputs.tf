@@ -8,7 +8,7 @@ output "cloudfront_5xx_alarm_arn" {
   value       = aws_cloudwatch_metric_alarm.cloudfront_5xx_errors.arn
 }
 
-output "waf_blocked_alarm_arn" {
-  description = "ARN of WAF blocked requests alarm"
-  value       = aws_cloudwatch_metric_alarm.waf_blocked_requests.arn
-}
+# output "waf_blocked_alarm_arn" {
+#   description = "ARN of WAF blocked requests alarm"
+#   value       = aws_cloudwatch_metric_alarm.waf_blocked_requests.arn
+# }

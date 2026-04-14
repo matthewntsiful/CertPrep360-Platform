@@ -8,11 +8,6 @@ variable "cloudfront_distribution_id" {
   type        = string
 }
 
-variable "waf_web_acl_name" {
-  description = "WAF Web ACL name"
-  type        = string
-}
-
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)

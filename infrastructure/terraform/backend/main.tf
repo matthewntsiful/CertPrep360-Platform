@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.20"
+      version = "~> 6.0"
     }
   }
 }
@@ -63,5 +63,25 @@ resource "aws_dynamodb_table" "terraform_locks" {
     Name        = "Terraform State Lock Table"
     Environment = "shared"
     ManagedBy   = "Terraform"
+  }
+}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1", "1c58a3a8518e8759bf075b76b750d4f2df264fcd"]
+
+  tags = {
+    Name        = "GitHub Actions OIDC Provider"
+    ManagedBy   = "Terraform"
+    Owner       = "Matthew Ntsiful"
+    Purpose     = "OIDC Authentication"
+    Description = "OIDC provider for GitHub Actions authentication"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }

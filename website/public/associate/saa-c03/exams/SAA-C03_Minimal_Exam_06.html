@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAA-C03 Practice Exam 06 | AWS Solutions Architect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../../js/resources.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aws: { orange: '#FF9900' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-white min-h-screen">
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" class="fixed bottom-6 left-6 z-50 w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-lg">
+        <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+        </svg>
+        <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+    </button>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <h1 class="text-xl font-bold">SAA-C03 Practice Exam 06</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">65 Questions • 130 Minutes</p>
+                    <button onclick="exam.toggleStudyMode()" id="studyModeBtn" class="mt-2 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-medium hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors">
+                        📖 Study Mode: OFF
+                    </button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div id="timer" class="text-2xl font-mono font-bold">130:00</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">Time Remaining</div>
+                    </div>
+                    <button onclick="exam.toggleTimer()" class="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-medium hover:scale-105 transition-transform">
+                        <span id="pauseBtn">Pause</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <span id="progressText">0 of 65 answered</span>
+                <span id="flaggedText">0 flagged</span>
+            </div>
+            <div class="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-aws-orange transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Navigation -->
+    <div class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 py-4">
+        <div class="max-w-6xl mx-auto px-4">
+            <div id="questionNav" class="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto"></div>
+        </div>
+    </div>
+
+    <!-- Question Container -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <div id="questionContainer"></div>
+    </main>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="hidden max-w-4xl mx-auto px-4 py-8"></div>
+
+    <script>
+        // Theme toggle
+        const toggleBtn = document.getElementById('theme-toggle');
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        toggleBtn?.addEventListener('click', () => {
+            setTheme(!document.documentElement.classList.contains('dark'));
+        });
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) setTheme(true);
+
+        // Exam questions
+        const examQuestions = [{"number":374,"text":"A company wants to migrate an Oracle database to AWS. The database consists of a single table that contains millions of geographic information systems (GIS) images that are high resolution and are identified by a geographic code. When a natural disaster occurs, tens of thousands of images get updated every few minutes. Each geographic code has a single image or row that is associated with it.   The company wants a solution that is highly available and scalable during such events. Which solution meets these requirements MOST cost-effectively?","options":{"A":"Store the images and geographic codes in a database table. Use Oracle running on an Amazon RDS Multi-AZ DB instance.","B":"Store the images in Amazon S3 buckets. Use Amazon DynamoDB with the geographic code as the key and the image S3 URL as the value.","C":"Store the images and geographic codes in an Amazon DynamoDB table. Configure DynamoDB Accelerator (DAX) during times of high load.","D":"Store the images in Amazon S3 buckets. Store geographic codes and image S3 URLs in a database table. Use Oracle running on an Amazon RDS Multi-AZ DB instance."},"correct":"B","domain":"Design Resilient Architectures","explanation":""},{"number":360,"text":"A social media company runs its application on Amazon EC2 instances behind an Application Load Balancer (ALB). The ALB is the origin for an Amazon CloudFront distribution. The application has more than a billion images stored in an Amazon S3 bucket and processes thousands of images each second. The company wants to resize the images dynamically and serve appropriate formats to clients. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Install an external image management library on an EC2 instance. Use the image management library to process the images.","B":"Create a CloudFront origin request policy. Use the policy to automatically resize images and to serve the appropriate format based on the User-Agent HTTP header in the request.","C":"Use a Lambda@Edge function with an external image management library. Associate the Lambda@Edge function with the CloudFront behaviors that serve the images.","D":"Create a CloudFront response headers policy. Use the policy to automatically resize images and to serve the appropriate format based on the User-Agent HTTP header in the request."},"correct":"C","domain":"Design High-Performing Architectures","explanation":"","topic":"s3-basics"},{"number":394,"text":"A company wants to deploy a new public web application on AWS. The application includes a web server tier that uses Amazon EC2 instances. The application also includes a database tier that uses an Amazon RDS for MySQL DB instance. The application must be secure and accessible for global customers that have dynamic IP addresses. How should a solutions architect configure the security groups to meet these requirements?","options":{"A":"Configure the security group for the web servers to allow inbound traffic on port 443 from 0.0.0.0/0. Configure the security group for the DB instance to allow inbound traffic on port 3306 from the security group of the web servers.","B":"Configure the security group for the web servers to allow inbound traffic on port 443 from the IP addresses of the customers. Configure the security group for the DB instance to allow inbound traffic on port 3306 from the security group of the web servers.","C":"Configure the security group for the web servers to allow inbound traffic on port 443 from the IP addresses of the customers. Configure the security group for the DB instance to allow inbound traffic on port 3306 from the IP addresses of the customers. ","D":"Configure the security group for the web servers to allow inbound traffic on port 443 from 0.0.0.0/0. Configure the security group for the DB instance to allow inbound traffic on port 3306 from 0.0.0.0/0."},"correct":"A","domain":"Design Secure Architectures","explanation":"","topic":"rds"},{"number":388,"text":"An ecommerce company is running a multi-tier application on AWS. The front-end and backend tiers both run on Amazon EC2, and the database runs on Amazon RDS for MySQL. The backend tier communicates with the RDS instance. There are frequent calls to return identical datasets from the database that are causing performance slowdowns. Which action should be taken to improve the performance of the backend?","options":{"A":"Implement Amazon SNS to store the database calls.","B":"Implement Amazon ElastiCache to cache the large datasets.","C":"Implement an RDS for MySQL read replica to cache database calls.","D":"Implement Amazon Kinesis Data Firehose to stream the calls to the database. "},"correct":"B","domain":"Design High-Performing Architectures","explanation":"","topic":"rds"},{"number":381,"text":"A company hosts a frontend application that uses an Amazon API Gateway API backend that is integrated with AWS Lambda. When the API receives requests, the Lambda function loads many libraries. Then the Lambda function connects to an Amazon RDS database, processes the data, and returns the data to the frontend application. The company wants to ensure that response latency is as low as possible for all its users with the fewest number of changes to the company's operations. Which solution will meet these requirements?","options":{"A":"Establish a connection between the frontend application and the database to make queries faster by bypassing the API.","B":"Configure provisioned concurrency for the Lambda function that handles the requests.","C":"Cache the results of the queries in Amazon S3 for faster retrieval of similar datasets.","D":"Increase the size of the database to increase the number of connections Lambda can establish at one time."},"correct":"B","domain":"Design High-Performing Architectures","explanation":"","topic":"rds"},{"number":332,"text":"A company is planning to store data on Amazon RDS DB instances. The company must encrypt the data at rest. What should a solutions architect do to meet this requirement?","options":{"A":"Create a key in AWS Key Management Service (AWS KMS). Enable encryption for the DB instances.","B":"Create an encryption key. Store the key in AWS Secrets Manager. Use the key to encrypt the DB instances.","C":"Generate a certificate in AWS Certificate Manager (ACM). Enable SSL/TLS on the DB instances by using the certificate.","D":"Generate a certificate in AWS Identity and Access Management (IAM). Enable SSL/TLS on the DB instances by using the certificate."},"correct":"A","domain":"General","explanation":"","topic":"rds"},{"number":342,"text":"A media company hosts its website on AWS. The website application's architecture includes a fleet of Amazon EC2 instances behind an Application Load Balancer (ALB) and a database that is hosted on Amazon Aurora. The company's   cybersecurity team reports that the application is vulnerable to SQL injection. How should the company resolve this issue?","options":{"A":"Use AWS WAF in front of the AL","B":"Associate the appropriate web ACLs with AWS WAF.","C":"Subscribe to AWS Shield Advanced to block all SQL injection attempts automatically.","D":"Set up Amazon Inspector to block all SQL injection attempts automatically."},"correct":"A","domain":"Design Secure Architectures","explanation":"","topic":"aurora"},{"number":349,"text":"A company has an application that is running on Amazon EC2 instances. A solutions architect has standardized the company on a particular instance family and various instance sizes based on the current needs of the company. The company wants to maximize cost savings for the application over the next 3 years. The company needs to be able to change the instance family and sizes in the next 6 months based on application popularity and usage. Which solution will meet these requirements MOST cost-effectively?","options":{"A":"Compute Savings Plan","B":"EC2 Instance Savings Plan","C":"Zonal Reserved Instances","D":"Standard Reserved Instances "},"correct":"A","domain":"Design Cost-Optimized Architectures","explanation":"","topic":"ec2-instances"},{"number":352,"text":"A company uses a 100 GB Amazon RDS for Microsoft SQL Server Single-AZ DB instance in the us-east-1 Region to store customer transactions. The company needs high availability and automatic recovery for the DB instance. The company must also run reports on the RDS database several times a year. The report process causes transactions to take longer than usual to post to the customers' accounts. The company needs a solution that will improve the performance of the report process. Which combination of steps will meet these requirements? (Choose two.)","options":{"A":"Modify the DB instance from a Single-AZ DB instance to a Multi-AZ deployment.","B":"Take a snapshot of the current DB instance. Restore the snapshot to a new RDS deployment in another Availability Zone.","C":"Create a read replica of the DB instance in a different Availability Zone. Point all requests for reports to the read replica.","D":"Migrate the database to RDS Custom.","E":"Use RDS Proxy to limit reporting requests to the maintenance window."},"correct":"AC","domain":"Design Resilient Architectures","explanation":"","topic":"rds"},{"number":378,"text":"A company has launched an Amazon RDS for MySQL DB instance. Most of the connections to the database come from serverless applications. Application traffic to the database changes significantly at random intervals. At times of high demand, users report that their applications experience database connection rejection errors. Which solution will resolve this issue with the LEAST operational overhead?","options":{"A":"Create a proxy in RDS Proxy. Configure the users' applications to use the DB instance through RDS Proxy.","B":"Deploy Amazon ElastiCache for Memcached between the users' applications and the DB instance.","C":"Migrate the DB instance to a different instance class that has higher I/O capacity. Configure the users' applications to use the new DB instance.","D":"Configure Multi-AZ for the DB instance. Configure the users' applications to switch between the DB instances. "},"correct":"A","domain":"General","explanation":"","topic":"rds"},{"number":353,"text":"A company is moving its data management application to AWS. The company wants to transition to an event-driven architecture. The architecture needs to be more distributed and to use serverless concepts while performing the different aspects of the workflow. The company also wants to minimize operational overhead. Which solution will meet these requirements?","options":{"A":"Build out the workflow in AWS Glue. Use AWS Glue to invoke AWS Lambda functions to process the workflow steps.","B":"Build out the workflow in AWS Step Functions. Deploy the application on Amazon EC2 instances. Use Step Functions to invoke the workflow steps on the EC2 instances.","C":"Build out the workflow in Amazon EventBridge. Use EventBridge to invoke AWS Lambda functions on a schedule to process the workflow steps.","D":"Build out the workflow in AWS Step Functions. Use Step Functions to create a state machine. Use the state machine to invoke AWS Lambda functions to process the workflow steps."},"correct":"D","domain":"General","explanation":""},{"number":391,"text":"A company has a large dataset for its online advertising business stored in an Amazon RDS for MySQL DB instance in a single Availability Zone. The company wants business reporting queries to run without impacting the write operations to the production DB instance. Which solution meets these requirements?","options":{"A":"Deploy RDS read replicas to process the business reporting queries.","B":"Scale out the DB instance horizontally by placing it behind an Elastic Load Balancer.","C":"Scale up the DB instance to a larger instance type to handle write operations and queries.","D":"Deploy the DB instance in multiple Availability Zones to process the business reporting queries."},"correct":"A","domain":"Design Resilient Architectures","explanation":"","topic":"rds"},{"number":358,"text":"A company stores its data objects in Amazon S3 Standard storage. A solutions architect has found that 75% of the data is rarely accessed after 30 days. The company needs all the data to remain immediately accessible with the same high availability and resiliency, but the company wants to minimize storage costs. Which storage solution will meet these requirements?  ","options":{"A":"Move the data objects to S3 Glacier Deep Archive after 30 days.","B":"Move the data objects to S3 Standard-Infrequent Access (S3 Standard-IA) after 30 days.","C":"Move the data objects to S3 One Zone-Infrequent Access (S3 One Zone-IA) after 30 days.","D":"Move the data objects to S3 One Zone-Infrequent Access (S3 One Zone-IA) immediately."},"correct":"B","domain":"Design Resilient Architectures","explanation":"","topic":"s3-basics"},{"number":362,"text":"A company uses Amazon API Gateway to run a private gateway with two REST APIs in the same VPC. The BuyStock RESTful web service calls the CheckFunds RESTful web service to ensure that enough funds are available before a stock can be purchased. The company has noticed in the VPC flow logs that the BuyStock RESTful web service calls the CheckFunds RESTful web service over the internet instead of through the VPC. A solutions architect must implement a solution so that the APIs communicate through the VPC. Which solution will meet these requirements with the FEWEST changes to the code?","options":{"A":"Add an X-API-Key header in the HTTP header for authorization.","B":"Use an interface endpoint.","C":"Use a gateway endpoint.","D":"Add an Amazon Simple Queue Service (Amazon SQS) queue between the two REST APIs."},"correct":"B","domain":"Design Secure Architectures","explanation":"","topic":"vpc"},{"number":376,"text":"A company is running several business applications in three separate VPCs within the us-east-1 Region. The applications must be able to communicate between VPCs. The applications also must be able to consistently send hundreds of gigabytes of data each day to a latency-sensitive application that runs in a single on-premises data center. A solutions architect needs to design a network connectivity solution that maximizes cost-effectiveness. Which solution meets these requirements?","options":{"A":"Configure three AWS Site-to-Site VPN connections from the data center to AWS. Establish connectivity by configuring one VPN connection for each VPC.","B":"Launch a third-party virtual network appliance in each VP","C":"Establish an IPsec VPN tunnel between the data center and each virtual appliance.","D":"Set up one AWS Direct Connect connection from the data center to AWS. Create a transit gateway, and attach each VPC to the transit gateway. Establish connectivity between the Direct Connect connection and the transit gateway."},"correct":"D","domain":"Design Secure Architectures","explanation":"","topic":"vpc"},{"number":363,"text":"A company hosts a multiplayer gaming application on AWS. The company wants the application to read data with sub-millisecond latency and run one-time queries on historical data. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Use Amazon RDS for data that is frequently accessed. Run a periodic custom script to export the data to an Amazon S3 bucket.","B":"Store the data directly in an Amazon S3 bucket. Implement an S3 Lifecycle policy to move older data to S3 Glacier Deep Archive for long-term storage. Run one-time queries on the data in Amazon S3 by using Amazon Athena.","C":"Use Amazon DynamoDB with DynamoDB Accelerator (DAX) for data that is frequently accessed. Export the data to an Amazon S3 bucket by using DynamoDB table export. Run one-time queries on the data in Amazon S3 by using Amazon Athena.","D":"Use Amazon DynamoDB for data that is frequently accessed. Turn on streaming to Amazon Kinesis Data Streams. Use Amazon Kinesis Data Firehose to read the data from Kinesis Data Streams. Store the records in an Amazon S3 bucket."},"correct":"C","domain":"Design High-Performing Architectures","explanation":""},{"number":340,"text":"A solutions architect must create a disaster recovery (DR) plan for a high-volume software as a service (SaaS) platform. All data for the platform is stored in an Amazon Aurora MySQL DB cluster. The DR plan must replicate data to a secondary AWS Region. Which solution will meet these requirements MOST cost-effectively?","options":{"A":"Use MySQL binary log replication to an Aurora cluster in the secondary Region. Provision one DB instance for the Aurora cluster in the secondary Region.","B":"Set up an Aurora global database for the DB cluster. When setup is complete, remove the DB instance from the secondary Region.","C":"Use AWS Database Migration Service (AWS DMS) to continuously replicate data to an Aurora cluster in the secondary Region. Remove the DB instance from the secondary Region. ","D":"Set up an Aurora global database for the DB cluster. Specify a minimum of one DB instance in the secondary Region."},"correct":"B","domain":"Design Resilient Architectures","explanation":"","topic":"aurora"},{"number":375,"text":"A company has an application that collects data from loT sensors on automobiles. The data is streamed and stored in Amazon S3 through Amazon Kinesis Data Firehose. The data produces trillions of S3 objects each year. Each morning, the company uses the data from the previous 30 days to retrain a suite of machine learning (ML) models. Four times each year, the company uses the data from the previous 12 months to perform analysis and train other ML models. The data must be available with minimal delay for up to 1 year. After 1 year, the data must be retained for archival purposes. Which storage solution meets these requirements MOST cost-effectively?","options":{"A":"Use the S3 Intelligent-Tiering storage class. Create an S3 Lifecycle policy to transition objects to S3 Glacier Deep Archive after 1 year.","B":"Use the S3 Intelligent-Tiering storage class. Configure S3 Intelligent-Tiering to automatically move objects to S3 Glacier Deep Archive after 1 year.","C":"Use the S3 Standard-Infrequent Access (S3 Standard-IA) storage class. Create an S3 Lifecycle policy to transition objects to S3 Glacier Deep Archive after 1 year. ","D":"Use the S3 Standard storage class. Create an S3 Lifecycle policy to transition objects to S3 Standard-Infrequent Access (S3 Standard-IA) after 30 days, and then to S3 Glacier Deep Archive after 1 year."},"correct":"D","domain":"Design Cost-Optimized Architectures","explanation":"","topic":"s3-basics"},{"number":386,"text":"A company runs an application on Amazon EC2 Linux instances across multiple Availability Zones. The application needs a storage layer that is highly available and Portable Operating System Interface (POSIX)-compliant. The storage layer must provide maximum data durability and must be shareable across the EC2 instances. The data in the storage layer will be accessed frequently for the first 30 days and will be accessed infrequently after that time. Which solution will meet these requirements MOST cost-effectively?","options":{"A":"Use the Amazon S3 Standard storage class. Create an S3 Lifecycle policy to move infrequently accessed data to S3 Glacier.","B":"Use the Amazon S3 Standard storage class. Create an S3 Lifecycle policy to move infrequently accessed data to S3 Standard-Infrequent Access (S3 Standard-IA).","C":"Use the Amazon Elastic File System (Amazon EFS) Standard storage class. Create a lifecycle management policy to move infrequently accessed data to EFS Standard-Infrequent Access (EFS Standard-IA).","D":"Use the Amazon Elastic File System (Amazon EFS) One Zone storage class. Create a lifecycle management policy to move infrequently accessed data to EFS One Zone-Infrequent Access (EFS One Zone-IA)."},"correct":"C","domain":"Design Resilient Architectures","explanation":"","topic":"ec2-instances"},{"number":350,"text":"A company collects data from a large number of participants who use wearable devices. The company stores the data in an Amazon DynamoDB table and uses applications to analyze the data. The data workload is constant and predictable. The company wants to stay at or below its forecasted budget for DynamoDB. Which solution will meet these requirements MOST cost-effectively?","options":{"A":"Use provisioned mode and DynamoDB Standard-Infrequent Access (DynamoDB Standard-IA). Reserve capacity for the forecasted workload.","B":"Use provisioned mode. Specify the read capacity units (RCUs) and write capacity units (WCUs).","C":"Use on-demand mode. Set the read capacity units (RCUs) and write capacity units (WCUs) high enough to accommodate changes in the workload.","D":"Use on-demand mode. Specify the read capacity units (RCUs) and write capacity units (WCUs) with reserved capacity."},"correct":"B","domain":"Design Cost-Optimized Architectures","explanation":"","topic":"dynamodb"},{"number":331,"text":"A security audit reveals that Amazon EC2 instances are not being patched regularly. A solutions architect needs to provide a solution that will run regular security scans across a large fleet of EC2 instances. The solution should also patch the EC2 instances on a regular schedule and provide a report of each instance's patch status. Which solution will meet these requirements?","options":{"A":"Set up Amazon Macie to scan the EC2 instances for software vulnerabilities. Set up a cron job on each EC2 instance to patch the instance on a regular  schedule.","B":"Turn on Amazon GuardDuty in the account. Configure GuardDuty to scan the EC2 instances for software vulnerabilities. Set up AWS Systems Manager Session Manager to patch the EC2 instances on a regular schedule.","C":"Set up Amazon Detective to scan the EC2 instances for software vulnerabilities. Set up an Amazon EventBridge scheduled rule to patch the EC2 instances on a regular schedule.","D":"Turn on Amazon Inspector in the account. Configure Amazon Inspector to scan the EC2 instances for software vulnerabilities. Set up AWS Systems Manager Patch Manager to patch the EC2 instances on a regular schedule."},"correct":"D","domain":"Design Secure Architectures","explanation":"","topic":"ec2-instances"},{"number":337,"text":"A company is experiencing sudden increases in demand. The company needs to provision large Amazon EC2 instances from an Amazon Machine Image (AMI). The instances will run in an Auto Scaling group. The company needs a solution that provides minimum initialization latency to meet the demand. Which solution meets these requirements?","options":{"A":"Use the aws ec2 register-image command to create an AMI from a snapshot. Use AWS Step Functions to replace the AMI in the Auto Scaling group.","B":"Enable Amazon Elastic Block Store (Amazon EBS) fast snapshot restore on a snapshot. Provision an AMI by using the snapshot. Replace the AMI in the Auto Scaling group with the new AMI.","C":"Enable AMI creation and define lifecycle rules in Amazon Data Lifecycle Manager (Amazon DLM). Create an AWS Lambda function that modifies the AMI in the Auto Scaling group.","D":"Use Amazon EventBridge to invoke AWS Backup lifecycle policies that provision AMIs. Configure Auto Scaling group capacity limits as an event source in EventBridge."},"correct":"B","domain":"Design High-Performing Architectures","explanation":"","topic":"ec2-instances"},{"number":333,"text":"A company must migrate 20 TB of data from a data center to the AWS Cloud within 30 days. The company's network bandwidth is limited to 15 Mbps and cannot exceed 70% utilization. What should a solutions architect do to meet these requirements?","options":{"A":"Use AWS Snowball.","B":"Use AWS DataSync. qnH","C":"Use a secure VPN connection.","D":"Use Amazon S3 Transfer Acceleration."},"correct":"A","domain":"General","explanation":""},{"number":334,"text":"A company needs to provide its employees with secure access to confidential and sensitive files. The company wants to ensure that the files can be accessed only by authorized users. The files must be downloaded securely to the employees' devices. The files are stored in an on-premises Windows file server. However, due to an increase in remote usage, the file server is running out of capacity. Which solution will meet these requirements?","options":{"A":"Migrate the file server to an Amazon EC2 instance in a public subnet. Configure the security group to limit inbound traffic to the employees' IP addresses.","B":"Migrate the files to an Amazon FSx for Windows File Server file system. Integrate the Amazon FSx file system with the on-premises Active Directory. Configure AWS Client VPN.","C":"Migrate the files to Amazon S3, and create a private VPC endpoint. Create a signed URL to allow download.","D":"Migrate the files to Amazon S3, and create a public VPC endpoint. Allow employees to sign on with AWS IAM Identity Center (AWS Single Sign-On)."},"correct":"B","domain":"Design Secure Architectures","explanation":""},{"number":357,"text":"A company is migrating an old application to AWS. The application runs a batch job every hour and is CPU intensive. The batch job takes 15 minutes on average with an on-premises server. The server has 64 virtual CPU (vCPU) and 512 GiB of memory. Which solution will run the batch job within 15 minutes with the LEAST operational overhead?","options":{"A":"Use AWS Lambda with functional scaling.","B":"Use Amazon Elastic Container Service (Amazon ECS) with AWS Fargate.","C":"Use Amazon Lightsail with AWS Auto Scaling.","D":"Use AWS Batch on Amazon EC2."},"correct":"D","domain":"General","explanation":""},{"number":351,"text":"A company stores confidential data in an Amazon Aurora PostgreSQL database in the ap-southeast-3 Region. The database is encrypted with an AWS Key Management Service (AWS KMS) customer managed key. The company was recently acquired and must securely share a backup of the database with the acquiring company's AWS account in ap-southeast-3. What should a solutions architect do to meet these requirements?","options":{"A":"Create a database snapshot. Copy the snapshot to a new unencrypted snapshot. Share the new snapshot with the acquiring company's AWS account.","B":"Create a database snapshot. Add the acquiring company's AWS account to the KMS key policy. Share the snapshot with the acquiring company's AWS account. ","C":"Create a database snapshot that uses a different AWS managed KMS key. Add the acquiring company's AWS account to the KMS key alias. Share the snapshot with the acquiring company's AWS account.","D":"Create a database snapshot. Download the database snapshot. Upload the database snapshot to an Amazon S3 bucket. Update the S3 bucket policy to allow access from the acquiring company's AWS account."},"correct":"B","domain":"Design Secure Architectures","explanation":"","topic":"aurora"},{"number":373,"text":"A company needs to create an Amazon Elastic Kubernetes Service (Amazon EKS) cluster to host a digital media streaming application. The EKS cluster will use a managed node group that is backed by Amazon Elastic Block Store (Amazon EBS) volumes for storage. The company must encrypt all data at rest by using a customer managed key that is stored in AWS Key Management Service (AWS KMS). Which combination of actions will meet this requirement with the LEAST operational overhead? (Choose two.)","options":{"A":"Use a Kubernetes plugin that uses the customer managed key to perform data encryption.","B":"After creation of the EKS cluster, locate the EBS volumes. Enable encryption by using the customer managed key.","C":"Enable EBS encryption by default in the AWS Region where the EKS cluster will be created. Select the customer managed key as the default key.","D":"Create the EKS cluster. Create an IAM role that has a policy that grants permission to the customer managed key. Associate the role with the EKS cluster.","E":"Store the customer managed key as a Kubernetes secret in the EKS cluster. Use the customer managed key to encrypt the EBS volumes."},"correct":"CD","domain":"Design Secure Architectures","explanation":"","topic":"kms"},{"number":338,"text":"A company hosts a multi-tier web application that uses an Amazon Aurora MySQL DB cluster for storage. The application tier is hosted on Amazon EC2 instances. The company's IT security guidelines mandate that the database credentials be encrypted and rotated every 14 days.   What should a solutions architect do to meet this requirement with the LEAST operational effort?","options":{"A":"Create a new AWS Key Management Service (AWS KMS) encryption key. Use AWS Secrets Manager to create a new secret that uses the KMS key with the appropriate credentials. Associate the secret with the Aurora DB cluster. Configure a custom rotation period of 14 days.","B":"Create two parameters in AWS Systems Manager Parameter Store: one for the user name as a string parameter and one that uses the SecureString type for the password. Select AWS Key Management Service (AWS KMS) encryption for the password parameter, and load these parameters in the application tier. Implement an AWS Lambda function that rotates the password every 14 days.","C":"Store a file that contains the credentials in an AWS Key Management Service (AWS KMS) encrypted Amazon Elastic File System (Amazon EFS) file system. Mount the EFS file system in all EC2 instances of the application tier. Restrict the access to the file on the file system so that the application can read the file and that only super users can modify the file. Implement an AWS Lambda function that rotates the key in Aurora every 14 days and writes new credentials into the file.","D":"Store a file that contains the credentials in an AWS Key Management Service (AWS KMS) encrypted Amazon S3 bucket that the application uses to load the credentials. Download the file to the application regularly to ensure that the correct credentials are used. Implement an AWS Lambda function that rotates the Aurora credentials every 14 days and uploads these credentials to the file in the S3 bucket."},"correct":"A","domain":"Design Secure Architectures","explanation":"","topic":"aurora"},{"number":356,"text":"A company hosts a serverless application on AWS. The application uses Amazon API Gateway, AWS Lambda, and an Amazon RDS for PostgreSQL database. The company notices an increase in application errors that result from database connection timeouts during times of peak traffic or unpredictable traffic. The company needs a solution that reduces the application failures with the least amount of change to the code. What should a solutions architect do to meet these requirements?  ","options":{"A":"Reduce the Lambda concurrency rate.","B":"Enable RDS Proxy on the RDS DB instance.","C":"Resize the RDS DB instance class to accept more connections.","D":"Migrate the database to Amazon DynamoDB with on-demand scaling."},"correct":"B","domain":"General","explanation":"","topic":"rds"},{"number":359,"text":"A gaming company is moving its public scoreboard from a data center to the AWS Cloud. The company uses Amazon EC2 Windows Server instances behind an Application Load Balancer to host its dynamic application. The company needs a highly available storage solution for the application. The application consists of static files and dynamic server-side code. Which combination of steps should a solutions architect take to meet these requirements? (Choose two.)","options":{"A":"Store the static files on Amazon S3. Use Amazon CloudFront to cache objects at the edge.","B":"Store the static files on Amazon S3. Use Amazon ElastiCache to cache objects at the edge.","C":"Store the server-side code on Amazon Elastic File System (Amazon EFS). Mount the EFS volume on each EC2 instance to share the files.","D":"Store the server-side code on Amazon FSx for Windows File Server. Mount the FSx for Windows File Server volume on each EC2 instance to share the files.","E":"Store the server-side code on a General Purpose SSD (gp2) Amazon Elastic Block Store (Amazon EBS) volume. Mount the EBS volume on each EC2 instance to share the files."},"correct":"AD","domain":"Design High-Performing Architectures","explanation":"","topic":"ec2-instances"},{"number":343,"text":"A company has an Amazon S3 data lake that is governed by AWS Lake Formation. The company wants to create a visualization in Amazon QuickSight by joining the data in the data lake with operational data that is stored in an Amazon Aurora MySQL database. The company wants to enforce column-level authorization so that the company's marketing team can access only a subset of columns in the database. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Use Amazon EMR to ingest the data directly from the database to the QuickSight SPICE engine. Include only the required columns.","B":"Use AWS Glue Studio to ingest the data from the database to the S3 data lake. Attach an IAM policy to the QuickSight users to enforce column-level access control. Use Amazon S3 as the data source in QuickSight.","C":"Use AWS Glue Elastic Views to create a materialized view for the database in Amazon S3. Create an S3 bucket policy to enforce column-level access control for the QuickSight users. Use Amazon S3 as the data source in QuickSight.","D":"Use a Lake Formation blueprint to ingest the data from the database to the S3 data lake. Use Lake Formation to enforce column-level access control for the QuickSight users. Use Amazon Athena as the data source in QuickSight. "},"correct":"D","domain":"Design Secure Architectures","explanation":"","topic":"aurora"},{"number":347,"text":"A company wants to restrict access to the content of one of its main web applications and to protect the content by using authorization techniques available on AWS. The company wants to implement a serverless architecture and an authentication solution for fewer than 100 users. The solution needs to integrate with the main web application and serve web content globally. The solution must also scale as the company's user base grows while providing the lowest login latency possible. Which solution will meet these requirements MOST cost-effectively?","options":{"A":"Use Amazon Cognito for authentication. Use Lambda@Edge for authorization. Use Amazon CloudFront to serve the web application globally.","B":"Use AWS Directory Service for Microsoft Active Directory for authentication. Use AWS Lambda for authorization. Use an Application Load Balancer to serve the web application globally.","C":"Use Amazon Cognito for authentication. Use AWS Lambda for authorization. Use Amazon S3 Transfer Acceleration to serve the web application globally.","D":"Use AWS Directory Service for Microsoft Active Directory for authentication. Use Lambda@Edge for authorization. Use AWS Elastic Beanstalk to serve the web application globally."},"correct":"A","domain":"Design Secure Architectures","explanation":""},{"number":380,"text":"A company is developing a real-time multiplayer game that uses UDP for communications between the client and servers in an Auto Scaling group. Spikes in demand are anticipated during the day, so the game server platform must adapt accordingly. Developers want to store gamer scores and other non-relational data in a database solution that will scale without intervention. Which solution should a solutions architect recommend?","options":{"A":"Use Amazon Route 53 for traffic distribution and Amazon Aurora Serverless for data storage.","B":"Use a Network Load Balancer for traffic distribution and Amazon DynamoDB on-demand for data storage. ","C":"Use a Network Load Balancer for traffic distribution and Amazon Aurora Global Database for data storage.","D":"Use an Application Load Balancer for traffic distribution and Amazon DynamoDB global tables for data storage."},"correct":"B","domain":"Design High-Performing Architectures","explanation":"","topic":"ec2-auto-scaling"},{"number":336,"text":"A company wants to give a customer the ability to use on-premises Microsoft Active Directory to download files that are stored in Amazon S3. The customer's application uses an SFTP client to download the files. Which solution will meet these requirements with the LEAST operational overhead and no changes to the customer's application?","options":{"A":"Set up AWS Transfer Family with SFTP for Amazon S3. Configure integrated Active Directory authentication.","B":"Set up AWS Database Migration Service (AWS DMS) to synchronize the on-premises client with Amazon S3. Configure integrated Active Directory authentication.","C":"Set up AWS DataSync to synchronize between the on-premises location and the S3 location by using AWS IAM Identity Center (AWS Single Sign-On). ","D":"Set up a Windows Amazon EC2 instance with SFTP to connect the on-premises client with Amazon S3. Integrate AWS Identity and Access Management (IAM)."},"correct":"A","domain":"General","explanation":"","topic":"s3-basics"},{"number":345,"text":"A solutions architect is designing a company's disaster recovery (DR) architecture. The company has a MySQL database that runs on an Amazon EC2 instance in a private subnet with scheduled backup. The DR design needs to include multiple AWS Regions. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Migrate the MySQL database to multiple EC2 instances. Configure a standby EC2 instance in the DR Region. Turn on replication.","B":"Migrate the MySQL database to Amazon RDS. Use a Multi-AZ deployment. Turn on read replication for the primary DB instance in the different Availability Zones.","C":"Migrate the MySQL database to an Amazon Aurora global database. Host the primary DB cluster in the primary Region. Host the secondary DB cluster in the DR Region.","D":"Store the scheduled backup of the MySQL database in an Amazon S3 bucket that is configured for S3 Cross-Region Replication (CRR). Use the data backup to restore the database in the DR Region."},"correct":"C","domain":"Design Resilient Architectures","explanation":"","topic":"rds"},{"number":379,"text":"A company recently deployed a new auditing system to centralize information about operating system versions, patching, and installed software for Amazon EC2 instances. A solutions architect must ensure all instances provisioned through EC2 Auto Scaling groups successfully send reports to the auditing system as soon as they are launched and terminated. Which solution achieves these goals MOST efficiently?","options":{"A":"Use a scheduled AWS Lambda function and run a script remotely on all EC2 instances to send data to the audit system.","B":"Use EC2 Auto Scaling lifecycle hooks to run a custom script to send data to the audit system when instances are launched and terminated.","C":"Use an EC2 Auto Scaling launch configuration to run a custom script through user data to send data to the audit system when instances are launched and terminated.","D":"Run a custom script on the instance operating system to send data to the audit system. Configure the script to be invoked by the EC2 Auto Scaling group when the instance starts and is terminated."},"correct":"B","domain":"Design High-Performing Architectures","explanation":"","topic":"ec2-instances"},{"number":392,"text":"A company hosts a three-tier ecommerce application on a fleet of Amazon EC2 instances. The instances run in an Auto Scaling group behind an Application Load Balancer (ALB). All ecommerce data is stored in an Amazon RDS for MariaDB Multi-AZ DB instance. The company wants to optimize customer session management during transactions. The application must store session data durably. Which solutions will meet these requirements? (Choose two.)","options":{"A":"Turn on the sticky sessions feature (session affinity) on the ALB.","B":"Use an Amazon DynamoDB table to store customer session information.","C":"Deploy an Amazon Cognito user pool to manage user session information.","D":"Deploy an Amazon ElastiCache for Redis cluster to store customer session information.","E":"Use AWS Systems Manager Application Manager in the application to manage user session information."},"correct":"AD","domain":"Design Resilient Architectures","explanation":"","topic":"rds"},{"number":385,"text":"A company is planning to migrate a commercial off-the-shelf application from its on-premises data center to AWS. The software has a software licensing model using sockets and cores with predictable capacity and uptime requirements. The company wants to use its existing licenses, which were purchased earlier this year. Which Amazon EC2 pricing option is the MOST cost-effective?","options":{"A":"Dedicated Reserved Hosts ","B":"Dedicated On-Demand Hosts","C":"Dedicated Reserved Instances","D":"Dedicated On-Demand Instances"},"correct":"A","domain":"Design Cost-Optimized Architectures","explanation":"","topic":"ec2-instances"},{"number":390,"text":"A company is deploying a two-tier web application in a VPC. The web tier is using an Amazon EC2 Auto Scaling group with public subnets that span multiple Availability Zones. The database tier consists of an Amazon RDS for MySQL DB instance in separate private subnets. The web tier requires access to the database to retrieve product information. The web application is not working as intended. The web application reports that it cannot connect to the database. The database is confirmed to be up and running.   All configurations for the network ACLs, security groups, and route tables are still in their default states. What should a solutions architect recommend to fix the application?","options":{"A":"Add an explicit rule to the private subnet's network ACL to allow traffic from the web tier's EC2 instances.","B":"Add a route in the VPC route table to allow traffic between the web tier's EC2 instances and the database tier.","C":"Deploy the web tier's EC2 instances and the database tier's RDS instance into two separate VPCs, and configure VPC peering.","D":"Add an inbound rule to the security group of the database tier's RDS instance to allow traffic from the web tiers security group."},"correct":"D","domain":"Design Secure Architectures","explanation":"","topic":"rds"},{"number":341,"text":"A company has a custom application with embedded credentials that retrieves information from an Amazon RDS MySQL DB instance. Management says the application must be made more secure with the least amount of programming effort. What should a solutions architect do to meet these requirements?","options":{"A":"Use AWS Key Management Service (AWS KMS) to create keys. Configure the application to load the database credentials from AWS KMS. Enable automatic key rotation.","B":"Create credentials on the RDS for MySQL database for the application user and store the credentials in AWS Secrets Manager. Configure the application to load the database credentials from Secrets Manager. Create an AWS Lambda function that rotates the credentials in Secret Manager.","C":"Create credentials on the RDS for MySQL database for the application user and store the credentials in AWS Secrets Manager. Configure the application to load the database credentials from Secrets Manager. Set up a credentials rotation schedule for the application user in the RDS for MySQL database using Secrets Manager.","D":"Create credentials on the RDS for MySQL database for the application user and store the credentials in AWS Systems Manager Parameter Store. Configure the application to load the database credentials from Parameter Store. Set up a credentials rotation schedule for the application user in the RDS for MySQL database using Parameter Store."},"correct":"C","domain":"General","explanation":"","topic":"rds"},{"number":384,"text":"A company has a three-tier application on AWS that ingests sensor data from its users' devices. The traffic flows through a Network Load Balancer (NLB), then to Amazon EC2 instances for the web tier, and finally to EC2 instances for the application tier. The application tier makes calls to a database. What should a solutions architect do to improve the security of the data in transit?","options":{"A":"Configure a TLS listener. Deploy the server certificate on the NLB.","B":"Configure AWS Shield Advanced. Enable AWS WAF on the NLB.","C":"Change the load balancer to an Application Load Balancer (ALB). Enable AWS WAF on the ALB.","D":"Encrypt the Amazon Elastic Block Store (Amazon EBS) volume on the EC2 instances by using AWS Key Management Service (AWS KMS)."},"correct":"A","domain":"Design Secure Architectures","explanation":"","topic":"ec2-instances"},{"number":367,"text":"A company runs a web application that is backed by Amazon RDS. A new database administrator caused data loss by accidentally editing information in a database table. To help recover from this type of incident, the company wants the ability to restore the database to its state from 5 minutes before any change within the last 30 days. Which feature should the solutions architect include in the design to meet this requirement?","options":{"A":"Read replicas","B":"Manual snapshots","C":"Automated backups","D":"Multi-AZ deployments"},"correct":"C","domain":"General","explanation":"","topic":"rds"},{"number":393,"text":"A company needs a backup strategy for its three-tier stateless web application. The web application runs on Amazon EC2 instances in an Auto Scaling group with a dynamic scaling policy that is configured to respond to scaling events. The database tier runs on Amazon RDS for PostgreSQL. The web application does not require temporary local storage on the EC2 instances. The company's recovery point objective (RPO) is 2 hours. The backup strategy must maximize scalability and optimize resource utilization for this environment. Which solution will meet these requirements?  ","options":{"A":"Take snapshots of Amazon Elastic Block Store (Amazon EBS) volumes of the EC2 instances and database every 2 hours to meet the RPO.","B":"Configure a snapshot lifecycle policy to take Amazon Elastic Block Store (Amazon EBS) snapshots. Enable automated backups in Amazon RDS to meet the RPO.","C":"Retain the latest Amazon Machine Images (AMIs) of the web and application tiers. Enable automated backups in Amazon RDS and use point-in-time recovery to meet the RPO.","D":"Take snapshots of Amazon Elastic Block Store (Amazon EBS) volumes of the EC2 instances every 2 hours. Enable automated backups in Amazon RDS and use point-in-time recovery to meet the RPO."},"correct":"C","domain":"Design Secure Architectures","explanation":"","topic":"rds"},{"number":348,"text":"A company has an aging network-attached storage (NAS) array in its data center. The NAS array presents SMB shares and NFS shares to client   workstations. The company does not want to purchase a new NAS array. The company also does not want to incur the cost of renewing the NAS array's support contract. Some of the data is accessed frequently, but much of the data is inactive. A solutions architect needs to implement a solution that migrates the data to Amazon S3, uses S3 Lifecycle policies, and maintains the same look and feel for the client workstations. The solutions architect has identified AWS Storage Gateway as part of the solution. Which type of storage gateway should the solutions architect provision to meet these requirements?","options":{"A":"Volume Gateway","B":"Tape Gateway","C":"Amazon FSx File Gateway","D":"Amazon S3 File Gateway"},"correct":"D","domain":"Design Cost-Optimized Architectures","explanation":"","topic":"s3-basics"},{"number":355,"text":"A company hosts a three-tier web application on Amazon EC2 instances in a single Availability Zone. The web application uses a self-managed MySQL database that is hosted on an EC2 instance to store data in an Amazon Elastic Block Store (Amazon EBS) volume. The MySQL database currently uses a 1 TB Provisioned IOPS SSD (io2) EBS volume. The company expects traffic of 1,000 IOPS for both reads and writes at peak traffic. The company wants to minimize any disruptions, stabilize performance, and reduce costs while retaining the capacity for double the IOPS. The company wants to move the database tier to a fully managed solution that is highly available and fault tolerant. Which solution will meet these requirements MOST cost-effectively?","options":{"A":"Use a Multi-AZ deployment of an Amazon RDS for MySQL DB instance with an io2 Block Express EBS volume.","B":"Use a Multi-AZ deployment of an Amazon RDS for MySQL DB instance with a General Purpose SSD (gp2) EBS volume.","C":"Use Amazon S3 Intelligent-Tiering access tiers.","D":"Use two large EC2 instances to host the database in active-passive mode."},"correct":"B","domain":"Design Resilient Architectures","explanation":"","topic":"rds"},{"number":335,"text":"A company's application runs on Amazon EC2 instances behind an Application Load Balancer (ALB). The instances run in an Amazon EC2 Auto Scaling group across multiple Availability Zones. On the first day of every month at midnight, the application becomes much slower when the month-end financial calculation batch runs. This causes the CPU utilization of the EC2 instances to immediately peak to 100%, which disrupts the application. What should a solutions architect recommend to ensure the application is able to handle the workload and avoid downtime?","options":{"A":"Configure an Amazon CloudFront distribution in front of the ALB.","B":"Configure an EC2 Auto Scaling simple scaling policy based on CPU utilization.","C":"Configure an EC2 Auto Scaling scheduled scaling policy based on the monthly schedule.","D":"Configure Amazon ElastiCache to remove some of the workload from the EC2 instances."},"correct":"C","domain":"Design Resilient Architectures","explanation":"","topic":"ec2-instances"},{"number":365,"text":"A company is building a game system that needs to send unique events to separate leaderboard, matchmaking, and authentication services concurrently. The company needs an AWS event-driven system that guarantees the order of the events. Which solution will meet these requirements?","options":{"A":"Amazon EventBridge event bus","B":"Amazon Simple Notification Service (Amazon SNS) FIFO topics","C":"Amazon Simple Notification Service (Amazon SNS) standard topics","D":"Amazon Simple Queue Service (Amazon SQS) FIFO queues"},"correct":"B","domain":"Design Secure Architectures","explanation":""},{"number":346,"text":"A company has a Java application that uses Amazon Simple Queue Service (Amazon SQS) to parse messages. The application cannot parse messages that are larger than 256 KB in size. The company wants to implement a solution to give the application the ability to parse messages as large as 50 MB. Which solution will meet these requirements with the FEWEST changes to the code?","options":{"A":"Use the Amazon SQS Extended Client Library for Java to host messages that are larger than 256 KB in Amazon S3.","B":"Use Amazon EventBridge to post large messages from the application instead of Amazon SQS.","C":"Change the limit in Amazon SQS to handle messages that are larger than 256 KB. ","D":"Store messages that are larger than 256 KB in Amazon Elastic File System (Amazon EFS). Configure Amazon SQS to reference this location in the messages."},"correct":"A","domain":"General","explanation":"","topic":"sqs"},{"number":330,"text":"A company is hosting a three-tier ecommerce application in the AWS Cloud. The company hosts the website on Amazon S3 and integrates the website with an API that handles sales requests. The company hosts the API on three Amazon EC2 instances behind an Application Load Balancer (ALB). The API consists of static and dynamic front-end content along with backend workers that process sales requests asynchronously. The company is expecting a significant and sudden increase in the number of sales requests during events for the launch of new products. What should a solutions architect recommend to ensure that all the requests are processed successfully?","options":{"A":"Add an Amazon CloudFront distribution for the dynamic content. Increase the number of EC2 instances to handle the increase in traffic.","B":"Add an Amazon CloudFront distribution for the static content. Place the EC2 instances in an Auto Scaling group to launch new instances based on network traffic.","C":"Add an Amazon CloudFront distribution for the dynamic content. Add an Amazon ElastiCache instance in front of the ALB to reduce traffic for the API to handle.","D":"Add an Amazon CloudFront distribution for the static content. Add an Amazon Simple Queue Service (Amazon SQS) queue to receive requests from the website for later processing by the EC2 instances."},"correct":"D","domain":"Design High-Performing Architectures","explanation":"","topic":"s3-basics"},{"number":354,"text":"A company is designing the network for an online multi-player game. The game uses the UDP networking protocol and will be deployed in eight AWS Regions. The network architecture needs to minimize latency and packet loss to give end users a high-quality gaming experience. Which solution will meet these requirements?","options":{"A":"Setup a transit gateway in each Region. Create inter-Region peering attachments between each transit gateway.","B":"Set up AWS Global Accelerator with UDP listeners and endpoint groups in each Region.","C":"Set up Amazon CloudFront with UDP turned on. Configure an origin in each Region.","D":"Set up a VPC peering mesh between each Region. Turn on UDP for each VPC. "},"correct":"B","domain":"Design High-Performing Architectures","explanation":""},{"number":339,"text":"A company has deployed a web application on AWS. The company hosts the backend database on Amazon RDS for MySQL with a primary DB instance and five read replicas to support scaling needs. The read replicas must lag no more than 1 second behind the primary DB instance. The database routinely runs scheduled stored procedures. As traffic on the website increases, the replicas experience additional lag during periods of peak load. A solutions architect must reduce the replication lag as much as possible. The solutions architect must minimize changes to the application code   and must minimize ongoing operational overhead. Which solution will meet these requirements?","options":{"A":"Migrate the database to Amazon Aurora MySQL. Replace the read replicas with Aurora Replicas, and configure Aurora Auto Scaling. Replace the stored procedures with Aurora MySQL native functions. on","B":"Deploy an Amazon ElastiCache for Redis cluster in front of the database. Modify the application to check the cache before the application queries the database. Replace the stored procedures with AWS Lambda functions.","C":"Migrate the database to a MySQL database that runs on Amazon EC2 instances. Choose large, compute optimized EC2 instances for all replica nodes. Maintain the stored procedures on the EC2 instances.","D":"Migrate the database to Amazon DynamoDB. Provision a large number of read capacity units (RCUs) to support the required throughput, and configure on-demand capacity scaling. Replace the stored procedures with DynamoDB streams."},"correct":"A","domain":"Design Resilient Architectures","explanation":"","topic":"rds"},{"number":372,"text":"A company runs a public three-tier web application in a VPC. The application runs on Amazon EC2 instances across multiple Availability Zones. The EC2 instances that run in private subnets need to communicate with a license server over the internet. The company needs a managed solution that minimizes operational maintenance. Which solution meets these requirements?","options":{"A":"Provision a NAT instance in a public subnet. Modify each private subnet's route table with a default route that points to the NAT instance.","B":"Provision a NAT instance in a private subnet. Modify each private subnet's route table with a default route that points to the NAT instance.","C":"Provision a NAT gateway in a public subnet. Modify each private subnet's route table with a default route that points to the NAT gateway.","D":"Provision a NAT gateway in a private subnet. Modify each private subnet's route table with a default route that points to the NAT gateway. "},"correct":"C","domain":"Design Secure Architectures","explanation":"","topic":"ec2-instances"},{"number":387,"text":"A company is hosting a web application on AWS using a single Amazon EC2 instance that stores user-uploaded documents in an Amazon EBS volume. For better scalability and availability, the company duplicated the architecture and created a second EC2 instance and EBS volume in another Availability Zone, placing both behind an Application Load Balancer. After completing this change, users reported that each time they refreshed the website, they could see one subset of their documents or the other, but never all of the documents at the same time. What should a solutions architect propose to ensure users see all of their documents at once?","options":{"A":"Create a security group for the web servers and allow port 443 from 0.0.0.0/0. Create a security group for the MySQL servers and allow port 3306 from the web servers security group.","B":"Create a network ACL for the web servers and allow port 443 from 0.0.0.0/0. Create a network ACL for the MySQL servers and allow port 3306 from the web servers security group.","C":"Create a security group for the web servers and allow port 443 from the load balancer. Create a security group for the MySQL servers and allow port 3306 from the web servers security group.","D":"Create a network ACL for the web servers and allow port 443 from the load balancer. Create a network ACL for the MySQL servers and allow port 3306 from the web servers security group."},"correct":"C","domain":"Design Secure Architectures","explanation":""},{"number":370,"text":"A solutions architect wants all new users to have specific complexity requirements and mandatory rotation periods for IAM user passwords. What should the solutions architect do to accomplish this?","options":{"A":"Set an overall password policy for the entire AWS account.","B":"Set a password policy for each IAM user in the AWS account.","C":"Use third-party vendor software to set password requirements.","D":"Attach an Amazon CloudWatch rule to the Create_newuser event to set the password with the appropriate requirements."},"correct":"A","domain":"Design Secure Architectures","explanation":"","topic":"iam"},{"number":382,"text":"A company is migrating its on-premises workload to the AWS Cloud. The company already uses several Amazon EC2 instances and Amazon RDS DB instances. The company wants a solution that automatically starts and stops the EC2 instances and DB instances outside of business hours. The solution must minimize cost and infrastructure maintenance.   Which solution will meet these requirements?","options":{"A":"Scale the EC2 instances by using elastic resize. Scale the DB instances to zero outside of business hours.","B":"Explore AWS Marketplace for partner solutions that will automatically start and stop the EC2 instances and DB instances on a schedule.","C":"Launch another EC2 instance. Configure a crontab schedule to run shell scripts that will start and stop the existing EC2 instances and DB instances on a schedule.","D":"Create an AWS Lambda function that will start and stop the EC2 instances and DB instances. Configure Amazon EventBridge to invoke the Lambda function on a schedule."},"correct":"D","domain":"Design Cost-Optimized Architectures","explanation":"","topic":"rds"},{"number":344,"text":"A transaction processing company has weekly scripted batch jobs that run on Amazon EC2 instances. The EC2 instances are in an Auto Scaling group. The number of transactions can vary, but the baseline CPU utilization that is noted on each run is at least 60%. The company needs to provision the capacity 30 minutes before the jobs run. Currently, engineers complete this task by manually modifying the Auto Scaling group parameters. The company does not have the resources to analyze the required capacity trends for the Auto Scaling group counts. The company needs an automated way to modify the Auto Scaling group's desired capacity. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Create a dynamic scaling policy for the Auto Scaling group. Configure the policy to scale based on the CPU utilization metric. Set the target value for the metric to 60%.","B":"Create a scheduled scaling policy for the Auto Scaling group. Set the appropriate desired capacity, minimum capacity, and maximum capacity. Set the recurrence to weekly. Set the start time to 30 minutes before the batch jobs run.","C":"Create a predictive scaling policy for the Auto Scaling group. Configure the policy to scale based on forecast. Set the scaling metric to CPU utilization. Set the target value for the metric to 60%. In the policy, set the instances to pre-launch 30 minutes before the jobs run.","D":"Create an Amazon EventBridge event to invoke an AWS Lambda function when the CPU utilization metric value for the Auto Scaling group reaches 60%. Configure the Lambda function to increase the Auto Scaling group's desired capacity and maximum capacity by 20%."},"correct":"C","domain":"Design High-Performing Architectures","explanation":"","topic":"ec2-instances"},{"number":368,"text":"A company's web application consists of an Amazon API Gateway API in front of an AWS Lambda function and an Amazon DynamoDB database. The Lambda function handles the business logic, and the DynamoDB table hosts the data. The application uses Amazon Cognito user pools to identify the individual users of the application. A solutions architect needs to update the application so that only users who have a subscription can access premium content. Which solution will meet this requirement with the LEAST operational overhead?","options":{"A":"Enable API caching and throttling on the API Gateway API.","B":"Set up AWS WAF on the API Gateway API. Create a rule to filter users who have a subscription.","C":"Apply fine-grained IAM permissions to the premium content in the DynamoDB table.","D":"Implement API usage plans and API keys to limit the access of users who do not have a subscription."},"correct":"D","domain":"General","explanation":"","topic":"dynamodb"},{"number":389,"text":"A new employee has joined a company as a deployment engineer. The deployment engineer will be using AWS CloudFormation templates to create multiple AWS resources. A solutions architect wants the deployment engineer to perform job activities while following the principle of least privilege. Which combination of actions should the solutions architect take to accomplish this goal? (Choose two.)","options":{"A":"Have the deployment engineer use AWS account root user credentials for performing AWS CloudFormation stack operations.","B":"Create a new IAM user for the deployment engineer and add the IAM user to a group that has the PowerUsers IAM policy attached.","C":"Create a new IAM user for the deployment engineer and add the IAM user to a group that has the AdministratorAccess IAM policy attached.","D":"Create a new IAM user for the deployment engineer and add the IAM user to a group that has an IAM policy that allows AWS CloudFormation actions only.","E":"Create an IAM role for the deployment engineer to explicitly define the permissions specific to the AWS CloudFormation stack and launch stacks using that IAM role."},"correct":"DE","domain":"General","explanation":""},{"number":369,"text":"A company is using Amazon Route 53 latency-based routing to route requests to its UDP-based application for users around the world. The application is hosted on redundant servers in the company's on-premises data centers in the United States, Asia, and Europe. The company's compliance requirements state that the application must be hosted on premises. The company wants to improve the performance and availability of the application. What should a solutions architect do to meet these requirements?","options":{"A":"Configure three Network Load Balancers (NLBs) in the three AWS Regions to address the on-premises endpoints. Create an accelerator by using AWS Global Accelerator, and register the NLBs as its endpoints. Provide access to the application by using a CNAME that points to the accelerator DNS. ","B":"Configure three Application Load Balancers (ALBs) in the three AWS Regions to address the on-premises endpoints. Create an accelerator by using AWS Global Accelerator, and register the ALBs as its endpoints. Provide access to the application by using a CNAME that points to the accelerator DNS.","C":"Configure three Network Load Balancers (NLBs) in the three AWS Regions to address the on-premises endpoints. In Route 53, create a latency-based record that points to the three NLBs, and use it as an origin for an Amazon CloudFront distribution. Provide access to the application by using a CNAME that points to the CloudFront DNS.","D":"Configure three Application Load Balancers (ALBs) in the three AWS Regions to address the on-premises endpoints. In Route 53, create a latency-based record that points to the three ALBs, and use it as an origin for an Amazon CloudFront distribution. Provide access to the application by using a CNAME that points to the CloudFront DNS."},"correct":"A","domain":"Design Secure Architectures","explanation":"","topic":"route53"},{"number":364,"text":"A company uses a payment processing system that requires messages for a particular payment ID to be received in the same order that they were sent. Otherwise, the payments might be processed incorrectly. Which actions should a solutions architect take to meet this requirement? (Choose two.)","options":{"A":"Write the messages to an Amazon DynamoDB table with the payment ID as the partition key.","B":"Write the messages to an Amazon Kinesis data stream with the payment ID as the partition key.","C":"Write the messages to an Amazon ElastiCache for Memcached cluster with the payment ID as the key. ","D":"Write the messages to an Amazon Simple Queue Service (Amazon SQS) queue. Set the message attribute to use the payment ID.","E":"Write the messages to an Amazon Simple Queue Service (Amazon SQS) FIFO queue. Set the message group to use the payment ID."},"correct":"BE","domain":"General","explanation":""},{"number":371,"text":"A company has migrated an application to Amazon EC2 Linux instances. One of these EC2 instances runs several 1-hour tasks on a schedule. These tasks were written by different teams and have no common programming language. The   company is concerned about performance and scalability while these tasks run on a single instance. A solutions architect needs to implement a solution to resolve these concerns. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Use AWS Batch to run the tasks as jobs. Schedule the jobs by using Amazon EventBridge (Amazon CloudWatch Events).","B":"Convert the EC2 instance to a container. Use AWS App Runner to create the container on demand to run the tasks as jobs.","C":"Copy the tasks into AWS Lambda functions. Schedule the Lambda functions by using Amazon EventBridge (Amazon CloudWatch Events).","D":"Create an Amazon Machine Image (AMI) of the EC2 instance that runs the tasks. Create an Auto Scaling group with the AMI to run multiple copies of the instance."},"correct":"A","domain":"Design High-Performing Architectures","explanation":"","topic":"ec2-instances"},{"number":383,"text":"A company hosts a three-tier web application that includes a PostgreSQL database. The database stores the metadata from documents. The company searches the metadata for key terms to retrieve documents that the company reviews in a report each month. The documents are stored in Amazon S3. The documents are usually written only once, but they are updated frequently. The reporting process takes a few hours with the use of relational queries. The reporting process must not prevent any document modifications or the addition of new documents. A solutions architect needs to implement a solution to speed up the reporting process. Which solution will meet these requirements with the LEAST amount of change to the application code?","options":{"A":"Set up a new Amazon DocumentDB (with MongoDB compatibility) cluster that includes a read replica. Scale the read replica to generate the reports.","B":"Set up a new Amazon Aurora PostgreSQL DB cluster that includes an Aurora Replica. Issue queries to the Aurora Replica to generate the reports. ","C":"Set up a new Amazon RDS for PostgreSQL Multi-AZ DB instance. Configure the reporting module to query the secondary RDS node so that the reporting module does not affect the primary node.","D":"Set up a new Amazon DynamoDB table to store the documents. Use a fixed write capacity to support new document entries. Automatically scale the read capacity to support the reports. lub"},"correct":"B","domain":"General","explanation":"","topic":"rds"},{"number":366,"text":"A hospital is designing a new application that gathers symptoms from patients. The hospital has decided to use Amazon Simple Queue Service (Amazon SQS) and Amazon Simple Notification Service (Amazon SNS) in the architecture. A solutions architect is reviewing the infrastructure design. Data must be encrypted at rest and in transit. Only authorized personnel of the hospital should be able to access the data. Which combination of steps should the solutions architect take to meet these requirements? (Choose two.)","options":{"A":"Turn on server-side encryption on the SQS components. Update the default key policy to restrict key usage to a set of authorized principals. ","B":"Turn on server-side encryption on the SNS components by using an AWS Key Management Service (AWS KMS) customer managed key. Apply a key policy to restrict key usage to a set of authorized principals.","C":"Turn on encryption on the SNS components. Update the default key policy to restrict key usage to a set of authorized principals. Set a condition in the topic policy to allow only encrypted connections over TLS.","D":"Turn on server-side encryption on the SQS components by using an AWS Key Management Service (AWS KMS) customer managed key. Apply a key policy to restrict key usage to a set of authorized principals. Set a condition in the queue policy to allow only encrypted connections over TLS.","E":"Turn on server-side encryption on the SQS components by using an AWS Key Management Service (AWS KMS) customer managed key. Apply an IAM policy to restrict key usage to a set of authorized principals. Set a condition in the queue policy to allow only encrypted connections over TLS."},"correct":"BD","domain":"Design Secure Architectures","explanation":"","topic":"sqs"},{"number":377,"text":"An ecommerce company is building a distributed application that involves several serverless functions and AWS services to complete order-processing tasks. These tasks require manual approvals as part of the workflow. A solutions architect needs to design an architecture for the order-processing application. The solution   must be able to combine multiple AWS Lambda functions into responsive serverless applications. The solution also must orchestrate data and services that run on Amazon EC2 instances, containers, or on-premises servers. Which solution will meet these requirements with the LEAST operational overhead?","options":{"A":"Use AWS Step Functions to build the application.","B":"Integrate all the application components in an AWS Glue job.","C":"Use Amazon Simple Queue Service (Amazon SQS) to build the application.","D":"Use AWS Lambda functions and Amazon EventBridge events to build the application."},"correct":"A","domain":"General","explanation":"","topic":"lambda"},{"number":361,"text":"A hospital needs to store patient records in an Amazon S3 bucket. The hospital's compliance team must ensure that all protected health information (PHI) is encrypted in transit and at rest. The compliance team must administer the encryption key for data at rest. Which solution will meet these requirements?","options":{"A":"Create a public SSL/TLS certificate in AWS Certificate Manager (ACM). Associate the certificate with Amazon S3. Configure default encryption for each S3 bucket to use server-side encryption with AWS KMS keys (SSE-KMS). Assign the compliance team to manage the KMS keys.","B":"Use the aws:SecureTransport condition on S3 bucket policies to allow only encrypted connections over HTTPS (TLS). Configure default encryption for each S3 bucket to use server-side encryption with S3 managed encryption keys  (SSE-S3). Assign the compliance team to manage the SSE-S3 keys.","C":"Use the aws:SecureTransport condition on S3 bucket policies to allow only encrypted connections over HTTPS (TLS). Configure default encryption for each S3 bucket to use server-side encryption with AWS KMS keys (SSE-KMS). Assign the compliance team to manage the KMS keys.","D":"Use the aws:SecureTransport condition on S3 bucket policies to allow only encrypted connections over HTTPS (TLS). Use Amazon Macie to protect the sensitive data that is stored in Amazon S3. Assign the compliance team to manage Macie."},"correct":"C","domain":"Design Secure Architectures","explanation":"","topic":"s3-basics"}];
+
+        const EXAM_ID = parseInt(window.location.pathname.match(/Exam_(\d+)/)?.[1] || '1');
+
+        class MinimalExam {
+            constructor(questions) {
+                this.questions = questions;
+                this.currentQuestion = 0;
+                this.answers = {};
+                this.flagged = new Set();
+                this.timeLeft = 130 * 60;
+                this.isPaused = false;
+                this.startTime = Date.now();
+                this.studyMode = false;
+                this.init();
+            }
+
+            init() {
+                this.loadState();
+                this.generateNav();
+                this.displayQuestion(0);
+                this.startTimer();
+            }
+
+            loadState() {
+                const saved = localStorage.getItem(`exam_${EXAM_ID}_state`);
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    if (Date.now() - state.timestamp < 4 * 60 * 60 * 1000) {
+                        this.answers = state.answers || {};
+                        this.flagged = new Set(state.flagged || []);
+                        this.timeLeft = state.timeLeft || 130 * 60;
+                        this.startTime = state.startTime || Date.now();
+                    }
+                }
+            }
+
+            saveState() {
+                localStorage.setItem(`exam_${EXAM_ID}_state`, JSON.stringify({
+                    answers: this.answers,
+                    flagged: Array.from(this.flagged),
+                    timeLeft: this.timeLeft,
+                    startTime: this.startTime,
+                    timestamp: Date.now()
+                }));
+            }
+
+            toggleStudyMode() {
+                this.studyMode = !this.studyMode;
+                const btn = document.getElementById('studyModeBtn');
+                const timerDiv = document.getElementById('timer').parentElement.parentElement;
+                if (this.studyMode) {
+                    btn.textContent = '📖 Study Mode: ON';
+                    btn.className = 'mt-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-xs font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors';
+                    timerDiv.style.display = 'none';
+                    this.isPaused = true;
+                } else {
+                    btn.textContent = '📖 Study Mode: OFF';
+                    btn.className = 'mt-2 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-medium hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors';
+                    timerDiv.style.display = 'flex';
+                    this.isPaused = false;
+                }
+                this.displayQuestion(this.currentQuestion);
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    if (!this.isPaused && this.timeLeft > 0 && !this.examCompleted) {
+                        this.timeLeft--;
+                        const mins = Math.floor(this.timeLeft / 60);
+                        const secs = this.timeLeft % 60;
+                        document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                        if (this.timeLeft === 0) this.submitExam(true);
+                    }
+                }, 1000);
+            }
+
+            toggleTimer() {
+                this.isPaused = !this.isPaused;
+                document.getElementById('pauseBtn').textContent = this.isPaused ? 'Resume' : 'Pause';
+                this.showPauseOverlay(this.isPaused);
+            }
+
+            showPauseOverlay(show) {
+                let overlay = document.getElementById('pauseOverlay');
+                if (show) {
+                    if (!overlay) {
+                        overlay = document.createElement('div');
+                        overlay.id = 'pauseOverlay';
+                        overlay.className = 'fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center';
+                        overlay.innerHTML = `
+                            <div class="bg-white dark:bg-gray-900 p-8 rounded-lg text-center max-w-md mx-4">
+                                <div class="text-6xl mb-4">⏸️</div>
+                                <h2 class="text-2xl font-bold mb-4">Exam Paused</h2>
+                                <p class="text-gray-600 dark:text-gray-400 mb-6">Click Resume to continue your exam</p>
+                                <button onclick="exam.toggleTimer()" class="px-6 py-3 bg-aws-orange text-white rounded-lg font-medium hover:bg-orange-600 transition-colors">
+                                    Resume Exam
+                                </button>
+                            </div>
+                        `;
+                        document.body.appendChild(overlay);
+                    }
+                    overlay.style.display = 'flex';
+                } else {
+                    if (overlay) overlay.style.display = 'none';
+                }
+            }
+
+            generateNav() {
+                const nav = document.getElementById('questionNav');
+                nav.innerHTML = this.questions.map((_, i) => 
+                    `<button onclick="exam.goTo(${i})" class="w-10 h-10 rounded-lg border-2 transition-colors text-sm font-medium flex items-center justify-center" id="nav-${i}">${i + 1}</button>`
+                ).join('');
+                this.updateNav();
+            }
+
+            updateNav() {
+                this.questions.forEach((_, i) => {
+                    const btn = document.getElementById(`nav-${i}`);
+                    btn.className = 'w-10 h-10 rounded-lg border-2 transition-colors text-sm font-medium flex items-center justify-center relative';
+                    
+                    if (i === this.currentQuestion) {
+                        btn.className += ' bg-aws-orange text-white border-aws-orange';
+                    } else if (this.answers[i] && this.flagged.has(i)) {
+                        btn.className += ' bg-green-500 text-white border-green-500';
+                        btn.innerHTML = `${i + 1}<span class="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border border-white"></span>`;
+                    } else if (this.answers[i]) {
+                        btn.className += ' bg-green-500 text-white border-green-500';
+                        btn.innerHTML = `${i + 1}`;
+                    } else if (this.flagged.has(i)) {
+                        btn.className += ' bg-yellow-500 text-white border-yellow-500';
+                        btn.innerHTML = `${i + 1}`;
+                    } else {
+                        btn.className += ' border-gray-300 dark:border-gray-700 hover:border-aws-orange';
+                        btn.innerHTML = `${i + 1}`;
+                    }
+                });
+                const answered = Object.keys(this.answers).length;
+                document.getElementById('progressText').textContent = `${answered} of ${this.questions.length} answered`;
+                document.getElementById('flaggedText').textContent = `${this.flagged.size} flagged`;
+                document.getElementById('progressBar').style.width = `${(answered / this.questions.length) * 100}%`;
+            }
+
+            displayQuestion(index) {
+                this.currentQuestion = index;
+                const q = this.questions[index];
+                const isMultiple = q.correct.length > 1;
+                const container = document.getElementById('questionContainer');
+                
+                container.innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Question ${index + 1} of ${this.questions.length}</div>
+                                <span class="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">${q.domain}</span>
+                            </div>
+                            <button onclick="exam.toggleFlag(${index})" class="px-4 py-2 rounded-lg border-2 ${this.flagged.has(index) ? 'bg-yellow-500 text-white border-yellow-500' : 'border-gray-300 dark:border-gray-700'} hover:scale-105 transition-transform text-sm">
+                                🚩 ${this.flagged.has(index) ? 'Unflag' : 'Flag'}
+                            </button>
+                        </div>
+                        <p class="text-lg leading-relaxed mb-6">${q.text}</p>
+                        ${isMultiple ? `<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose ${q.correct.length} answers</p>` : ''}
+                    </div>
+
+                    <div class="space-y-3 mb-8">
+                        ${Object.entries(q.options).map(([letter, text]) => `
+                            <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all ${this.isSelected(index, letter) ? 'border-aws-orange bg-orange-50 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700'}">
+                                <div class="flex items-start gap-3">
+                                    <input type="${isMultiple ? 'checkbox' : 'radio'}" name="q${index}" value="${letter}" ${this.isSelected(index, letter) ? 'checked' : ''} onchange="exam.selectAnswer(${index}, '${letter}', this.checked)" class="mt-1">
+                                    <div class="flex-1">
+                                        <span class="font-bold text-aws-orange">${letter}.</span> ${text}
+                                    </div>
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-800">
+                        <button onclick="exam.prev()" ${index === 0 ? 'disabled' : ''} class="px-6 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            ← Previous
+                        </button>
+                        ${index === this.questions.length - 1 ? 
+                            '<button onclick="exam.submitExam()" class="px-8 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors">Submit Exam</button>' :
+                            '<button onclick="exam.next()" class="px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:scale-105 transition-transform">Next →</button>'
+                        }
+                    </div>
+                `;
+                this.updateNav();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            isSelected(qIndex, letter) {
+                const ans = this.answers[qIndex];
+                return Array.isArray(ans) ? ans.includes(letter) : ans === letter;
+            }
+
+            selectAnswer(qIndex, letter, checked) {
+                const q = this.questions[qIndex];
+                const isMultiple = q.correct.length > 1;
+                
+                if (isMultiple) {
+                    if (!this.answers[qIndex]) this.answers[qIndex] = [];
+                    if (checked) this.answers[qIndex].push(letter);
+                    else this.answers[qIndex] = this.answers[qIndex].filter(l => l !== letter);
+                    if (this.answers[qIndex].length === 0) delete this.answers[qIndex];
+                } else {
+                    this.answers[qIndex] = letter;
+                }
+                this.saveState();
+                this.updateNav();
+                
+                if (this.studyMode) {
+                    this.showInstantFeedback(qIndex);
+                }
+            }
+
+            showInstantFeedback(qIndex) {
+                const q = this.questions[qIndex];
+                const userAns = this.answers[qIndex];
+                let isCorrect = false;
+                if (Array.isArray(userAns)) {
+                    isCorrect = userAns.sort().join('') === q.correct.split('').sort().join('');
+                } else {
+                    isCorrect = userAns === q.correct;
+                }
+                
+                const feedbackDiv = document.getElementById('instantFeedback');
+                if (feedbackDiv) feedbackDiv.remove();
+                
+                const container = document.getElementById('questionContainer');
+                const feedback = document.createElement('div');
+                feedback.id = 'instantFeedback';
+                feedback.className = `mt-4 p-4 rounded-lg border-2 ${isCorrect ? 'bg-green-50 dark:bg-green-900/20 border-green-500' : 'bg-red-50 dark:bg-red-900/20 border-red-500'}`;
+                feedback.innerHTML = `
+                    <div class="flex items-start gap-2 mb-2">
+                        <span class="text-2xl">${isCorrect ? '✅' : '❌'}</span>
+                        <h4 class="font-semibold ${isCorrect ? 'text-green-900 dark:text-green-300' : 'text-red-900 dark:text-red-300'}">${isCorrect ? 'Correct!' : 'Incorrect'}</h4>
+                    </div>
+                    ${!isCorrect ? `<p class="text-sm mb-2"><strong>Correct answer:</strong> ${q.correct}</p>` : ''}
+                    ${q.explanation ? `<p class="text-sm text-gray-700 dark:text-gray-300 mb-3">${q.explanation}</p>` : ''}
+                    ${q.resources && q.resources.length > 0 ? `
+                        <div class="space-y-2">
+                            ${q.resources.map(r => `
+                                <a href="${r.url}" target="_blank" class="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                                    <span>${r.type}</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(feedback);
+            }
+
+            toggleFlag(index) {
+                if (this.flagged.has(index)) this.flagged.delete(index);
+                else this.flagged.add(index);
+                this.saveState();
+                this.displayQuestion(index);
+            }
+
+            goTo(index) { this.displayQuestion(index); }
+            next() { if (this.currentQuestion < this.questions.length - 1) this.displayQuestion(this.currentQuestion + 1); }
+            prev() { if (this.currentQuestion > 0) this.displayQuestion(this.currentQuestion - 1); }
+
+            submitExam(auto = false) {
+                const unanswered = this.questions.length - Object.keys(this.answers).length;
+                if (!auto && unanswered > 0 && !confirm(`You have ${unanswered} unanswered questions. Submit anyway?`)) return;
+                
+                const results = [];
+                let correct = 0;
+                this.questions.forEach((q, i) => {
+                    const userAns = this.answers[i];
+                    const correctAns = q.correct;
+                    let isCorrect = false;
+                    if (Array.isArray(userAns)) {
+                        isCorrect = userAns.sort().join('') === correctAns.split('').sort().join('');
+                    } else {
+                        isCorrect = userAns === correctAns;
+                    }
+                    if (isCorrect) correct++;
+                    results.push({ question: i, correct: isCorrect, userAnswer: userAns, correctAnswer: correctAns });
+                });
+
+                const score = Math.round((correct / this.questions.length) * 100);
+                const passed = score >= 72;
+                const timeTaken = Math.round((Date.now() - this.startTime) / 1000 / 60);
+
+                this.saveProgress(score, passed, correct, timeTaken, results);
+
+                document.getElementById('questionContainer').classList.add('hidden');
+                document.getElementById('resultsContainer').classList.remove('hidden');
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div class="text-center mb-12">
+                        <div class="text-6xl mb-4">${passed ? '🎉' : '📚'}</div>
+                        <h1 class="text-4xl font-bold mb-4">${passed ? 'Congratulations!' : 'Keep Studying!'}</h1>
+                        <div class="text-6xl font-bold mb-4 ${passed ? 'text-green-500' : 'text-red-500'}">${score}%</div>
+                        <p class="text-xl text-gray-600 dark:text-gray-400">${correct} out of ${this.questions.length} correct</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">${passed ? 'You passed! (72% required)' : 'You need 72% to pass'}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Time: ${timeTaken} minutes</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 justify-center mb-4">
+                        <button onclick="shareToX()" class="px-3 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            X
+                        </button>
+                        <button onclick="shareToLinkedIn()" class="px-3 py-2 bg-blue-700 text-white rounded-lg text-sm hover:bg-blue-800 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                            LinkedIn
+                        </button>
+                        <button onclick="shareToFacebook()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            Facebook
+                        </button>
+                        <button onclick="shareToReddit()" class="px-3 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
+                            Reddit
+                        </button>
+                        <button onclick="shareToWhatsApp()" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            WhatsApp
+                        </button>
+                        <button onclick="shareToTelegram()" class="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                            Telegram
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-3 justify-center mb-8">
+                        <button onclick="exam.showReview()" class="px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:scale-105 transition-transform">Review Answers</button>
+                        <button onclick="location.reload()" class="px-6 py-3 border-2 border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">Retake Exam</button>
+                        <a href="/" class="px-6 py-3 border-2 border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors inline-block">Back to Exams</a>
+                    </div>
+                `;
+                this.examCompleted = true;
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                localStorage.removeItem(`exam_${EXAM_ID}_state`);
+            }
+
+            saveProgress(score, passed, correct, timeTaken, results) {
+                const progress = JSON.parse(localStorage.getItem('examProgress') || '{}');
+                if (!progress[EXAM_ID]) progress[EXAM_ID] = { attempts: 0, scores: [] };
+                progress[EXAM_ID].score = score;
+                progress[EXAM_ID].completed = true;
+                progress[EXAM_ID].passed = passed;
+                progress[EXAM_ID].correct = correct;
+                progress[EXAM_ID].total = this.questions.length;
+                progress[EXAM_ID].timeTaken = timeTaken;
+                progress[EXAM_ID].lastTaken = Date.now();
+                progress[EXAM_ID].attempts = (progress[EXAM_ID].attempts || 0) + 1;
+                if (!progress[EXAM_ID].scores) progress[EXAM_ID].scores = [];
+                progress[EXAM_ID].scores.push(score);
+                progress[EXAM_ID].results = results;
+                localStorage.setItem('examProgress', JSON.stringify(progress));
+                
+                // Trigger progress update on main page
+                if (window.examProgress) {
+                    window.examProgress.updateExamProgress(EXAM_ID, score, true);
+                }
+            }
+
+            showReview() {
+                const progress = JSON.parse(localStorage.getItem('examProgress') || '{}')
+                const results = progress[EXAM_ID]?.results || []
+                
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold mb-4">Answer Review</h2>
+                        <div class="flex gap-4 mb-6">
+                            <button onclick="exam.submitExam()" class="px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-900">← Back to Results</button>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        ${this.questions.map((q, i) => {
+                            const result = results[i]
+                            const isCorrect = result?.correct
+                            const topicResources = q.topic && RESOURCES[q.topic] ? RESOURCES[q.topic].resources : []
+                            return `
+                                <div class="border-2 ${isCorrect ? 'border-green-500' : 'border-red-500'} rounded-lg p-6">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Question ${i + 1}</span>
+                                            <span class="ml-3 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs">${q.domain}</span>
+                                        </div>
+                                        <span class="text-2xl">${isCorrect ? '✅' : '❌'}</span>
+                                    </div>
+                                    <p class="text-lg mb-4">${q.text}</p>
+                                    <div class="space-y-2 mb-4">
+                                        ${Object.entries(q.options).map(([letter, text]) => {
+                                            const isUserAnswer = Array.isArray(result?.userAnswer) ? result.userAnswer.includes(letter) : result?.userAnswer === letter
+                                            const isCorrectAnswer = q.correct.includes(letter)
+                                            let bgColor = '';
+                                            if (isCorrectAnswer) bgColor = 'bg-green-100 dark:bg-green-900/20 border-green-500';
+                                            else if (isUserAnswer) bgColor = 'bg-red-100 dark:bg-red-900/20 border-red-500';
+                                            else bgColor = 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800';
+                                            return `
+                                                <div class="p-3 border-2 rounded-lg ${bgColor}">
+                                                    <span class="font-bold">${letter}.</span> ${text}
+                                                    ${isCorrectAnswer ? ' <span class="text-green-600 dark:text-green-400 font-medium">✓ Correct</span>' : ''}
+                                                    ${isUserAnswer && !isCorrectAnswer ? ' <span class="text-red-600 dark:text-red-400 font-medium">✗ Your answer</span>' : ''}
+                                                </div>
+                                            `
+                                        }).join('')}  
+                                    </div>
+                                    ${!isCorrect && (q.explanation || topicResources.length > 0) ? `
+                                        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
+                                            <div class="flex items-start gap-2 mb-2">
+                                                <span class="text-xl">📚</span>
+                                                <h4 class="font-semibold text-blue-900 dark:text-blue-300">Learn More</h4>
+                                            </div>
+                                            ${q.explanation ? `<p class="text-sm text-gray-700 dark:text-gray-300 mb-3">${q.explanation}</p>` : ""}
+                                            ${topicResources.length > 0 ? `
+                                                <div class="space-y-2">
+                                                    ${topicResources.map(r => `
+                                                        <a href="${r.url}" target="_blank" class="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                                                            <span>${r.type}</span>
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                                            </svg>
+                                                        </a>
+                                                    `).join('')}  
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `
+                        }).join('')}  
+                    </div>
+                    <div class="mt-8 flex gap-4 justify-center">
+                        <button onclick="location.reload()" class="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:scale-105 transition-transform">Retake Exam</button>
+                        <a href="/" class="px-8 py-3 border-2 border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors inline-block">Back to Exams</a>
+                    </div>
+                `
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+            }
+        }
+
+        function shareToX() {
+            const progress = JSON.parse(localStorage.getItem("examProgress") || "{}");
+            const examData = progress[EXAM_ID];
+            if (!examData) return;
+            const text = `I scored ${examData.score}% on AWS SAA-C03 Practice Exam ${EXAM_ID}! ${examData.passed ? "✅ PASSED" : ""}`;
+            const url = "https://aws-exams.matthewntsiful.com";
+            const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+            window.open(shareUrl, "_blank", "width=550,height=420");
+        }
+
+        function shareToLinkedIn() {
+            const progress = JSON.parse(localStorage.getItem("examProgress") || "{}");
+            const examData = progress[EXAM_ID];
+            if (!examData) return;
+            const url = "https://aws-exams.matthewntsiful.com";
+            const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+            window.open(shareUrl, "_blank", "width=550,height=420");
+        }
+
+        function shareToFacebook() {
+            const url = "https://aws-exams.matthewntsiful.com";
+            const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            window.open(shareUrl, "_blank", "width=550,height=420");
+        }
+
+        function shareToReddit() {
+            const progress = JSON.parse(localStorage.getItem("examProgress") || "{}");
+            const examData = progress[EXAM_ID];
+            if (!examData) return;
+            const url = "https://aws-exams.matthewntsiful.com";
+            const title = `I scored ${examData.score}% on AWS SAA-C03 Practice Exam ${EXAM_ID}! ${examData.passed ? "✅ PASSED" : ""}`;
+            const shareUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+            window.open(shareUrl, "_blank", "width=800,height=600");
+        }
+
+        function shareToWhatsApp() {
+            const progress = JSON.parse(localStorage.getItem("examProgress") || "{}");
+            const examData = progress[EXAM_ID];
+            if (!examData) return;
+            const text = `I scored ${examData.score}% on AWS SAA-C03 Practice Exam ${EXAM_ID}! ${examData.passed ? "✅ PASSED" : ""} https://aws-exams.matthewntsiful.com`;
+            const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(shareUrl, "_blank");
+        }
+
+        function shareToTelegram() {
+            const progress = JSON.parse(localStorage.getItem("examProgress") || "{}");
+            const examData = progress[EXAM_ID];
+            if (!examData) return;
+            const text = `I scored ${examData.score}% on AWS SAA-C03 Practice Exam ${EXAM_ID}! ${examData.passed ? "✅ PASSED" : ""}`;
+            const url = "https://aws-exams.matthewntsiful.com";
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+            window.open(shareUrl, "_blank");
+        }
+
+        let exam = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            exam = new MinimalExam(examQuestions);
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            // Ignore if typing in input fields
+            if (e.target.matches('input, textarea')) return;
+            
+            // Spacebar pause/resume
+            if (e.code === 'Space') {
+                e.preventDefault();
+                exam.toggleTimer();
+            }
+            // Arrow keys for navigation
+            else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                exam.prev();
+            }
+            else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                exam.next();
+            }
+        });
+        });
+    </script>
+
+    <!-- Developer Contact -->
+    <footer class="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-800 py-8 mt-16">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h3 class="text-lg font-semibold mb-4">Contact Developer</h3>
+            <div class="flex flex-wrap justify-center gap-6 text-sm">
+                <a href="https://github.com/matthewntsiful" target="_blank" class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-aws-orange transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    @matthewntsiful
+                </a>
+                <a href="https://matthewntsiful.com" target="_blank" class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-aws-orange transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    matthewntsiful.com
+                </a>
+                <a href="mailto:matthew@matthewntsiful.com" class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-aws-orange transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    matthew@matthewntsiful.com
+                </a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

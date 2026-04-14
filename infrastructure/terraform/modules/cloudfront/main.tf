@@ -1,5 +1,9 @@
+locals {
+  name_prefix = replace(var.s3_bucket_name, ".", "-")
+}
+
 resource "aws_cloudfront_cache_policy" "exam_cache_policy" {
-  name        = "${var.s3_bucket_name}-cache-policy"
+  name        = "${local.name_prefix}-cache-policy"
   min_ttl     = 0
   default_ttl = 300
   max_ttl     = 86400
@@ -20,7 +24,7 @@ resource "aws_cloudfront_cache_policy" "exam_cache_policy" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "security_headers" {
-  name = "${var.s3_bucket_name}-security-headers"
+  name = "${local.name_prefix}-security-headers"
 
   security_headers_config {
     strict_transport_security {
@@ -62,7 +66,6 @@ resource "aws_cloudfront_distribution" "exam_distribution" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
-  web_acl_id          = var.web_acl_id
 
   aliases = var.domain_name != "" ? [var.domain_name] : []
 

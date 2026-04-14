@@ -17,9 +17,10 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.tailwindcss.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https://cdn.tailwindcss.com"]
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://d1.awsstatic.com", "https://images.credly.com"],
+      connectSrc: ["'self'", "https://cdn.tailwindcss.com", "https://www.googletagmanager.com"]
     }
   }
 }));
@@ -32,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Load exam data
 const getExams = () => {
-  const examDir = path.join(__dirname, 'public/exams');
+  const examDir = path.join(__dirname, 'public/associate/saa-c03/exams');
   const files = fs.readdirSync(examDir)
     .filter(f => f.startsWith('SAA-C03_Minimal_Exam_') && f.endsWith('.html'))
     .sort();
@@ -45,18 +46,10 @@ const getExams = () => {
   }));
 };
 
-// Routes
+// Routes — serve static index.html for all non-API routes
 app.get('/', (req, res) => {
-  const exams = getExams();
-  res.render('minimal', { exams });
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
-
-app.get('/full', (req, res) => {
-  const exams = getExams();
-  res.render('index', { exams });
-});
-
-
 
 app.get('/api/exams', (req, res) => {
   res.json(getExams());

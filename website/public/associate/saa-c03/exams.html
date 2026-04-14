@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS SAA-C03 Practice Exams - Free Solutions Architect Associate Certification Prep</title>
+    <meta name="description" content="Free AWS Solutions Architect Associate (SAA-C03) practice exams. 16 full-length exams with 1,040 questions, 130-minute timer, progress tracking, and detailed explanations. Pass your AWS certification exam.">
+    <meta name="keywords" content="AWS, SAA-C03, Solutions Architect Associate, practice exams, certification, AWS certification, cloud computing, exam prep, free practice tests">
+    <meta name="author" content="Matthew Ntsiful">
+    <link rel="canonical" href="https://aws-exams.matthewntsiful.com">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aws-exams.matthewntsiful.com">
+    <meta property="og:title" content="AWS SAA-C03 Practice Exams - Free Certification Prep">
+    <meta property="og:description" content="16 full-length AWS Solutions Architect Associate practice exams with 1,040 questions. Free, comprehensive exam preparation with progress tracking.">
+    <meta property="og:image" content="https://aws-exams.matthewntsiful.com/icon-512.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://aws-exams.matthewntsiful.com">
+    <meta property="twitter:title" content="AWS SAA-C03 Practice Exams - Free Certification Prep">
+    <meta property="twitter:description" content="16 full-length AWS Solutions Architect Associate practice exams with 1,040 questions. Free, comprehensive exam preparation.">
+    <meta property="twitter:image" content="https://aws-exams.matthewntsiful.com/icon-512.png">
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FF9900">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L2KDBHY4M2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-L2KDBHY4M2');
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        aws: { orange: '#FF9900' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-white min-h-screen">
+    <!-- Particles Container -->
+    <div id="particles" class="fixed inset-0 overflow-hidden pointer-events-none"></div>
+
+    <!-- Install App Button -->
+    <button id="install-button" class="fixed top-6 left-6 z-50 px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
+        Install
+    </button>
+
+    <!-- Fixed Theme Toggle -->
+    <button id="theme-toggle" class="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-lg">
+        <svg id="sun-icon" class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+        </svg>
+        <svg id="moon-icon" class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+    </button>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-4xl mx-auto text-center fade-in">
+            <div class="mb-8">
+                <div class="inline-flex items-center space-x-2 px-4 py-2 bg-aws-orange/10 dark:bg-aws-orange/20 rounded-full mb-6">
+                    <div class="w-2 h-2 bg-aws-orange rounded-full animate-pulse"></div>
+                    <span class="text-aws-orange font-medium text-sm">AWS Certified Solutions Architect - Associate</span>
+                </div>
+                <h1 class="text-7xl md:text-9xl font-bold mb-6 tracking-tighter">
+                    SAA-C03
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+                    Complete practice exam suite for AWS Solutions Architect Associate certification
+                </p>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                <a href="#exams" class="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-lg font-medium hover:scale-105 transition-transform duration-200 shadow-lg">
+                    Browse Exams →
+                </a>
+                <a href="#exams" class="border-2 border-gray-300 dark:border-gray-700 px-8 py-4 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
+                    View Progress
+                </a>
+            </div>
+            
+            <!-- Social Sharing -->
+            <div class="flex gap-3 justify-center mb-16">
+                <a href="https://twitter.com/intent/tweet?text=Free%20AWS%20SAA-C03%20Practice%20Exams%20-%2016%20full-length%20tests%20with%201%2C040%20questions&url=https://aws-exams.matthewntsiful.com" target="_blank" rel="noopener" class="px-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm hover:scale-105 transition-transform" title="Share on Twitter">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://aws-exams.matthewntsiful.com" target="_blank" rel="noopener" class="px-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm hover:scale-105 transition-transform" title="Share on LinkedIn">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https://aws-exams.matthewntsiful.com" target="_blank" rel="noopener" class="px-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm hover:scale-105 transition-transform" title="Share on Facebook">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+                <button onclick="copyLink()" class="px-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm hover:scale-105 transition-transform" title="Copy link">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="mb-12">
+                <div class="max-w-md mx-auto">
+                    <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <span>Overall Progress</span>
+                        <span id="overall-progress">0%</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div id="overall-progress-bar" class="h-full bg-gradient-to-r from-aws-orange to-yellow-500 transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-600 mt-2">
+                        <span id="completed-count">0 completed</span>
+                        <span id="passed-count">0 passed</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+                <div class="border-l-2 border-aws-orange pl-4">
+                    <div class="text-5xl font-bold mb-2">16</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Exams</div>
+                </div>
+                <div class="border-l-2 border-gray-300 dark:border-gray-700 pl-4">
+                    <div class="text-5xl font-bold mb-2">65</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Questions</div>
+                </div>
+                <div class="border-l-2 border-gray-300 dark:border-gray-700 pl-4">
+                    <div class="text-5xl font-bold mb-2">130</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Minutes</div>
+                </div>
+            </div>
+        
+        <!-- Scroll Indicator -->
+        <a href="#exams" class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </a>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section class="relative py-20 px-4 bg-gray-50 dark:bg-gray-900/50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center">Your Performance</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Average Score</div>
+                    <div class="text-4xl font-bold" id="avg-score">0%</div>
+                </div>
+                <div class="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Exams Completed</div>
+                    <div class="text-4xl font-bold" id="exams-completed">0/16</div>
+                </div>
+                <div class="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Pass Rate</div>
+                    <div class="text-4xl font-bold text-green-500" id="pass-rate">0%</div>
+                </div>
+                <div class="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Attempts</div>
+                    <div class="text-4xl font-bold" id="total-attempts">0</div>
+                </div>
+            </div>
+            <div class="text-center">
+                <button onclick="clearProgress()" class="px-6 py-2 text-sm border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+                    Clear All Progress
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Exams Section -->
+    <section id="exams" class="relative py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-bold mb-4">Practice Exams</h2>
+                <p class="text-gray-600 dark:text-gray-400">16 comprehensive exams designed to prepare you for the SAA-C03 certification</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_01.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-1" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        01
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 1
+                        </div>
+                        <span class="difficulty-badge-1 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-1"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-1">Not started</div>
+                    <div class="quick-stats-1 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-1">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-1">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_02.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-2" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        02
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 2
+                        </div>
+                        <span class="difficulty-badge-2 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-2"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-2">Not started</div>
+                    <div class="quick-stats-2 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-2">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-2">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_03.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-3" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        03
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 3
+                        </div>
+                        <span class="difficulty-badge-3 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-3"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-3">Not started</div>
+                    <div class="quick-stats-3 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-3">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-3">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_04.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-4" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        04
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 4
+                        </div>
+                        <span class="difficulty-badge-4 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-4"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-4">Not started</div>
+                    <div class="quick-stats-4 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-4">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-4">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_05.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-5" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        05
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 5
+                        </div>
+                        <span class="difficulty-badge-5 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-5"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-5">Not started</div>
+                    <div class="quick-stats-5 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-5">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-5">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_06.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-6" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        06
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 6
+                        </div>
+                        <span class="difficulty-badge-6 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-6"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-6">Not started</div>
+                    <div class="quick-stats-6 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-6">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-6">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_07.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-7" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        07
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 7
+                        </div>
+                        <span class="difficulty-badge-7 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-7"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-7">Not started</div>
+                    <div class="quick-stats-7 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-7">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-7">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_08.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-8" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        08
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 8
+                        </div>
+                        <span class="difficulty-badge-8 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-8"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-8">Not started</div>
+                    <div class="quick-stats-8 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-8">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-8">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_09.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-9" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        09
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 9
+                        </div>
+                        <span class="difficulty-badge-9 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-9"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-9">Not started</div>
+                    <div class="quick-stats-9 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-9">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-9">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_10.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-10" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        10
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 10
+                        </div>
+                        <span class="difficulty-badge-10 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-10"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-10">Not started</div>
+                    <div class="quick-stats-10 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-10">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-10">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_11.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-11" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        11
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 11
+                        </div>
+                        <span class="difficulty-badge-11 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-11"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-11">Not started</div>
+                    <div class="quick-stats-11 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-11">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-11">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_12.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-12" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        12
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 12
+                        </div>
+                        <span class="difficulty-badge-12 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-12"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-12">Not started</div>
+                    <div class="quick-stats-12 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-12">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-12">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_13.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-13" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        13
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 13
+                        </div>
+                        <span class="difficulty-badge-13 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-13"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-13">Not started</div>
+                    <div class="quick-stats-13 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-13">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-13">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_14.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-14" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        14
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 14
+                        </div>
+                        <span class="difficulty-badge-14 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-14"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-14">Not started</div>
+                    <div class="quick-stats-14 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-14">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-14">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_15.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-15" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        15
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 15
+                        </div>
+                        <span class="difficulty-badge-15 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-15"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-15">Not started</div>
+                    <div class="quick-stats-15 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-15">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-15">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="/associate/saa-c03/exams/SAA-C03_Minimal_Exam_16.html" 
+                   class="exam-card group relative border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-aws-orange transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-gray-950 overflow-hidden">
+                    <!-- Completion Badge -->
+                    <div class="absolute top-4 right-4 completion-badge-16" style="display: none;">
+                        <div class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-5xl font-bold text-gray-200 dark:text-gray-800 group-hover:text-aws-orange transition-colors mb-6">
+                        16
+                    </div>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="text-sm font-medium">
+                            SAA-C03 Exam 16
+                        </div>
+                        <span class="difficulty-badge-16 text-xs px-2 py-1 rounded-full"></span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                        65 questions • 130 min
+                    </div>
+                    <div class="h-1 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-aws-orange transition-all duration-500" style="width: 0%" id="progress-bar-16"></div>
+                    </div>
+                    <div class="mt-4 text-xs text-gray-400 dark:text-gray-600" id="score-16">Not started</div>
+                    <div class="quick-stats-16 hidden group-hover:block mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs space-y-1">
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Best Score:</span>
+                            <span class="best-score-16">—</span>
+                        </div>
+                        <div class="flex justify-between text-gray-500 dark:text-gray-500">
+                            <span>Attempts:</span>
+                            <span class="attempts-16">0</span>
+                        </div>
+                    </div>
+                </a>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative py-12 text-center text-sm text-gray-500 dark:text-gray-600">
+        <p>© 2024 AWS Solutions Architect Associate (SAA-C03) Practice Exams</p>
+    </footer>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "AWS SAA-C03 Practice Exams",
+      "url": "https://aws-exams.matthewntsiful.com",
+      "logo": "https://aws-exams.matthewntsiful.com/icon-512.png",
+      "description": "Free AWS Solutions Architect Associate (SAA-C03) practice exams with 16 full-length tests and 1,040 questions.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "educationalCredentialAwarded": "AWS Certified Solutions Architect - Associate"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AWS SAA-C03 Practice Exams",
+      "url": "https://aws-exams.matthewntsiful.com",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "1040"
+      },
+      "featureList": "16 practice exams, 1040 questions, 130-minute timer, progress tracking, dark mode, mobile responsive"
+    }
+    </script>
+
+    <script>
+        // Particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#FF9900', '#3B82F6', '#8B5CF6'];
+            
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = Math.random() * 4 + 2 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.opacity = Math.random() * 0.3 + 0.1;
+                particle.style.animation = `float ${Math.random() * 3 + 2}s ease-in-out infinite`;
+                particle.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Theme toggle
+        const toggleBtn = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        
+        toggleBtn?.addEventListener('click', () => {
+            const isDark = !document.documentElement.classList.contains('dark');
+            setTheme(isDark);
+        });
+
+        // Load theme
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            setTheme(true);
+        }
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target?.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Calculate overall progress and analytics
+        function updateOverallProgress() {
+            const progress = JSON.parse(localStorage.getItem('examProgress') || '{}');
+            const total = 16;
+            const completed = Object.values(progress).filter(p => p.completed).length;
+            const passed = Object.values(progress).filter(p => p.completed && p.score >= 72).length;
+            const percentage = Math.round((completed / total) * 100);
+            
+            document.getElementById('overall-progress').textContent = percentage + '%';
+            document.getElementById('overall-progress-bar').style.width = percentage + '%';
+            document.getElementById('completed-count').textContent = completed + ' completed';
+            document.getElementById('passed-count').textContent = passed + ' passed';
+            
+            // Analytics
+            const scores = Object.values(progress).filter(p => p.completed).map(p => p.score);
+            const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+            const passRate = completed > 0 ? Math.round((passed / completed) * 100) : 0;
+            const totalAttempts = Object.values(progress).reduce((sum, p) => sum + (p.attempts || 0), 0);
+            
+            document.getElementById('avg-score').textContent = avgScore + '%';
+            document.getElementById('exams-completed').textContent = completed + '/16';
+            document.getElementById('pass-rate').textContent = passRate + '%';
+            document.getElementById('total-attempts').textContent = totalAttempts;
+        }
+
+        // Show completion badges, progress, and difficulty
+        function updateExamCards() {
+            const progress = JSON.parse(localStorage.getItem('examProgress') || '{}');
+            
+            Object.keys(progress).forEach(examId => {
+                const data = progress[examId];
+                if (data.completed && data.score >= 72) {
+                    const badge = document.querySelector(`.completion-badge-${examId}`);
+                    if (badge) badge.style.display = 'block';
+                }
+                
+                // Update progress bar
+                const progressBar = document.getElementById(`progress-bar-${examId}`);
+                if (progressBar && data.completed) {
+                    progressBar.style.width = data.score + '%';
+                }
+                
+                // Update score display
+                const scoreEl = document.getElementById(`score-${examId}`);
+                if (scoreEl && data.completed) {
+                    scoreEl.textContent = `Last: ${data.score}% • ${data.passed ? 'Passed ✓' : 'Failed'}`;
+                    scoreEl.className = `mt-4 text-xs ${data.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`;
+                }
+                
+                // Update quick stats
+                const bestScore = document.querySelector(`.best-score-${examId}`);
+                const attempts = document.querySelector(`.attempts-${examId}`);
+                if (bestScore) bestScore.textContent = data.score > 0 ? `${data.score}%` : '—';
+                if (attempts) attempts.textContent = data.attempts || 0;
+            });
+            
+            // Add difficulty badges
+            for (let i = 1; i <= 16; i++) {
+                const badge = document.querySelector(`.difficulty-badge-${i}`);
+                if (badge) {
+                    let difficulty, color;
+                    if (i <= 4) { difficulty = 'Easy'; color = 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'; }
+                    else if (i <= 8) { difficulty = 'Medium'; color = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'; }
+                    else if (i <= 12) { difficulty = 'Hard'; color = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'; }
+                    else { difficulty = 'Expert'; color = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
+                    
+                    badge.textContent = difficulty;
+                    badge.className = `difficulty-badge-${i} text-xs px-2 py-1 rounded-full font-medium ${color}`;
+                }
+            }
+        }
+
+        // Clear all progress
+        function clearProgress() {
+            if (confirm('Are you sure you want to clear all exam progress? This cannot be undone.')) {
+                localStorage.removeItem('examProgress');
+                for (let i = 1; i <= 16; i++) {
+                    localStorage.removeItem(`exam_${i}_state`);
+                }
+                location.reload();
+            }
+        }
+
+        // Copy link to clipboard
+        function copyLink() {
+            navigator.clipboard.writeText('https://aws-exams.matthewntsiful.com').then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        // PWA Install
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-button').classList.remove('hidden');
+        });
+
+        document.getElementById('install-button')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('install-button').classList.add('hidden');
+            }
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+
+        // Initialize
+        createParticles();
+        setTimeout(() => {
+            updateOverallProgress();
+            updateExamCards();
+        }, 500);
+    </script>
+</body>
+</html>

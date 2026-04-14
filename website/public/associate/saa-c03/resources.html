@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AWS Solutions Architect Associate (SAA-C03) - Study Resources</title>
+  <meta name="description" content="Free study resources for AWS Certified Solutions Architect Associate SAA-C03 exam."/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#FF9900"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { aws: { orange: '#FF9900' } } } } }</script>
+  <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .fade-in { animation: fadeIn 0.5s ease-out forwards; }</style>
+</head>
+<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-white min-h-screen">
+  <button id="theme-toggle" class="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 flex items-center justify-center hover:scale-110 transition-transform shadow-lg">
+    <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+    <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+  </button>
+  <header class="border-b border-gray-100 dark:border-gray-900 px-4 py-4">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <a href="/" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-aws-orange transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        All Certifications
+      </a>
+      <a href="/associate/saa-c03/" class="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-aws-orange transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>
+        Practice Exams
+      </a>
+    </div>
+  </header>
+  <main class="max-w-4xl mx-auto px-4 py-12 fade-in">
+    <div class="flex flex-col sm:flex-row items-start gap-6 mb-12">
+      <img src="/assets/badges/saa.png" alt="SAA-C03 badge" class="w-24 h-24 object-contain shrink-0"/>
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium mb-3">
+          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+          Associate Level
+        </div>
+        <h1 class="text-3xl font-bold mb-2">AWS Solutions Architect Associate</h1>
+        <p class="text-gray-500 dark:text-gray-400 mb-3">SAA-C03 · Recommended: 1 year AWS experience</p>
+        <p class="text-gray-600 dark:text-gray-400">Validates ability to design and implement distributed systems on AWS with best practices for security, cost optimization, and operational excellence.</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center"><div class="text-2xl font-bold text-aws-orange mb-1">65</div><div class="text-xs text-gray-500 dark:text-gray-400">Questions</div></div>
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center"><div class="text-2xl font-bold text-aws-orange mb-1">130</div><div class="text-xs text-gray-500 dark:text-gray-400">Minutes</div></div>
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center"><div class="text-2xl font-bold text-aws-orange mb-1">72%</div><div class="text-xs text-gray-500 dark:text-gray-400">Passing Score</div></div>
+      <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 text-center"><div class="text-2xl font-bold text-aws-orange mb-1">$150</div><div class="text-xs text-gray-500 dark:text-gray-400">Exam Fee</div></div>
+    </div>
+    <section class="mb-12">
+      <h2 class="flex items-center gap-2 text-xl font-bold mb-6"><svg class="w-5 h-5 text-aws-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z"/></svg>Official AWS Resources</h2>
+      <div class="space-y-3">
+        <a href="https://d1.awsstatic.com/training-and-certification/docs-sa-assoc/AWS-Certified-Solutions-Architect-Associate_Exam-Guide.pdf" target="_blank" rel="noopener" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-aws-orange transition-colors group">
+          <div class="flex items-center gap-3"><svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><div><div class="font-medium text-sm">Exam Guide PDF</div><div class="text-xs text-gray-500 dark:text-gray-400">Official domains, objectives and question types</div></div></div>
+          <svg class="w-4 h-4 text-gray-400 group-hover:text-aws-orange transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        </a>
+        <a href="https://aws.amazon.com/certification/certified-solutions-architect-associate/" target="_blank" rel="noopener" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-aws-orange transition-colors group">
+          <div class="flex items-center gap-3"><svg class="w-5 h-5 text-aws-orange shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253M3 12a8.959 8.959 0 0 0 .284 2.253"/></svg><div><div class="font-medium text-sm">Official Certification Page</div><div class="text-xs text-gray-500 dark:text-gray-400">Register for the exam, view requirements</div></div></div>
+          <svg class="w-4 h-4 text-gray-400 group-hover:text-aws-orange transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        </a>
+        <a href="https://aws.amazon.com/architecture/well-architected/" target="_blank" rel="noopener" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-aws-orange transition-colors group">
+          <div class="flex items-center gap-3"><svg class="w-5 h-5 text-purple-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg><div><div class="font-medium text-sm">AWS Well-Architected Framework</div><div class="text-xs text-gray-500 dark:text-gray-400">Essential design principles for SAA-C03</div></div></div>
+          <svg class="w-4 h-4 text-gray-400 group-hover:text-aws-orange transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        </a>
+        <a href="https://docs.aws.amazon.com/" target="_blank" rel="noopener" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-aws-orange transition-colors group">
+          <div class="flex items-center gap-3"><svg class="w-5 h-5 text-blue-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg><div><div class="font-medium text-sm">AWS Documentation</div><div class="text-xs text-gray-500 dark:text-gray-400">Complete service documentation and guides</div></div></div>
+          <svg class="w-4 h-4 text-gray-400 group-hover:text-aws-orange transition-colors" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+        </a>
+      </div>
+    </section>
+    <section class="mb-12">
+      <h2 class="flex items-center gap-2 text-xl font-bold mb-6"><svg class="w-5 h-5 text-aws-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/></svg>Exam Domains</h2>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl"><span class="text-sm font-medium">Design Secure Architectures</span><span class="text-sm font-bold text-aws-orange">30%</span></div>
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl"><span class="text-sm font-medium">Design Resilient Architectures</span><span class="text-sm font-bold text-aws-orange">26%</span></div>
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl"><span class="text-sm font-medium">Design High-Performing Architectures</span><span class="text-sm font-bold text-aws-orange">24%</span></div>
+        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-xl"><span class="text-sm font-medium">Design Cost-Optimized Architectures</span><span class="text-sm font-bold text-aws-orange">20%</span></div>
+      </div>
+    </section>
+    <section class="mb-12">
+      <h2 class="flex items-center gap-2 text-xl font-bold mb-6"><svg class="w-5 h-5 text-aws-orange" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/></svg>Key AWS Services to Master</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800"><div class="font-medium text-sm mb-1">Compute</div><div class="text-xs text-gray-500 dark:text-gray-400">EC2, Lambda, ECS, EKS, Auto Scaling</div></div>
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800"><div class="font-medium text-sm mb-1">Storage</div><div class="text-xs text-gray-500 dark:text-gray-400">S3, EBS, EFS, FSx, Storage Gateway</div></div>
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800"><div class="font-medium text-sm mb-1">Database</div><div class="text-xs text-gray-500 dark:text-gray-400">RDS, DynamoDB, Aurora, ElastiCache, Redshift</div></div>
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800"><div class="font-medium text-sm mb-1">Networking</div><div class="text-xs text-gray-500 dark:text-gray-400">VPC, Route 53, CloudFront, ELB, Direct Connect</div></div>
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800"><div class="font-medium text-sm mb-1">Security</div><div class="text-xs text-gray-500 dark:text-gray-400">IAM, KMS, Secrets Manager, WAF, Shield</div></div>
+        <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800"><div class="font-medium text-sm mb-1">Monitoring</div><div class="text-xs text-gray-500 dark:text-gray-400">CloudWatch, CloudTrail, X-Ray, Config</div></div>
+      </div>
+    </section>
+    <div class="bg-aws-orange/10 dark:bg-aws-orange/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div><div class="font-bold mb-1">Ready to practice?</div><div class="text-sm text-gray-600 dark:text-gray-400">16 full-length exams with 1,040 questions</div></div>
+      <a href="/associate/saa-c03/" class="inline-flex items-center gap-2 bg-aws-orange text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-500 transition-colors shrink-0">Start Practice Exams<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg></a>
+    </div>
+  </main>
+  <footer class="py-8 px-4 border-t border-gray-100 dark:border-gray-900 mt-12">
+    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+      <p>AWS Certification Practice Exams · Educational use only</p>
+      <a href="mailto:matthew@matthewntsiful.com" class="inline-flex items-center gap-2 hover:text-aws-orange transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>matthew@matthewntsiful.com</a>
+    </div>
+  </footer>
+  <script>
+    const toggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) html.classList.add('dark');
+    toggle.addEventListener('click', () => { html.classList.toggle('dark'); localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light'; });
+  </script>
+</body>
+</html>

@@ -10,17 +10,17 @@
     "deploy": "node scripts/deploy.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "ejs": "^3.1.9"
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "helmet": "^7.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "aws-sdk": "^2.1490.0",
-    "tailwindcss": "^3.3.0",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31"
+    "aws-sdk": "^2.1693.0",
+    "nodemon": "^3.0.1",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.0"
   },
   "engines": {
     "node": ">=18.0.0"

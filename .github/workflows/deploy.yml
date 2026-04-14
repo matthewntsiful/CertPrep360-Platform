@@ -13,7 +13,6 @@ permissions:
 
 env:
   NODE_VERSION: '18'
-  TERRAFORM_VERSION: '1.9.0'
 
 jobs:
   build:
@@ -73,19 +72,19 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Deploy to S3
         run: |
-          aws s3 sync website/public/ s3://saa-exams-dev-24b4775a/ \
+          aws s3 sync website/public/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --delete \
             --cache-control "public, max-age=300"
 
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id EBZ8XFPX6NOO5 \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
 
   deploy-prod:
@@ -107,46 +106,17 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Deploy to S3
         run: |
-          aws s3 sync website/public/ s3://saa-exams-prod-dd94466b/ \
+          aws s3 sync website/public/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --delete \
             --cache-control "public, max-age=300"
 
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id E2GXT0Z9GLVZ04 \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
-
-  terraform-plan:
-    name: Terraform Plan
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TERRAFORM_VERSION }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
-          aws-region: us-east-1
-
-      - name: Terraform Init
-        working-directory: ./infrastructure/terraform/environments/prod
-        run: terraform init
-
-      - name: Terraform Plan
-        working-directory: ./infrastructure/terraform/environments/prod
-        run: terraform plan -no-color 
-
-        #### Terraform Apply

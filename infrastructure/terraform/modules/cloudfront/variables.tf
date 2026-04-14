@@ -25,12 +25,6 @@ variable "oac_id" {
   type        = string
 }
 
-variable "web_acl_id" {
-  description = "WAF Web ACL ID"
-  type        = string
-  default     = ""
-}
-
 variable "logging_bucket" {
   description = "S3 bucket for CloudFront logs"
   type        = string

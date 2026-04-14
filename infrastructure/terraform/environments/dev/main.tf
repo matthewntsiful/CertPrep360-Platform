@@ -12,11 +12,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.20"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
+      version = "~> 6.0"
     }
   }
 }
@@ -30,12 +26,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
-}
-
 locals {
-  subdomain = "saa-exams-dev.${var.root_domain}"
+  subdomain = "aws-exams-dev.${var.root_domain}"
   tags = {
     Environment = "dev"
     Project     = "SAA-C03-Exams"
@@ -43,22 +35,10 @@ locals {
   }
 }
 
-module "waf" {
-  source = "../../modules/waf"
-  
-  waf_name   = "saa-exams-dev-waf"
-  rate_limit = 1000
-  tags       = local.tags
-  
-  providers = {
-    aws = aws.us_east_1
-  }
-}
-
 module "s3" {
   source = "../../modules/s3"
   
-  bucket_name                   = "saa-exams-dev-${random_id.bucket_suffix.hex}"
+  bucket_name                   = local.subdomain
   cloudfront_distribution_arn   = module.cloudfront.distribution_arn
   tags                         = local.tags
 }
@@ -84,7 +64,6 @@ module "cloudfront" {
   s3_bucket_domain_name = module.s3.bucket_domain_name
   domain_name           = local.subdomain
   ssl_certificate_arn   = module.route53.certificate_arn
-  web_acl_id           = module.waf.web_acl_arn
   oac_id               = module.s3.oac_id
   logging_bucket       = module.s3.logs_bucket_domain_name
   tags                 = local.tags
@@ -99,7 +78,6 @@ module "monitoring" {
   
   environment                = "dev"
   cloudfront_distribution_id = module.cloudfront.distribution_id
-  waf_web_acl_name          = module.waf.web_acl_name
   tags                      = local.tags
   
   providers = {
