@@ -27,7 +27,8 @@ provider "aws" {
 }
 
 locals {
-  subdomain = "aws-exams-dev.${var.root_domain}"
+  subdomain     = "aws-exams-dev.${var.root_domain}"
+  api_subdomain = "api.${local.subdomain}"
   tags = {
     Environment = "dev"
     Project     = "SAA-C03-Exams"
@@ -48,8 +49,12 @@ module "route53" {
   
   root_domain                = var.root_domain
   subdomain                  = local.subdomain
+  api_subdomain              = local.api_subdomain
   cloudfront_domain_name     = module.cloudfront.distribution_domain_name
   cloudfront_hosted_zone_id  = module.cloudfront.distribution_hosted_zone_id
+  api_gateway_domain_name    = module.api_gateway.regional_domain_name
+  api_gateway_zone_id        = module.api_gateway.regional_zone_id
+  create_api_record          = true # Use a static flag to avoid computed count dependency errors
   tags                       = local.tags
   
   providers = {
@@ -105,12 +110,25 @@ module "dynamodb" {
   tags       = local.tags
 }
 
+module "ssm" {
+  source               = "../../modules/ssm"
+  environment          = "dev"
+  project_name         = "certprep360"
+  google_client_id     = var.google_client_id
+  google_client_secret = var.google_client_secret
+  paystack_public_key  = var.paystack_public_key
+  paystack_secret_key  = var.paystack_secret_key
+  tags                 = local.tags
+}
+
 module "cognito" {
   source         = "../../modules/cognito"
   user_pool_name = "CertPrep360-Dev-Users"
   cognito_domain = "certprep360-dev-auth"
   callback_urls  = ["https://${local.subdomain}", "http://localhost:5173"]
   logout_urls    = ["https://${local.subdomain}", "http://localhost:5173"]
+  google_client_id     = var.google_client_id
+  google_client_secret = var.google_client_secret
   tags           = local.tags
 }
 
@@ -188,5 +206,7 @@ module "api_gateway" {
   get_user_analytics_lambda_invoke_arn = module.lambda_get_user_analytics.invoke_arn
   get_dynamic_quiz_lambda_invoke_arn   = module.lambda_get_dynamic_quiz.invoke_arn
   admin_manage_content_lambda_invoke_arn = module.lambda_admin_manage_content.invoke_arn
-  tags = local.tags
+  custom_domain_name                   = local.api_subdomain
+  certificate_arn                       = module.route53.api_certificate_arn
+  tags                                 = local.tags
 }

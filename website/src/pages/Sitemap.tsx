@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Map, Shield, Layout, BookOpen, GraduationCap, Link as LinkIcon, Database, Zap } from 'lucide-react';
+import { Map, Shield, Layout, GraduationCap, Link as LinkIcon, Database, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Sitemap = () => {

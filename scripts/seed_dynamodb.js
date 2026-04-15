@@ -37,19 +37,36 @@ async function seedData() {
         const batch = batches[i];
         const putRequests = batch.map(q => {
             if (!q.q_id) return null;
+            
+            // Extract IDs, prioritizing JSON fields but allowing CLI overrides
+            const currentCertId = (q.cert_id || certId).toUpperCase();
+            const currentExamId = q.exam_id || examId;
+            const domain = q.domain || "General";
+
             return {
                 PutRequest: {
                     Item: {
-                        PK: `CERT#${certId.toUpperCase()}`,
-                        SK: `EXAM#${examId}#QUESTION#${q.q_id}`,
+                        // Main Table Keys
+                        PK: `CERT#${currentCertId}`,
+                        SK: `EXAM#${currentExamId}#QUESTION#${q.q_id}`,
+                        
+                        // GSI1 (Domain-scoped queries)
+                        "GSI1-PK": `DOMAIN#${domain}`,
+                        "GSI1-SK": `CERT#${currentCertId}#QUESTION#${q.q_id}`,
+
+                        // Content Attributes
                         q_id: q.q_id,
+                        number: q.number,
                         text: q.text,
                         options: q.options,
                         correct: q.correct,
                         explanation: q.explanation || "Detailed domain analysis.",
-                        resources: q.resources || ["https://aws.amazon.com/documentation/"],
-                        domain: q.domain || "Uncategorized",
-                        type: "QUESTION"
+                        resources: q.resources || [],
+                        domain: domain,
+                        cert_id: currentCertId,
+                        exam_id: currentExamId,
+                        type: "QUESTION",
+                        updatedAt: new Date().toISOString()
                     }
                 }
             };

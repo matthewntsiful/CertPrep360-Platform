@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { get } from '@aws-amplify/api';
+import { get, post } from '@aws-amplify/api';
 import type { Question, ExamSession } from '../types/exam';
-import mockQuestionsData from '../data/mock-questions.json';
 
 interface ExamStore extends ExamSession {
   startExam: (certId: string, examId: string) => Promise<void>;
@@ -38,22 +37,12 @@ export const useExamStore = create<ExamStore>()(
         set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME });
         
         try {
-          let questions: Question[] = [];
-
-          // DEV MODE MOCK API BYPASS
-          if (import.meta.env.DEV) {
-            // Bypass the strict filter temporarily and load a rapid 5-question mock 
-            // so the local Dev environment functions properly and is easy to test.
-            questions = (mockQuestionsData as unknown as Question[]).slice(0, 5);
-          } else {
-            // Live API Fetch using Amplify
-            const restOperation = get({
-              apiName: 'CertPrepApi',
-              path: `/questions/${certId}/${examId}`
-            });
-            const { body } = await restOperation.response;
-            questions = await body.json() as unknown as Question[];
-          }
+          const restOperation = get({
+            apiName: 'CertPrepApi',
+            path: `/questions/${certId}/${examId}`
+          });
+          const { body } = await restOperation.response;
+          const questions = await body.json() as unknown as Question[];
           
           set({
             certId,
@@ -118,20 +107,16 @@ export const useExamStore = create<ExamStore>()(
         const score = Math.round((correct / Math.max(questions.length, 1)) * 100);
         const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
 
-        // Submit to backend (skip in dev mode)
-        if (!import.meta.env.DEV) {
-          try {
-            const { post } = await import('@aws-amplify/api');
-            await post({
-              apiName: 'CertPrepApi',
-              path: '/results',
-              options: {
-                body: { examId, certId, score, timeTaken, answers }
-              }
-            }).response;
-          } catch (err) {
-            console.error('Failed to submit exam results:', err);
-          }
+        try {
+          await post({
+            apiName: 'CertPrepApi',
+            path: '/results',
+            options: {
+              body: { examId, certId, score, timeTaken, answers }
+            }
+          }).response;
+        } catch (err) {
+          console.error('Failed to submit exam results:', err);
         }
 
         set({ status: 'completed' });

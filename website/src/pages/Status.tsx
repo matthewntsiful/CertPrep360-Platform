@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Shield, Server, Database, Globe, Cpu, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Activity, Shield, Server, Database, Globe, Cpu, CheckCircle2 } from 'lucide-react';
 
 const Status = () => {
   const services = [

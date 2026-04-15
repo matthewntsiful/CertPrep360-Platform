@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Shield, Menu, Twitter, Linkedin, Github, ExternalLink, Mail, Phone, MapPin, Zap } from 'lucide-react';
+import { Shield, Menu, Twitter, Linkedin, Github, Zap } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,7 +11,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, attributes } = useAuth();
+  const { user, loading } = useAuth();
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
     if (target === 'certifications') {
@@ -67,7 +67,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
 
           <div className="flex items-center gap-4">
-            {user ? (
+            {loading ? (
+              <div className="w-24 h-9 bg-slate-900 animate-pulse rounded-lg" />
+            ) : user ? (
               <button 
                 onClick={() => navigate('/dashboard')}
                 className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-orange-500/50 text-white rounded-lg text-sm font-bold transition-all flex items-center gap-2 group"

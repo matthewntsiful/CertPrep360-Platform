@@ -33,6 +33,18 @@ variable "admin_manage_content_lambda_invoke_arn" {
   type        = string
 }
 
+variable "custom_domain_name" {
+  description = "The custom domain name for the API Gateway (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "certificate_arn" {
+  description = "The ARN of the ACM certificate for the custom domain (optional)"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)

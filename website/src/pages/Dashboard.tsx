@@ -5,12 +5,10 @@ import {
   Target, 
   BarChart3, 
   Clock, 
-  Award, 
   BookOpen, 
   Zap,
   Layout as LayoutIcon,
   Play,
-  Link as LinkIcon,
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
@@ -18,20 +16,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchUserAnalytics, fetchDynamicQuiz, type UserAnalytics } from '../services/api';
 
-// Mock data for DEV mode
-const MOCK_ANALYTICS: UserAnalytics = {
-  examsCompleted: 12,
-  averageScore: 78,
-  totalStudyHours: 24.5,
-  weakestDomain: 'Design Secure Architectures',
-  certificationsTracked: ['SAA-C03'],
-  recentAttempts: [
-    { examId: 'SAA-C03_Minimal_Exam_01', certId: 'SAA-C03', score: 85, date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-    { examId: 'SAA-C03_Minimal_Exam_01', certId: 'DVA-C02', score: 64, date: new Date(Date.now() - 86400000).toISOString() },
-    { examId: 'SAA-C03_Minimal_Exam_01', certId: 'CLF-C02', score: 92, date: new Date(Date.now() - 3 * 86400000).toISOString() },
-  ]
-};
-
+// Dashboard component
 const formatRelativeDate = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
   const hours = Math.floor(diff / 3600000);
@@ -51,8 +36,7 @@ const Dashboard: React.FC = () => {
     const load = async () => {
       setLoading(true);
       const data = await fetchUserAnalytics();
-      // Use real data in prod, mock data in dev
-      setAnalytics(data ?? MOCK_ANALYTICS);
+      setAnalytics(data);
       setLoading(false);
     };
     load();

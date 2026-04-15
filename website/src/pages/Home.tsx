@@ -109,7 +109,7 @@ const Home: React.FC = () => {
               onClick={() => document.getElementById('certifications')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full sm:w-auto px-10 py-5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:scale-105 shadow-2xl shadow-orange-500/40"
             >
-              Explore Roadmaps <ArrowRight className="w-6 h-6" />
+              Get Started <ArrowRight className="w-6 h-6" />
             </button>
           )}
         </motion.div>

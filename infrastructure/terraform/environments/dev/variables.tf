@@ -34,3 +34,29 @@ variable "domain_name" {
   description = "Domain name"
   type        = string
 }
+
+variable "google_client_id" {
+  description = "Google Client ID for Cognito Federated Login"
+  type        = string
+  default     = ""
+}
+
+variable "google_client_secret" {
+  description = "Google Client Secret for Cognito Federated Login"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "paystack_public_key" {
+  description = "Paystack Public Key for future payments"
+  type        = string
+  default     = ""
+}
+
+variable "paystack_secret_key" {
+  description = "Paystack Secret Key for future payments"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

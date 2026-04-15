@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, Database, Globe, Server } from 'lucide-react';
+import { Lock, Eye, Database, Server } from 'lucide-react';
 
 const Privacy = () => {
   const sections = [

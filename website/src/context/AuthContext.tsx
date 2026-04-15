@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Hub } from 'aws-amplify/utils';
 import { getCurrentUser, fetchUserAttributes, signIn, signOut, type AuthUser } from 'aws-amplify/auth';
 
 interface AuthContextType {
@@ -18,23 +19,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     checkUser();
+
+    // Listen for auth events (Sign In, Sign Out, Token Refresh)
+    const unsubscribe = Hub.listen('auth', ({ payload }) => {
+      switch (payload.event) {
+        case 'signedIn':
+        case 'tokenRefresh':
+          console.log('Auth Event Detected:', payload.event, '- waiting 500ms to settle...');
+          // Delay briefly to allow tokens to be persisted
+          setTimeout(() => {
+            checkUser();
+          }, 500);
+          break;
+        case 'signedOut':
+          setUser(null);
+          setAttributes(null);
+          setLoading(false);
+          break;
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const checkUser = async () => {
-    // DEV MODE MOCK: Automatically log in for local preview
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      setUser({ username: 'MockCandidate', userId: 'dev-123' });
-      setAttributes({ name: 'Cloud Architect (Preview)' });
-      setLoading(false);
-      return;
-    }
-
     try {
+      console.log('Checking Auth status...');
       const currentUser = await getCurrentUser();
+      console.log('User identity confirmed:', currentUser.username);
+      
       const attrs = await fetchUserAttributes();
+      console.log('User attributes fetched successfully');
+      
       setUser(currentUser);
       setAttributes(attrs);
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Auth check failed:', err.name, err.message);
       setUser(null);
       setAttributes(null);
     } finally {

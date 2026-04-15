@@ -95,6 +95,7 @@ resource "aws_api_gateway_integration" "results_lambda" {
   http_method = aws_api_gateway_method.post_results.http_method
 
   integration_http_method = "POST"
+  type                    = "AWS_PROXY"
   uri                     = var.submit_results_lambda_invoke_arn
 }
 
@@ -119,6 +120,7 @@ resource "aws_api_gateway_integration" "analytics_lambda" {
   http_method = aws_api_gateway_method.get_analytics.http_method
 
   integration_http_method = "POST"
+  type                    = "AWS_PROXY"
   uri                     = var.get_user_analytics_lambda_invoke_arn
 }
 
@@ -213,8 +215,19 @@ resource "aws_api_gateway_stage" "dev" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = "dev"
 
-  # Phase 4: Stage-level throttling — 1000 req/s burst, 500 steady rate
-  default_route_settings {
+  cache_cluster_enabled = true
+  cache_cluster_size    = "0.5"
+}
+
+# Phase 4: Global Stage-level throttling — 1000 req/s burst, 500 steady rate
+resource "aws_api_gateway_method_settings" "all" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.dev.stage_name
+  method_path = "*/*"
+
+  settings {
+    throttling_burst_limit = 1000
+    throttling_rate_limit  = 500
   }
 }
 
@@ -244,4 +257,27 @@ resource "aws_api_gateway_method_settings" "results_throttle" {
     throttling_burst_limit = 200
     throttling_rate_limit  = 100
   }
+}
+
+# --- Custom Domain Implementation ---
+
+resource "aws_api_gateway_domain_name" "custom" {
+  count = var.custom_domain_name != "" ? 1 : 0
+
+  regional_certificate_arn = var.certificate_arn
+  domain_name              = var.custom_domain_name
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  tags = var.tags
+}
+
+resource "aws_api_gateway_base_path_mapping" "custom" {
+  count = var.custom_domain_name != "" ? 1 : 0
+
+  api_id      = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.dev.stage_name
+  domain_name = aws_api_gateway_domain_name.custom[0].domain_name
 }

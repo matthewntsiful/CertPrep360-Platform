@@ -46,6 +46,32 @@ resource "aws_iam_role_policy_attachment" "dynamodb" {
   policy_arn = aws_iam_policy.dynamodb_access.arn
 }
 
+resource "aws_iam_policy" "ssm_access" {
+  count       = length(var.ssm_parameter_arns) > 0 ? 1 : 0
+  name        = "${var.function_name}-ssm-access"
+  description = "Allow Lambda to read specific SSM parameters"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Effect   = "Allow"
+        Resource = var.ssm_parameter_arns
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm" {
+  count      = length(var.ssm_parameter_arns) > 0 ? 1 : 0
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.ssm_access[0].arn
+}
+
 resource "aws_lambda_function" "main" {
   filename      = var.zip_path
   function_name = var.function_name

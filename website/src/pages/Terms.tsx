@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Gavel, Scale, AlertTriangle, Copyright, ExternalLink } from 'lucide-react';
+import { FileText, Gavel, Scale, AlertTriangle, Copyright, Shield } from 'lucide-react';
 
 const Terms = () => {
   const principles = [

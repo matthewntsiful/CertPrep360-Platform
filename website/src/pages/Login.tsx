@@ -1,24 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, LogIn, Github, Chrome } from 'lucide-react';
+import { Shield, Mail, Lock, LogIn, Chrome } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { signInWithRedirect } from '@aws-amplify/auth';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState('');
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
+  // Safeguard: If the user is already authenticated, don't stay on the login page
+  useEffect(() => {
+    if (!loading && user) {
+      console.log('User already authenticated, redirecting to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [user, loading, navigate, from]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setAuthLoading(true);
     setError('');
     try {
       await login({ username: email, password });
@@ -26,12 +34,12 @@ const Login: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Failed to login');
     } finally {
-      setLoading(false);
+      setAuthLoading(false);
     }
   };
 
-  const handleSocialLogin = (provider: 'Google' | 'GitHub') => {
-    signInWithRedirect({ provider: provider as any });
+  const handleSocialLogin = () => {
+    signInWithRedirect({ provider: 'Google' });
   };
 
   return (
@@ -54,16 +62,10 @@ const Login: React.FC = () => {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => handleSocialLogin('Google')}
+            onClick={handleSocialLogin}
             className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-bold transition-all"
           >
             <Chrome className="w-5 h-5" /> Continue with Google
-          </button>
-          <button
-            onClick={() => handleSocialLogin('GitHub')}
-            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-bold transition-all"
-          >
-            <Github className="w-5 h-5" /> Continue with GitHub
           </button>
         </div>
 
@@ -115,13 +117,13 @@ const Login: React.FC = () => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={authLoading}
             className="group relative w-full flex justify-center py-4 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-orange-500/20 disabled:opacity-50 disabled:hover:scale-100"
           >
             <span className="absolute left-0 inset-y-0 flex items-center pl-3">
               <LogIn className="h-5 w-5 text-orange-300 group-hover:text-white" />
             </span>
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {authLoading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 

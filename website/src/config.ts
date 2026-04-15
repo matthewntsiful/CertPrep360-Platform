@@ -6,7 +6,7 @@ export const AWS_CONFIG = {
       loginWith: {
         oauth: {
           domain: import.meta.env.VITE_AUTH_DOMAIN || 'certprep360-dev.auth.us-east-1.amazoncognito.com',
-          scopes: ['email', 'openid', 'profile'],
+          scopes: ['email', 'openid', 'profile', 'aws.cognito.signin.user.admin'],
           redirectSignIn: [import.meta.env.VITE_REDIRECT_URI || 'http://localhost:5173'],
           redirectSignOut: [import.meta.env.VITE_REDIRECT_URI || 'http://localhost:5173'],
           responseType: 'code' as const,

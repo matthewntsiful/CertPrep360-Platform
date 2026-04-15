@@ -30,6 +30,12 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "ssm_parameter_arns" {
+  description = "List of SSM parameter ARNs the Lambda needs access to"
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)

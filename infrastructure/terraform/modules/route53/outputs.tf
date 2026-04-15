@@ -3,6 +3,11 @@ output "certificate_arn" {
   value       = aws_acm_certificate_validation.exam_cert.certificate_arn
 }
 
+output "api_certificate_arn" {
+  description = "ARN of the API SSL certificate"
+  value       = aws_acm_certificate_validation.api_cert.certificate_arn
+}
+
 output "domain_name" {
   description = "Domain name"
   value       = var.subdomain
