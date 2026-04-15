@@ -96,3 +96,8 @@ module "github_oidc" {
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
   tags                       = local.tags
 }
+
+# --- Serverless Backend ---
+# NOTE: Backend will be wired to prod after successful dev testing and sign-off.
+# See environments/dev/main.tf for the full Lambda + API Gateway configuration.
+

@@ -101,7 +101,41 @@ export const useExamStore = create<ExamStore>()(
         return { timeLeft: state.timeLeft - 1 };
       }),
 
-      completeExam: () => set({ status: 'completed' }),
+      completeExam: async () => {
+        const state = useExamStore.getState();
+        const { questions, answers, certId, examId, startTime } = state;
+
+        // Calculate score
+        let correct = 0;
+        questions.forEach((q, i) => {
+          const answer = answers[i];
+          if (!answer) return;
+          const isCorrect = Array.isArray(answer)
+            ? [...answer].sort().join('') === [...q.correct].sort().join('')
+            : answer === q.correct;
+          if (isCorrect) correct++;
+        });
+        const score = Math.round((correct / Math.max(questions.length, 1)) * 100);
+        const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
+
+        // Submit to backend (skip in dev mode)
+        if (!import.meta.env.DEV) {
+          try {
+            const { post } = await import('@aws-amplify/api');
+            await post({
+              apiName: 'CertPrepApi',
+              path: '/results',
+              options: {
+                body: { examId, certId, score, timeTaken, answers }
+              }
+            }).response;
+          } catch (err) {
+            console.error('Failed to submit exam results:', err);
+          }
+        }
+
+        set({ status: 'completed' });
+      },
 
       resetExam: () => set({
         status: 'idle',

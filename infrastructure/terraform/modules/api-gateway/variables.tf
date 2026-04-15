@@ -18,6 +18,21 @@ variable "submit_results_lambda_invoke_arn" {
   type        = string
 }
 
+variable "get_user_analytics_lambda_invoke_arn" {
+  description = "The invoke ARN of the Analytics Aggregation Lambda function"
+  type        = string
+}
+
+variable "get_dynamic_quiz_lambda_invoke_arn" {
+  description = "The invoke ARN of the Dynamic Quiz Lambda function"
+  type        = string
+}
+
+variable "admin_manage_content_lambda_invoke_arn" {
+  description = "The invoke ARN of the Admin Content Management Lambda function"
+  type        = string
+}
+
 variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)

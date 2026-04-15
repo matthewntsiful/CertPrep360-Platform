@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Terminal, 
@@ -6,39 +6,84 @@ import {
   BarChart3, 
   Clock, 
   Award, 
-  ArrowRight, 
   BookOpen, 
-  Search,
   Zap,
   Layout as LayoutIcon,
-  Play
+  Play,
+  Link as LinkIcon,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fetchUserAnalytics, fetchDynamicQuiz, type UserAnalytics } from '../services/api';
+
+// Mock data for DEV mode
+const MOCK_ANALYTICS: UserAnalytics = {
+  examsCompleted: 12,
+  averageScore: 78,
+  totalStudyHours: 24.5,
+  weakestDomain: 'Design Secure Architectures',
+  certificationsTracked: ['SAA-C03'],
+  recentAttempts: [
+    { examId: 'SAA-C03_Minimal_Exam_01', certId: 'SAA-C03', score: 85, date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+    { examId: 'SAA-C03_Minimal_Exam_01', certId: 'DVA-C02', score: 64, date: new Date(Date.now() - 86400000).toISOString() },
+    { examId: 'SAA-C03_Minimal_Exam_01', certId: 'CLF-C02', score: 92, date: new Date(Date.now() - 3 * 86400000).toISOString() },
+  ]
+};
+
+const formatRelativeDate = (dateStr: string) => {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (hours < 24) return `${hours} hours ago`;
+  return `${days} day${days !== 1 ? 's' : ''} ago`;
+};
 
 const Dashboard: React.FC = () => {
   const { user, attributes } = useAuth();
   const navigate = useNavigate();
+  const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generatingQuiz, setGeneratingQuiz] = useState(false);
 
-  // Mock data for the dashboard evolution
-  const stats = [
-    { label: 'Exams Completed', value: '12', icon: Target, color: 'text-orange-500' },
-    { label: 'Overall Accuracy', value: '78%', icon: BarChart3, color: 'text-blue-500' },
-    { label: 'Study Hours', value: '24.5', icon: Clock, color: 'text-emerald-500' },
-    { label: 'Badges Earned', value: '4', icon: Award, color: 'text-purple-500' }
-  ];
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const data = await fetchUserAnalytics();
+      // Use real data in prod, mock data in dev
+      setAnalytics(data ?? MOCK_ANALYTICS);
+      setLoading(false);
+    };
+    load();
+  }, []);
 
-  const recentExams = [
-    { cert: 'SAA-C03', date: '2 hours ago', score: 85, status: 'Passed' },
-    { cert: 'DVA-C02', date: 'Yesterday', score: 64, status: 'Failed' },
-    { cert: 'CLF-C02', date: '3 days ago', score: 92, status: 'Passed' }
-  ];
+  const handleGeneratePracticeSet = async () => {
+    if (!analytics?.weakestDomain || generatingQuiz) return;
+    setGeneratingQuiz(true);
+    const quiz = await fetchDynamicQuiz(analytics.weakestDomain);
+    if (quiz) {
+      // In prod, this would navigate to a dynamic quiz page
+      console.log('Dynamic quiz loaded:', quiz);
+    } else {
+      // In dev, navigate to the mock exam
+      navigate('/exam/saa-c03/SAA-C03_Minimal_Exam_01');
+    }
+    setGeneratingQuiz(false);
+  };
+
+  const stats = analytics ? [
+    { label: 'Exams Completed', value: String(analytics.examsCompleted), icon: Target, color: 'text-orange-500' },
+    { label: 'Overall Accuracy', value: `${analytics.averageScore}%`, icon: BarChart3, color: 'text-blue-500' },
+    { label: 'Study Hours', value: String(analytics.totalStudyHours), icon: Clock, color: 'text-emerald-500' },
+    { label: 'Weakest Domain', value: analytics.weakestDomain.split(' ').slice(0, 2).join(' '), icon: AlertCircle, color: 'text-purple-500' }
+  ] : [];
 
   const activeRoadmap = {
     title: 'Solutions Architect Associate',
     code: 'SAA-C03',
-    progress: 65,
-    nextMilestone: 'Domain 3: Design Secure Architectures'
+    progress: analytics ? Math.min(analytics.examsCompleted * 6, 100) : 0,
+    nextMilestone: analytics?.weakestDomain ?? 'Loading...'
   };
 
   return (
@@ -59,18 +104,24 @@ const Dashboard: React.FC = () => {
         
         <div className="flex items-center gap-4">
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Global Rank</span>
-            <span className="text-xl font-black text-white">#1,242</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Certs Tracked</span>
+            <span className="text-xl font-black text-white">
+              {loading ? '—' : analytics?.certificationsTracked.length ?? 0}
+            </span>
           </div>
           <div className="w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center">
-            <Zap className="w-6 h-6 text-orange-500" />
+            <TrendingUp className="w-6 h-6 text-orange-500" />
           </div>
         </div>
       </header>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] animate-pulse h-36" />
+          ))
+        ) : stats.map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
@@ -82,7 +133,7 @@ const Dashboard: React.FC = () => {
               <stat.icon className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-3xl font-black text-white">{stat.value}</div>
+              <div className="text-3xl font-black text-white truncate">{stat.value}</div>
               <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">{stat.label}</div>
             </div>
           </motion.div>
@@ -135,8 +186,8 @@ const Dashboard: React.FC = () => {
                      <BookOpen className="w-5 h-5 text-slate-500" />
                    </div>
                    <div className="text-sm">
-                      <div className="text-slate-500 text-[10px] font-bold uppercase">Next Milestone</div>
-                      <div className="text-white font-medium">{activeRoadmap.nextMilestone}</div>
+                      <div className="text-slate-500 text-[10px] font-bold uppercase">Focus Area</div>
+                      <div className="text-white font-medium text-xs max-w-[200px] leading-relaxed">{activeRoadmap.nextMilestone}</div>
                    </div>
                 </div>
                 <button 
@@ -158,35 +209,48 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {recentExams.map((exam, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] flex items-center justify-between group hover:bg-slate-900 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-xs ${
-                    exam.status === 'Passed' ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-red-500/20 bg-red-500/5 text-red-500'
-                  }`}>
-                    {exam.score}%
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] animate-pulse h-20" />
+              ))
+            ) : (analytics?.recentAttempts ?? []).map((attempt, i) => {
+              const passed = attempt.score >= 72;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] flex items-center justify-between group hover:bg-slate-900 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-xs ${
+                      passed ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-red-500/20 bg-red-500/5 text-red-500'
+                    }`}>
+                      {attempt.score}%
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white leading-tight">{attempt.certId}</h4>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{formatRelativeDate(attempt.date)}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-white leading-tight">{exam.cert}</h4>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{exam.date}</span>
+                  <div className={`text-[10px] font-black uppercase tracking-widest ${passed ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {passed ? 'Passed' : 'Failed'}
                   </div>
-                </div>
-                <div className={`text-[10px] font-black uppercase tracking-widest ${exam.status === 'Passed' ? 'text-emerald-500' : 'text-red-500'}`}>
-                  {exam.status}
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
 
-          <button className="w-full p-6 bg-slate-900/20 border border-slate-800 border-dashed rounded-[2rem] text-slate-500 hover:text-white hover:border-slate-600 transition-all flex flex-col items-center gap-2 group">
-             <Zap className="w-6 h-6 group-hover:scale-125 transition-transform" />
-             <span className="text-xs font-bold uppercase tracking-widest">Generate New Practice Set</span>
+          <button 
+            onClick={handleGeneratePracticeSet}
+            disabled={generatingQuiz}
+            className="w-full p-6 bg-slate-900/20 border border-slate-800 border-dashed rounded-[2rem] text-slate-500 hover:text-white hover:border-slate-600 transition-all flex flex-col items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Zap className={`w-6 h-6 group-hover:scale-125 transition-transform ${generatingQuiz ? 'animate-pulse' : ''}`} />
+            <span className="text-xs font-bold uppercase tracking-widest">
+              {generatingQuiz ? 'Generating...' : `Practice ${analytics?.weakestDomain?.split(' ').slice(-1)[0] ?? 'Domain'}`}
+            </span>
           </button>
         </div>
       </div>
