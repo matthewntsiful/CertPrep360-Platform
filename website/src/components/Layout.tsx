@@ -1,0 +1,186 @@
+
+import React, { useEffect } from 'react';
+import { Shield, Menu, Twitter, Linkedin, Github, ExternalLink, Mail, Phone, MapPin, Zap } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, attributes } = useAuth();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
+    if (target === 'certifications') {
+      e.preventDefault();
+      if (location.pathname !== '/') {
+        navigate('/#certifications');
+      } else {
+        document.getElementById('certifications')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (location.hash === '#certifications' && location.pathname === '/') {
+      setTimeout(() => {
+        document.getElementById('certifications')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [location]);
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-50 selection:bg-orange-500/30">
+      {/* Background decoration */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
+      </div>
+
+      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 group cursor-pointer">
+            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform shadow-lg shadow-orange-500/20">
+              <Shield className="text-white w-6 h-6" />
+            </div>
+            <span className="font-bold text-xl tracking-tight">
+              CertPrep<span className="text-orange-500">360</span>
+            </span>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+            <Link to="/" className="hover:text-white transition-colors">Home</Link>
+            {user && (
+              <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+            )}
+            <a 
+              href="#certifications" 
+              onClick={(e) => handleNavClick(e, 'certifications')}
+              className="hover:text-white transition-colors"
+            >
+              Certifications
+            </a>
+            <Link to="/login" className="hover:text-white transition-colors">Practice</Link>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            {user ? (
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-orange-500/50 text-white rounded-lg text-sm font-bold transition-all flex items-center gap-2 group"
+              >
+                <div className="w-6 h-6 rounded bg-orange-500/10 flex items-center justify-center">
+                   <Zap className="w-3 h-3 text-orange-500" />
+                </div>
+                Dashboard
+              </button>
+            ) : (
+              <>
+                <Link 
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+                >
+                  Log in
+                </Link>
+                <button 
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/20"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
+            <button className="md:hidden p-2 text-slate-400">
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 max-w-7xl mx-auto px-4 py-12">
+        {children}
+      </main>
+
+      <footer className="border-t border-slate-800 pt-20 pb-10 bg-slate-950/50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            {/* Brand Column */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <Shield className="w-8 h-8 text-orange-500" />
+                <span className="font-bold text-2xl tracking-tight">CertPrep360</span>
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+                Elite-tier AWS certification preparation. Industrial-grade practice exams and deep architectural roadmaps for the serious cloud engineer.
+              </p>
+              <div className="flex items-center gap-4">
+                <a href="#" className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-orange-500 hover:border-orange-500/50 transition-all">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+                <a href="#" className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-orange-500 hover:border-orange-500/50 transition-all">
+                  <Twitter className="w-5 h-5" />
+                </a>
+                <a href="#" className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-orange-500 hover:border-orange-500/50 transition-all">
+                  <Github className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Platform Column */}
+            <div>
+              <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Platform</h4>
+              <ul className="space-y-4 text-sm text-slate-400 font-medium">
+                <li><Link to="/" className="hover:text-orange-500 transition-colors">Exam Hub</Link></li>
+                <li><a href="#certifications" onClick={(e) => handleNavClick(e, 'certifications')} className="hover:text-orange-500 transition-colors">Study Roadmaps</a></li>
+                <li><Link to="/login" className="hover:text-orange-500 transition-colors">Practice Engines</Link></li>
+                <li><a href="#" className="hover:text-orange-500 transition-colors">Enterprise Portal</a></li>
+              </ul>
+            </div>
+
+            {/* Resources Column */}
+            <div>
+              <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Resources</h4>
+              <ul className="space-y-4 text-sm text-slate-400 font-medium">
+                <li><a href="#" className="hover:text-orange-500 transition-colors">Knowledge Base</a></li>
+                <li><a href="#" className="hover:text-orange-500 transition-colors">Sample Questions</a></li>
+                <li><a href="#" className="hover:text-orange-500 transition-colors">Community Forum</a></li>
+                <li><a href="#" className="hover:text-orange-500 transition-colors">Contact Support</a></li>
+              </ul>
+            </div>
+
+            {/* System Status / Legal */}
+            <div className="space-y-8">
+              <div>
+                <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Legals</h4>
+                <ul className="space-y-4 text-sm text-slate-400 font-medium">
+                  <li><Link to="/privacy" className="hover:text-orange-500 transition-colors">Privacy Protocol</Link></li>
+                  <li><Link to="/terms" className="hover:text-orange-500 transition-colors">Terms of Engagement</Link></li>
+                </ul>
+              </div>
+              <Link 
+                to="/status"
+                className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex items-center gap-3 hover:bg-emerald-500/10 transition-all group"
+              >
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Systems Operational</span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+            <p>© {new Date().getFullYear()} CertPrep360 Platform. All rights reserved.</p>
+            <div className="flex gap-8">
+              <Link to="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
+              <Link to="/status" className="hover:text-white transition-colors">Status</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Layout;

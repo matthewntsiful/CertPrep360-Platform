@@ -1,0 +1,185 @@
+
+import { Flag, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { useExamStore } from '../../store/useExamStore';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const QuestionView: React.FC = () => {
+  const { 
+    questions, 
+    currentQuestionIndex, 
+    answers, 
+    setAnswer, 
+    flaggedQuestions, 
+    toggleFlag,
+    nextQuestion,
+    prevQuestion,
+    studyMode,
+    completeExam
+  } = useExamStore();
+
+  const q = questions[currentQuestionIndex];
+  if (!q) return null;
+
+  const currentAnswer = answers[currentQuestionIndex];
+  const isMultiple = q.correct.length > 1;
+
+  const handleOptionToggle = (letter: string) => {
+    if (isMultiple) {
+      const existing = (currentAnswer as string[]) || [];
+      const next = existing.includes(letter)
+        ? existing.filter(l => l !== letter)
+        : [...existing, letter];
+      setAnswer(currentQuestionIndex, next);
+    } else {
+      setAnswer(currentQuestionIndex, letter);
+    }
+  };
+
+  const isCorrect = () => {
+    if (!currentAnswer) return null;
+    if (Array.isArray(currentAnswer)) {
+      return [...currentAnswer].sort().join('') === [...q.correct].sort().join('');
+    }
+    return currentAnswer === q.correct;
+  };
+
+  return (
+    <div className="space-y-8">
+      <motion.div
+        key={q.q_id}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden"
+      >
+        <div className="flex justify-between items-start mb-8">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500">Question {currentQuestionIndex + 1} of {questions.length}</span>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20 uppercase tracking-widest">
+                {q.domain || 'AWS Professional'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => toggleFlag(currentQuestionIndex)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              flaggedQuestions.has(currentQuestionIndex)
+              ? 'bg-yellow-500 text-slate-900 shadow-lg shadow-yellow-500/20 translate-y-[-2px]'
+              : 'text-slate-500 hover:text-slate-300 bg-slate-800/50 border border-slate-800'
+            }`}
+          >
+            <Flag className={`w-3.5 h-3.5 ${flaggedQuestions.has(currentQuestionIndex) ? 'fill-current' : ''}`} />
+            {flaggedQuestions.has(currentQuestionIndex) ? 'Flagged' : 'Flag'}
+          </button>
+        </div>
+
+        <p className="text-lg leading-relaxed text-slate-300 font-normal mb-10">
+          {q.text}
+        </p>
+
+        {isMultiple && (
+          <div className="mb-6 flex items-center gap-2 px-4 py-2 bg-blue-500/5 border border-blue-500/10 rounded-xl text-blue-400 text-xs">
+            <Info className="w-4 h-4" />
+            Pick <strong>{q.correct.length}</strong> correct answers
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {Object.entries(q.options).map(([letter, text]) => {
+            const isSelected = Array.isArray(currentAnswer) ? currentAnswer.includes(letter) : currentAnswer === letter;
+            const showFeedback = studyMode && currentAnswer;
+            const isAnswerCorrect = q.correct.includes(letter);
+            
+            let borderColor = 'border-slate-800/60';
+            let bgColor = 'bg-slate-900/50';
+            
+            if (isSelected) {
+              borderColor = 'border-orange-500';
+              bgColor = 'bg-orange-500/5';
+            }
+
+            if (showFeedback) {
+              if (isAnswerCorrect) {
+                 borderColor = 'border-emerald-500';
+                 bgColor = 'bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.05)]';
+              } else if (isSelected) {
+                 borderColor = 'border-red-500';
+                 bgColor = 'bg-red-500/10';
+              }
+            }
+
+            return (
+              <button
+                key={letter}
+                onClick={() => handleOptionToggle(letter)}
+                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-4 group ${borderColor} ${bgColor} ${!showFeedback && 'hover:border-slate-700'}`}
+              >
+                <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 font-bold text-xs transition-colors mt-0.5 ${
+                  isSelected ? 'bg-orange-500 text-white' : 'bg-slate-800/80 text-slate-400 group-hover:bg-slate-700'
+                }`}>
+                  {letter}
+                </div>
+                <span className={`text-sm leading-relaxed font-normal ${isSelected ? 'text-slate-100' : 'text-slate-300'}`}>{text}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <AnimatePresence>
+          {studyMode && currentAnswer && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-10 p-6 rounded-2xl border ${isCorrect() ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                {isCorrect() ? (
+                  <div className="flex items-center gap-2 text-emerald-500 font-bold">
+                    <CheckCircle2 className="w-5 h-5" /> PASSED
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-red-500 font-bold">
+                    <XCircle className="w-5 h-5" /> REJECTED
+                  </div>
+                )}
+                <div className="text-xs uppercase tracking-widest font-extrabold text-slate-500">Explanation</div>
+              </div>
+              <p className="text-sm text-slate-300 leading-relaxed italic">
+                {q.explanation || "No detailed explanation available for this beta question."}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      <div className="flex justify-between items-center px-4">
+        <button
+          onClick={prevQuestion}
+          disabled={currentQuestionIndex === 0}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold text-sm"
+        >
+          <ChevronLeft className="w-5 h-5" /> Previous
+        </button>
+
+        {currentQuestionIndex === questions.length - 1 ? (
+          <button
+            onClick={completeExam}
+            className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-red-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest"
+          >
+            End Session
+          </button>
+        ) : (
+          <button
+            onClick={nextQuestion}
+            className="flex items-center gap-2 px-10 py-3 bg-white text-slate-950 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
+          >
+            Next <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default QuestionView;

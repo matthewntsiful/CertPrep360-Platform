@@ -96,3 +96,55 @@ module "github_oidc" {
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
   tags                       = local.tags
 }
+
+# --- Serverless Backend Integration ---
+
+module "dynamodb" {
+  source     = "../../modules/dynamodb"
+  table_name = "CertPrep360-Dev-Main"
+  tags       = local.tags
+}
+
+module "cognito" {
+  source         = "../../modules/cognito"
+  user_pool_name = "CertPrep360-Dev-Users"
+  cognito_domain = "certprep360-dev-auth"
+  callback_urls  = ["https://${local.subdomain}", "http://localhost:5173"]
+  logout_urls    = ["https://${local.subdomain}", "http://localhost:5173"]
+  tags           = local.tags
+}
+
+module "lambda_get_questions" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-GetQuestions"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/placeholder.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+  }
+  tags = local.tags
+}
+
+module "lambda_submit_results" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-SubmitResults"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/placeholder.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+  }
+  tags = local.tags
+}
+
+module "api_gateway" {
+  source               = "../../modules/api-gateway"
+  api_name             = "CertPrep360-Dev-API"
+  cognito_user_pool_arn = module.cognito.user_pool_arn
+  get_questions_lambda_invoke_arn  = module.lambda_get_questions.invoke_arn
+  submit_results_lambda_invoke_arn = module.lambda_submit_results.invoke_arn
+  tags = local.tags
+}
