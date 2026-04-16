@@ -107,6 +107,8 @@ resource "aws_lambda_function" "main" {
   role             = aws_iam_role.lambda_exec.arn
   handler          = var.handler
   runtime          = "nodejs20.x"
+  timeout          = var.timeout
+  memory_size      = var.memory_size
 
   environment {
     variables = var.environment_variables

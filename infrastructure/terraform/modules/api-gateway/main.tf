@@ -197,6 +197,23 @@ resource "aws_api_gateway_method" "delete_admin_content" {
   authorizer_id = aws_api_gateway_authorizer.cognito.id
 }
 
+resource "aws_api_gateway_method" "get_admin_content" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.admin_content.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "admin_content_get_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.admin_content.id
+  http_method             = aws_api_gateway_method.get_admin_content.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.admin_manage_content_lambda_invoke_arn
+}
+
 resource "aws_api_gateway_integration" "admin_content_post_lambda" {
   rest_api_id             = aws_api_gateway_rest_api.main.id
   resource_id             = aws_api_gateway_resource.admin_content.id
@@ -213,6 +230,30 @@ resource "aws_api_gateway_integration" "admin_content_delete_lambda" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = var.admin_manage_content_lambda_invoke_arn
+}
+
+# /admin/stats
+resource "aws_api_gateway_resource" "admin_stats" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.admin.id
+  path_part   = "stats"
+}
+
+resource "aws_api_gateway_method" "get_admin_stats" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.admin_stats.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "admin_stats_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.admin_stats.id
+  http_method             = aws_api_gateway_method.get_admin_stats.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.admin_analytics_lambda_invoke_arn
 }
 
 # CORS Support for /questions/{certId}/{examId}
@@ -395,6 +436,96 @@ resource "aws_api_gateway_integration_response" "options_dynamic_quiz" {
   }
 }
 
+# CORS Support for /admin/content
+resource "aws_api_gateway_method" "options_admin_content" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.admin_content.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_admin_content" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.admin_content.id
+  http_method = aws_api_gateway_method.options_admin_content.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_admin_content" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.admin_content.id
+  http_method = aws_api_gateway_method.options_admin_content.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_admin_content" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.admin_content.id
+  http_method = aws_api_gateway_method.options_admin_content.http_method
+  status_code = aws_api_gateway_method_response.options_admin_content.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS Support for /admin/stats
+resource "aws_api_gateway_method" "options_admin_stats" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.admin_stats.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_admin_stats" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.admin_stats.id
+  http_method = aws_api_gateway_method.options_admin_stats.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_admin_stats" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.admin_stats.id
+  http_method = aws_api_gateway_method.options_admin_stats.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_admin_stats" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.admin_stats.id
+  http_method = aws_api_gateway_method.options_admin_stats.http_method
+  status_code = aws_api_gateway_method_response.options_admin_stats.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
 # Global Gateway Responses for 4xx/5xx errors (CORS support for error states)
 resource "aws_api_gateway_gateway_response" "default_4xx" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
@@ -427,10 +558,14 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.dynamic_quiz_lambda,
     aws_api_gateway_integration.admin_content_post_lambda,
     aws_api_gateway_integration.admin_content_delete_lambda,
+    aws_api_gateway_integration.admin_content_get_lambda,
+    aws_api_gateway_integration.admin_stats_lambda,
     aws_api_gateway_integration.options_questions,
     aws_api_gateway_integration.options_results,
     aws_api_gateway_integration.options_analytics,
     aws_api_gateway_integration.options_dynamic_quiz,
+    aws_api_gateway_integration.options_admin_content,
+    aws_api_gateway_integration.options_admin_stats,
     aws_api_gateway_gateway_response.default_4xx,
     aws_api_gateway_gateway_response.default_5xx
   ]
@@ -442,8 +577,12 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.questions_cert_id.id,
       aws_api_gateway_resource.questions_exam_id.id,
       aws_api_gateway_method.get_questions.id,
+      aws_api_gateway_authorizer.cognito.id,
       aws_api_gateway_integration.questions_lambda.id,
       aws_api_gateway_method.options_questions.id,
+      aws_api_gateway_method.options_admin_content.id,
+      aws_api_gateway_method.options_admin_stats.id,
+      aws_api_gateway_method.get_admin_content.id,
       aws_api_gateway_gateway_response.default_4xx.id,
       aws_api_gateway_gateway_response.default_5xx.id,
     ]))

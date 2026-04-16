@@ -48,6 +48,18 @@ variable "ssm_parameter_arns" {
   default     = []
 }
 
+variable "timeout" {
+  description = "The amount of time your Lambda Function has to run in seconds"
+  type        = number
+  default     = 3
+}
+
+variable "memory_size" {
+  description = "Amount of memory in MB your Lambda Function can use at runtime"
+  type        = number
+  default     = 128
+}
+
 variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)

@@ -1,6 +1,6 @@
 import { ListUsersCommand, CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { docClient } from "../common/db.js";
+import { docClient } from "./common/db.js";
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 const TABLE_NAME = process.env.TABLE_NAME;
