@@ -1,7 +1,31 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { get, post } from '@aws-amplify/api';
+import { fetchAuthSession } from '@aws-amplify/auth';
 import type { Question, ExamSession } from '../types/exam';
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.example.com/dev';
+
+// Helper: get the Cognito JWT and make an authenticated API request
+async function authFetch(path: string, options: RequestInit = {}) {
+  const session = await fetchAuthSession();
+  const token = session.tokens?.idToken?.toString();
+  if (!token) throw new Error('No auth token available');
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
 
 interface ExamStore extends ExamSession {
   startExam: (certId: string, examId: string) => Promise<void>;
@@ -37,13 +61,7 @@ export const useExamStore = create<ExamStore>()(
         set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME });
         
         try {
-          const restOperation = get({
-            apiName: 'CertPrepApi',
-            path: `/questions/${certId}/${examId}`
-          });
-          const { body } = await restOperation.response;
-          const questions = await body.json() as unknown as Question[];
-          
+          const questions = await authFetch(`/questions/${certId}/${examId}`) as Question[];
           set({
             certId,
             examId,
@@ -108,13 +126,10 @@ export const useExamStore = create<ExamStore>()(
         const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
 
         try {
-          await post({
-            apiName: 'CertPrepApi',
-            path: '/results',
-            options: {
-              body: { examId, certId, score, timeTaken, answers }
-            }
-          }).response;
+          await authFetch('/results', {
+            method: 'POST',
+            body: JSON.stringify({ examId, certId, score, timeTaken, answers }),
+          });
         } catch (err) {
           console.error('Failed to submit exam results:', err);
         }

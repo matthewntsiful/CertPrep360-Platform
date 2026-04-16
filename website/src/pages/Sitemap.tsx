@@ -18,23 +18,23 @@ const Sitemap = () => {
       title: "Certification Tracks",
       icon: GraduationCap,
       items: [
-        { name: "Cloud Practitioner", path: "/resources/clf-c02" },
-        { name: "Solutions Architect Assoc", path: "/resources/saa-c03" },
-        { name: "Developer Associate", path: "/resources/dva-c02" },
-        { name: "CloudOps Engineer Assoc", path: "/resources/coe-c01" },
-        { name: "Data Engineer Assoc", path: "/resources/dea-c01" },
-        { name: "ML Engineer Assoc", path: "/resources/mle-c01" }
+        { name: "Cloud Practitioner", path: "/certification/clf-c02" },
+        { name: "Solutions Architect Assoc", path: "/certification/saa-c03" },
+        { name: "Developer Associate", path: "/certification/dva-c02" },
+        { name: "CloudOps Engineer Assoc", path: "/certification/coe-c01" },
+        { name: "Data Engineer Assoc", path: "/certification/dea-c01" },
+        { name: "ML Engineer Assoc", path: "/certification/mle-c01" }
       ]
     },
     {
       title: "Advanced Tracks",
       icon: Shield,
       items: [
-        { name: "Solutions Architect Prof", path: "/resources/sap-c02" },
-        { name: "DevOps Engineer Prof", path: "/resources/dop-c02" },
-        { name: "Generative AI Developer", path: "/resources/gdp-c01" },
-        { name: "Security Specialty", path: "/resources/scs-c02" },
-        { name: "Advanced Networking", path: "/resources/ans-c01" }
+        { name: "Solutions Architect Prof", path: "/certification/sap-c02" },
+        { name: "DevOps Engineer Prof", path: "/certification/dop-c02" },
+        { name: "Generative AI Developer", path: "/certification/gdp-c01" },
+        { name: "Security Specialty", path: "/certification/scs-c02" },
+        { name: "Advanced Networking", path: "/certification/ans-c01" }
       ]
     },
     {

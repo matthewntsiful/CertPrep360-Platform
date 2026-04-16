@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Mail, Lock, LogIn, Chrome } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { signInWithRedirect } from '@aws-amplify/auth';
 
 const Login: React.FC = () => {
@@ -76,6 +76,13 @@ const Login: React.FC = () => {
           </div>
         </div>
 
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
+          <div className="relative flex justify-center text-xs uppercase tracking-[0.2em] font-bold">
+            <span className="bg-slate-900 px-4 text-slate-500">Or use email</span>
+          </div>
+        </div>
+
         <form className="space-y-6" onSubmit={handleLogin}>
           {error && (
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
@@ -129,7 +136,7 @@ const Login: React.FC = () => {
 
         <p className="text-center text-sm text-slate-500">
           Not registered yet?{' '}
-          <a href="#" className="font-bold text-white hover:text-orange-500 transition-colors">Create Account</a>
+          <Link to="/signup" className="font-bold text-white hover:text-orange-500 transition-colors">Create Account</Link>
         </p>
       </motion.div>
     </div>

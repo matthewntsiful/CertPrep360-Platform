@@ -1,5 +1,5 @@
 
-import { Flag, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { Flag, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,10 +11,7 @@ const QuestionView: React.FC = () => {
     setAnswer, 
     flaggedQuestions, 
     toggleFlag,
-    nextQuestion,
-    prevQuestion,
-    studyMode,
-    completeExam
+    studyMode
   } = useExamStore();
 
   const q = questions[currentQuestionIndex];
@@ -53,7 +50,6 @@ const QuestionView: React.FC = () => {
       >
         <div className="flex justify-between items-start mb-8">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500">Question {currentQuestionIndex + 1} of {questions.length}</span>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20 uppercase tracking-widest">
                 {q.domain || 'AWS Professional'}
@@ -153,31 +149,6 @@ const QuestionView: React.FC = () => {
         </AnimatePresence>
       </motion.div>
 
-      <div className="flex justify-between items-center px-4">
-        <button
-          onClick={prevQuestion}
-          disabled={currentQuestionIndex === 0}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all font-bold text-sm"
-        >
-          <ChevronLeft className="w-5 h-5" /> Previous
-        </button>
-
-        {currentQuestionIndex === questions.length - 1 ? (
-          <button
-            onClick={completeExam}
-            className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-red-500/20 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest"
-          >
-            End Session
-          </button>
-        ) : (
-          <button
-            onClick={nextQuestion}
-            className="flex items-center gap-2 px-10 py-3 bg-white text-slate-950 rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
-          >
-            Next <ChevronRight className="w-5 h-5" />
-          </button>
-        )}
-      </div>
     </div>
   );
 };

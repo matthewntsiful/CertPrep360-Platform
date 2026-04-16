@@ -24,6 +24,18 @@ variable "api_gateway_execution_arn" {
   type        = string
 }
 
+variable "enable_cognito_access" {
+  description = "Whether to grant this Lambda access to Cognito"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_user_pool_arn" {
+  description = "Optional ARN of the Cognito User Pool to grant read access to"
+  type        = string
+  default     = ""
+}
+
 variable "environment_variables" {
   description = "A map of environment variables for the Lambda function"
   type        = map(string)

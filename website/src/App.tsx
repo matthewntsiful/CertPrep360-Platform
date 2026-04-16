@@ -1,15 +1,21 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Layout from './components/Layout';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Exam from './pages/Exam';
-import Resources from './pages/Resources';
+import ExamHub from './pages/ExamHub';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Sitemap from './pages/Sitemap';
 import Status from './pages/Status';
+import AdminOverview from './pages/AdminOverview';
+import AdminContentManager from './pages/AdminContentManager';
+import SignUp from './pages/SignUp';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
+import AdminLayout from './components/AdminLayout';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const queryClient = new QueryClient();
@@ -36,10 +42,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
               <Route 
                 path="/dashboard" 
                 element={
@@ -56,11 +64,28 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-              <Route path="/resources/:certId" element={<Resources />} />
+              <Route path="/certification/:certId" element={<ExamHub />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/sitemap" element={<Sitemap />} />
               <Route path="/status" element={<Status />} />
+
+              {/* Admin Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <AdminProtectedRoute>
+                    <AdminLayout />
+                  </AdminProtectedRoute>
+                }
+              >
+                <Route index element={<AdminOverview />} />
+                <Route path="ai-generator" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">AI Content Factory<br/><span className="text-slate-800 text-[8px]">Phase 3 Deployment Required</span></div>} />
+                <Route path="content" element={<AdminContentManager />} />
+                <Route path="users" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">User Identity Manager<br/><span className="text-slate-800 text-[8px]">Coming Soon</span></div>} />
+                <Route path="analytics" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">Advanced Platform Intel<br/><span className="text-slate-800 text-[8px]">Coming Soon</span></div>} />
+                <Route path="settings" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">System Configuration<br/><span className="text-slate-800 text-[8px]">Coming Soon</span></div>} />
+              </Route>
             </Routes>
           </Layout>
         </Router>

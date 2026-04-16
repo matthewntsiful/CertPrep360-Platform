@@ -1,8 +1,14 @@
 import React from 'react';
 import { useExamStore } from '../../store/useExamStore';
 import { motion } from 'framer-motion';
+import { LayoutGrid, X } from 'lucide-react';
 
-const ExamProgress: React.FC = () => {
+interface ExamProgressProps {
+  onClose?: () => void;
+  isDrawer?: boolean;
+}
+
+const ExamProgress: React.FC<ExamProgressProps> = ({ onClose, isDrawer }) => {
   const { 
     questions, 
     currentQuestionIndex, 
@@ -11,70 +17,80 @@ const ExamProgress: React.FC = () => {
     goToQuestion 
   } = useExamStore();
 
-  const getStatusColor = (index: number) => {
+  const getStatusStyle = (index: number) => {
     const isCurrent = index === currentQuestionIndex;
     const isAnswered = answers[index] !== undefined;
     const isFlagged = flaggedQuestions.has(index);
 
-    if (isCurrent) return 'bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)]';
-    if (isFlagged) return 'bg-yellow-500 text-slate-900 border-yellow-500';
+    if (isCurrent) return 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)] border-orange-400';
+    if (isFlagged) return 'bg-yellow-500 text-slate-900 border-yellow-400';
     if (isAnswered) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
     
-    return 'bg-slate-900 text-slate-500 border-slate-800 hover:border-slate-700 hover:text-slate-300';
+    return 'bg-slate-900 text-slate-600 border-slate-800 hover:border-slate-700 hover:text-slate-400';
+  };
+
+  const handleQuestionClick = (index: number) => {
+    goToQuestion(index);
+    if (onClose) onClose();
   };
 
   return (
-    <div className="p-6 rounded-3xl bg-slate-900/50 border border-slate-800 sticky top-24">
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">Navigation</h3>
+    <div className={`rounded-3xl bg-slate-900/40 backdrop-blur-xl border border-slate-800 flex flex-col ${isDrawer ? 'h-full' : 'p-6 sticky top-24'}`}>
+      {isDrawer && (
+        <div className="flex items-center justify-between p-6 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-orange-500 transition-all duration-300"
-                style={{ width: `${(Object.keys(answers).length / questions.length) * 100}%` }}
-              />
-            </div>
-            <span className="text-[10px] font-mono text-slate-500 uppercase">
-              {Math.round((Object.keys(answers).length / questions.length) * 100)}%
-            </span>
+            <LayoutGrid className="w-5 h-5 text-orange-500" />
+            <h3 className="font-bold text-white uppercase tracking-widest text-xs">Question Matrix</h3>
           </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
         </div>
+      )}
 
-        <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+      <div className={`space-y-6 ${isDrawer ? 'p-6 overflow-y-auto flex-1 h-[60vh] custom-scrollbar' : ''}`}>
+        {!isDrawer && (
+           <div className="flex items-center justify-between">
+             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Progress Matrix</h3>
+             <span className="text-[10px] font-mono font-bold text-orange-500">
+               {Object.keys(answers).length} / {questions.length}
+             </span>
+           </div>
+        )}
+
+        <div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-6 xl:grid-cols-8 gap-1.5">
           {questions.map((_, i) => (
             <motion.button
               key={i}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => goToQuestion(i)}
-              className={`aspect-square rounded-lg border text-[10px] font-bold transition-all flex items-center justify-center relative ${getStatusColor(i)}`}
+              whileHover={{ scale: 1.15, zIndex: 10 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleQuestionClick(i)}
+              className={`w-7 h-7 rounded-sm border text-[9px] font-black transition-all flex items-center justify-center relative shrink-0 ${getStatusStyle(i)}`}
             >
-              {i + 1}
+              {(i + 1).toString().padStart(2, '0')}
               {flaggedQuestions.has(i) && ! (i === currentQuestionIndex) && (
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full border border-slate-900" />
+                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-yellow-400 rounded-full" />
               )}
             </motion.button>
           ))}
         </div>
 
-        <div className="pt-6 border-t border-slate-800 space-y-3">
-          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <div className="w-3 h-3 rounded bg-orange-500" /> Current
-          </div>
-          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" /> Answered
-          </div>
-          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <div className="w-3 h-3 rounded bg-yellow-500" /> Flagged
-          </div>
-          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <div className="w-3 h-3 rounded bg-slate-900 border border-slate-800" /> Unvisited
-          </div>
+        {/* Compact Legend */}
+        <div className="pt-4 border-t border-slate-800 flex flex-wrap gap-x-4 gap-y-2">
+          <LegendItem icon={<div className="w-1.5 h-1.5 rounded-full bg-orange-500" />} label="Current" />
+          <LegendItem icon={<div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />} label="Done" />
+          <LegendItem icon={<div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />} label="Flag" />
+          <LegendItem icon={<div className="w-1.5 h-1.5 rounded-full bg-slate-800" />} label="Next" />
         </div>
       </div>
     </div>
   );
 };
+
+const LegendItem: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
+  <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-600">
+    {icon} {label}
+  </div>
+);
 
 export default ExamProgress;

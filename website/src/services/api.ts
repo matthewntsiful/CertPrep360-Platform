@@ -1,4 +1,4 @@
-import { get } from '@aws-amplify/api';
+import { fetchAuthSession } from '@aws-amplify/auth';
 
 export interface UserAnalytics {
   examsCompleted: number;
@@ -14,18 +14,34 @@ export interface UserAnalytics {
   }>;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.example.com/dev';
+
+async function authFetch(path: string, options: RequestInit = {}) {
+  const session = await fetchAuthSession();
+  const token = session.tokens?.idToken?.toString();
+  if (!token) throw new Error('No auth token available');
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  return response.json();
+}
+
 /**
  * Fetches real user analytics from the backend API.
- * Returns null in DEV mode (uses mock data in Dashboard instead).
  */
 export async function fetchUserAnalytics(): Promise<UserAnalytics | null> {
   try {
-    const restOperation = get({
-      apiName: 'CertPrepApi',
-      path: '/analytics',
-    });
-    const { body } = await restOperation.response;
-    return await body.json() as unknown as UserAnalytics;
+    return await authFetch('/analytics') as UserAnalytics;
   } catch (error) {
     console.error('Failed to fetch analytics:', error);
     return null;
@@ -37,12 +53,7 @@ export async function fetchUserAnalytics(): Promise<UserAnalytics | null> {
  */
 export async function fetchDynamicQuiz(domain: string, certId = 'SAA-C03', limit = 10) {
   try {
-    const restOperation = get({
-      apiName: 'CertPrepApi',
-      path: `/dynamic-quiz?domain=${encodeURIComponent(domain)}&certId=${certId}&limit=${limit}`,
-    });
-    const { body } = await restOperation.response;
-    return await body.json();
+    return await authFetch(`/dynamic-quiz?domain=${encodeURIComponent(domain)}&certId=${certId}&limit=${limit}`);
   } catch (error) {
     console.error('Failed to fetch dynamic quiz:', error);
     return null;

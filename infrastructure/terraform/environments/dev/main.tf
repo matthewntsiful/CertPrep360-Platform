@@ -136,7 +136,7 @@ module "lambda_get_questions" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-GetQuestions"
   handler                   = "index.handler"
-  zip_path                  = "${path.module}/placeholder.zip"
+  zip_path                  = "${path.module}/build/get-questions.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   environment_variables = {
@@ -149,7 +149,7 @@ module "lambda_submit_results" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-SubmitResults"
   handler                   = "index.handler"
-  zip_path                  = "${path.module}/placeholder.zip"
+  zip_path                  = "${path.module}/build/submit-results.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   environment_variables = {
@@ -162,7 +162,7 @@ module "lambda_get_user_analytics" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-GetUserAnalytics"
   handler                   = "index.handler"
-  zip_path                  = "${path.module}/placeholder.zip"
+  zip_path                  = "${path.module}/build/get-user-analytics.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   environment_variables = {
@@ -175,7 +175,7 @@ module "lambda_get_dynamic_quiz" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-GetDynamicQuiz"
   handler                   = "index.handler"
-  zip_path                  = "${path.module}/placeholder.zip"
+  zip_path                  = "${path.module}/build/get-dynamic-quiz.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   environment_variables = {
@@ -188,11 +188,29 @@ module "lambda_admin_manage_content" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-AdminManageContent"
   handler                   = "index.handler"
-  zip_path                  = "${path.module}/placeholder.zip"
+  zip_path                  = "${path.module}/build/admin-manage-content.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  cognito_user_pool_arn     = module.cognito.user_pool_arn
+  enable_cognito_access     = true
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
+  }
+  tags = local.tags
+}
+
+module "lambda_admin_analytics" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-AdminAnalytics"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/build/admin-analytics.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  cognito_user_pool_arn     = module.cognito.user_pool_arn
+  enable_cognito_access     = true
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+    USER_POOL_ID = module.cognito.user_pool_id
   }
   tags = local.tags
 }
@@ -206,6 +224,7 @@ module "api_gateway" {
   get_user_analytics_lambda_invoke_arn = module.lambda_get_user_analytics.invoke_arn
   get_dynamic_quiz_lambda_invoke_arn   = module.lambda_get_dynamic_quiz.invoke_arn
   admin_manage_content_lambda_invoke_arn = module.lambda_admin_manage_content.invoke_arn
+  admin_analytics_lambda_invoke_arn      = module.lambda_admin_analytics.invoke_arn
   custom_domain_name                   = local.api_subdomain
   certificate_arn                       = module.route53.api_certificate_arn
   tags                                 = local.tags

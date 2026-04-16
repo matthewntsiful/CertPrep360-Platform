@@ -33,6 +33,11 @@ variable "admin_manage_content_lambda_invoke_arn" {
   type        = string
 }
 
+variable "admin_analytics_lambda_invoke_arn" {
+  description = "The invoke ARN of the Global Admin Analytics Lambda function"
+  type        = string
+}
+
 variable "custom_domain_name" {
   description = "The custom domain name for the API Gateway (optional)"
   type        = string

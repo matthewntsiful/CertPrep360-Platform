@@ -1,5 +1,5 @@
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { docClient } from "../common/db.js";
+import { docClient } from "./common/db.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
@@ -29,7 +29,8 @@ export const handler = async (event) => {
         const response = await docClient.send(command);
 
         // Normalize the response to match the frontend expectation
-        const questions = response.Items.map(item => ({
+        const items = response.Items || [];
+        const questions = items.map(item => ({
             q_id: item.q_id,
             text: item.text,
             options: item.options,

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { RESOURCES_DATA } from '../data/resourcesData';
 
-const Resources: React.FC = () => {
+const ExamHub: React.FC = () => {
   const { certId } = useParams<{ certId: string }>();
   const navigate = useNavigate();
   const cert = certId ? RESOURCES_DATA[certId] : null;
@@ -146,18 +146,55 @@ const Resources: React.FC = () => {
             ))}
           </div>
 
-          {/* SAA-C03 CTA */}
-          <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-orange-500/5 to-slate-950 border border-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-8 mt-12">
-            <div className="space-y-2 text-center md:text-left">
-              <h4 className="text-xl font-black italic tracking-tighter">Practice for free while you wait!</h4>
-              <p className="text-sm text-slate-500">The Architect Associate track shares 70% of the core service knowledge required for {cert.code}.</p>
+          {/* Practice Exams Grid */}
+          <div className="space-y-6 mt-12 pt-8 border-t border-slate-800/50">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3">
+              <Target className="w-6 h-6 text-orange-500" />
+              Practice Exams
+            </h2>
+            <p className="text-slate-400 text-sm">16 rigorous modules to master {cert.code}. Start from foundational scenarios and progress to expert-level architecture simulators.</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 16 }).map((_, idx) => {
+                const examNum = idx + 1;
+                const tier = examNum <= 4 ? "Foundational" : examNum <= 10 ? "Intermediate" : examNum <= 14 ? "Advanced" : "Expert";
+                const tierColor = examNum <= 4 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" : 
+                                  examNum <= 10 ? "text-blue-500 bg-blue-500/10 border-blue-500/20" : 
+                                  examNum <= 14 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" : 
+                                  "text-red-500 bg-red-500/10 border-red-500/20";
+                
+                const padNum = String(examNum).padStart(2, '0');
+                const targetExamId = `${cert.certId.toUpperCase()}-EXAM-${padNum}`;
+                
+                return (
+                  <motion.button
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate(`/exam/${cert.certId}/${targetExamId}`)}
+                    className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/80 transition-all text-left flex flex-col justify-between min-h-[140px] group relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                      <Target className="w-16 h-16" />
+                    </div>
+                    <div className="relative z-10 w-full">
+                      <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded inline-block border ${tierColor} mb-4`}>
+                        {tier}
+                      </div>
+                      <div className="mt-auto">
+                        <div className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Exam Module</div>
+                        <div className="text-3xl font-black text-white group-hover:text-orange-500 transition-colors">
+                          {padNum}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
-            <button 
-              onClick={() => navigate('/exam/saa-c03/SAA-C03_Minimal_Exam_01')}
-              className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-500/20 whitespace-nowrap"
-            >
-              Try SAA-C03 Exams
-            </button>
           </div>
         </div>
 
@@ -191,4 +228,4 @@ const Resources: React.FC = () => {
   );
 };
 
-export default Resources;
+export default ExamHub;

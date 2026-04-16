@@ -1,5 +1,5 @@
-import { PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
-import { docClient } from "../common/db.js";
+import { PutCommand, DeleteCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { docClient } from "./common/db.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
@@ -22,6 +22,54 @@ export const handler = async (event) => {
     const httpMethod = event.httpMethod;
 
     try {
+        if (httpMethod === "GET") {
+            // Support listing questions, optionally filtered by cert or exam
+            const certId = event.queryStringParameters?.certId;
+            const examId = event.queryStringParameters?.examId;
+
+            let command;
+            if (examId) {
+                // If we have an examId, we can query by PK
+                command = new QueryCommand({
+                    TableName: TABLE_NAME,
+                    KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                    ExpressionAttributeValues: {
+                        ":pk": `EXAM#${examId}`,
+                        ":skPrefix": "QUESTION#"
+                    }
+                });
+            } else {
+                // Otherwise, perform a Scan (Admin only, low frequency)
+                command = new ScanCommand({
+                    TableName: TABLE_NAME,
+                    FilterExpression: "#type = :qType",
+                    ExpressionAttributeNames: {
+                        "#type": "type"
+                    },
+                    ExpressionAttributeValues: {
+                        ":qType": "QUESTION"
+                    }
+                });
+            }
+
+            const response = await docClient.send(command);
+            let items = response.Items || [];
+
+            // Post-filter by certId if provided and we did a Scan
+            if (certId && !examId) {
+                items = items.filter(item => item.cert_id === certId);
+            }
+
+            return {
+                statusCode: 200,
+                headers: { 
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(items),
+            };
+        }
+
         if (httpMethod === "POST" || httpMethod === "PUT") {
             const body = JSON.parse(event.body || "{}");
             const { q_id, cert_id, exam_id, text, options, correct, domain, explanation, resources } = body;

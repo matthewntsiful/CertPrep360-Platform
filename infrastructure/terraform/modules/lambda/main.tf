@@ -72,12 +72,41 @@ resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = aws_iam_policy.ssm_access[0].arn
 }
 
+resource "aws_iam_policy" "cognito_access" {
+  count       = var.enable_cognito_access ? 1 : 0
+  name        = "${var.function_name}-cognito-access"
+  description = "Allow Lambda to read Cognito user information"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "cognito-idp:ListUsers",
+          "cognito-idp:ListGroups",
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:AdminListGroupsForUser"
+        ]
+        Effect   = "Allow"
+        Resource = var.cognito_user_pool_arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cognito" {
+  count      = var.enable_cognito_access ? 1 : 0
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.cognito_access[0].arn
+}
+
 resource "aws_lambda_function" "main" {
-  filename      = var.zip_path
-  function_name = var.function_name
-  role          = aws_iam_role.lambda_exec.arn
-  handler       = var.handler
-  runtime       = "nodejs20.x"
+  filename         = var.zip_path
+  source_code_hash = filesha256(var.zip_path)
+  function_name    = var.function_name
+  role             = aws_iam_role.lambda_exec.arn
+  handler          = var.handler
+  runtime          = "nodejs20.x"
 
   environment {
     variables = var.environment_variables
@@ -85,6 +114,7 @@ resource "aws_lambda_function" "main" {
 
   tags = var.tags
 }
+
 
 resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"

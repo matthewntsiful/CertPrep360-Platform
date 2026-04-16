@@ -37,7 +37,9 @@ async function runMassInjection() {
 
     console.log('⚡ Seeding ' + certId + ' into ' + TABLE_NAME + '...');
     try {
-      execSync(`${NODE_BIN} scripts/seed_dynamodb.js ${TABLE_NAME} ${targetFile} ${certId.toUpperCase()} 01`, { stdio: 'inherit' });
+      const padId = "01"; 
+      const standardizedExamId = `${certId.toUpperCase()}-EXAM-${padId}`;
+      execSync(`${NODE_BIN} scripts/seed_dynamodb.js ${TABLE_NAME} ${targetFile} ${certId.toUpperCase()} ${standardizedExamId}`, { stdio: 'inherit' });
     } catch (error) {
       console.error('❌ Failed to seed ' + certId);
     }

@@ -11,7 +11,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
     if (target === 'certifications') {
@@ -55,6 +55,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
             {user && (
               <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+            )}
+            {isAdmin && (
+              <Link to="/admin" className="text-orange-500 hover:text-orange-400 transition-colors font-bold">Admin Hub</Link>
             )}
             <a 
               href="#certifications" 

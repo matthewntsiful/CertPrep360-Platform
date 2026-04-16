@@ -18,7 +18,8 @@ export const AWS_CONFIG = {
     REST: {
       CertPrepApi: {
         endpoint: import.meta.env.VITE_API_URL || 'https://api.example.com/dev',
-        region: 'us-east-1'
+        region: 'us-east-1',
+        authorizationType: 'AMAZON_COGNITO_USER_POOLS'
       }
     }
   }

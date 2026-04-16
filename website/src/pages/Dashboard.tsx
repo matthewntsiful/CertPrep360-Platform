@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
       console.log('Dynamic quiz loaded:', quiz);
     } else {
       // In dev, navigate to the mock exam
-      navigate('/exam/saa-c03/SAA-C03_Minimal_Exam_01');
+      navigate('/certification/saa-c03');
     }
     setGeneratingQuiz(false);
   };
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
                    </div>
                 </div>
                 <button 
-                  onClick={() => navigate(`/resources/saa-c03`)}
+                  onClick={() => navigate(`/certification/saa-c03`)}
                   className="w-full md:w-auto px-8 py-4 bg-white text-slate-950 rounded-2xl font-black flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-xl"
                 >
                   <Play className="w-5 h-5 fill-current" /> Continue Studying

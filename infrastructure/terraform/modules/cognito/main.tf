@@ -1,8 +1,13 @@
 resource "aws_cognito_user_pool" "main" {
   name = var.user_pool_name
 
-  alias_attributes         = ["email"]
+  username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
+  mfa_configuration        = "OPTIONAL"
+
+  software_token_mfa_configuration {
+    enabled = true
+  }
 
   password_policy {
     minimum_length    = 8
@@ -84,4 +89,11 @@ resource "aws_cognito_identity_provider" "google" {
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = var.cognito_domain
   user_pool_id = aws_cognito_user_pool.main.id
+}
+
+resource "aws_cognito_user_group" "admins" {
+  name         = "Admins"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "High-privilege administrators for CertPrep360 Platform"
+  precedence   = 1
 }

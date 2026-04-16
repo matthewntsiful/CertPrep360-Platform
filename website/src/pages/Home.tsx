@@ -175,11 +175,7 @@ const Home: React.FC = () => {
                     viewport={{ once: true }}
                     transition={{ delay: 0.05 * i }}
                     onClick={() => {
-                      if (cert.questions > 0) {
-                        navigate(`/exam/${cert.id}/01`);
-                      } else {
-                        navigate(`/resources/${cert.id}`);
-                      }
+                      navigate(`/certification/${cert.id}`);
                     }}
                     className={`group relative p-8 rounded-3xl bg-slate-900 border transition-all cursor-pointer overflow-hidden ${
                       cert.questions > 0 

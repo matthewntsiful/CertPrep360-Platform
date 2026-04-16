@@ -52,17 +52,36 @@ resource "aws_api_gateway_resource" "questions" {
   path_part   = "questions"
 }
 
+# /questions/{certId}
+resource "aws_api_gateway_resource" "questions_cert_id" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.questions.id
+  path_part   = "{certId}"
+}
+
+# /questions/{certId}/{examId}
+resource "aws_api_gateway_resource" "questions_exam_id" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.questions_cert_id.id
+  path_part   = "{examId}"
+}
+
 resource "aws_api_gateway_method" "get_questions" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_resource.questions.id
+  resource_id   = aws_api_gateway_resource.questions_exam_id.id
   http_method   = "GET"
   authorization = "COGNITO_USER_POOLS"
   authorizer_id = aws_api_gateway_authorizer.cognito.id
+
+  request_parameters = {
+    "method.request.path.certId" = true
+    "method.request.path.examId" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "questions_lambda" {
   rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_resource.questions.id
+  resource_id = aws_api_gateway_resource.questions_exam_id.id
   http_method = aws_api_gateway_method.get_questions.http_method
 
   integration_http_method = "POST"
@@ -196,6 +215,209 @@ resource "aws_api_gateway_integration" "admin_content_delete_lambda" {
   uri                     = var.admin_manage_content_lambda_invoke_arn
 }
 
+# CORS Support for /questions/{certId}/{examId}
+resource "aws_api_gateway_method" "options_questions" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.questions_exam_id.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_questions" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.questions_exam_id.id
+  http_method = aws_api_gateway_method.options_questions.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_questions" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.questions_exam_id.id
+  http_method = aws_api_gateway_method.options_questions.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_questions" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.questions_exam_id.id
+  http_method = aws_api_gateway_method.options_questions.http_method
+  status_code = aws_api_gateway_method_response.options_questions.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS Support for /results
+resource "aws_api_gateway_method" "options_results" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.results.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_results" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.results.id
+  http_method = aws_api_gateway_method.options_results.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_results" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.results.id
+  http_method = aws_api_gateway_method.options_results.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_results" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.results.id
+  http_method = aws_api_gateway_method.options_results.http_method
+  status_code = aws_api_gateway_method_response.options_results.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS Support for /analytics
+resource "aws_api_gateway_method" "options_analytics" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.analytics.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_analytics" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.analytics.id
+  http_method = aws_api_gateway_method.options_analytics.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_analytics" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.analytics.id
+  http_method = aws_api_gateway_method.options_analytics.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_analytics" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.analytics.id
+  http_method = aws_api_gateway_method.options_analytics.http_method
+  status_code = aws_api_gateway_method_response.options_analytics.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS Support for /dynamic-quiz
+resource "aws_api_gateway_method" "options_dynamic_quiz" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.dynamic_quiz.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_dynamic_quiz" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.dynamic_quiz.id
+  http_method = aws_api_gateway_method.options_dynamic_quiz.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_dynamic_quiz" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.dynamic_quiz.id
+  http_method = aws_api_gateway_method.options_dynamic_quiz.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_dynamic_quiz" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.dynamic_quiz.id
+  http_method = aws_api_gateway_method.options_dynamic_quiz.http_method
+  status_code = aws_api_gateway_method_response.options_dynamic_quiz.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# Global Gateway Responses for 4xx/5xx errors (CORS support for error states)
+resource "aws_api_gateway_gateway_response" "default_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "default_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+  }
+}
+
 # Deployment
 resource "aws_api_gateway_deployment" "main" {
   depends_on = [
@@ -204,8 +426,32 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.analytics_lambda,
     aws_api_gateway_integration.dynamic_quiz_lambda,
     aws_api_gateway_integration.admin_content_post_lambda,
-    aws_api_gateway_integration.admin_content_delete_lambda
+    aws_api_gateway_integration.admin_content_delete_lambda,
+    aws_api_gateway_integration.options_questions,
+    aws_api_gateway_integration.options_results,
+    aws_api_gateway_integration.options_analytics,
+    aws_api_gateway_integration.options_dynamic_quiz,
+    aws_api_gateway_gateway_response.default_4xx,
+    aws_api_gateway_gateway_response.default_5xx
   ]
+
+  # Force a new deployment whenever the API configuration changes
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.questions.id,
+      aws_api_gateway_resource.questions_cert_id.id,
+      aws_api_gateway_resource.questions_exam_id.id,
+      aws_api_gateway_method.get_questions.id,
+      aws_api_gateway_integration.questions_lambda.id,
+      aws_api_gateway_method.options_questions.id,
+      aws_api_gateway_gateway_response.default_4xx.id,
+      aws_api_gateway_gateway_response.default_5xx.id,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   rest_api_id = aws_api_gateway_rest_api.main.id
 }
@@ -231,16 +477,15 @@ resource "aws_api_gateway_method_settings" "all" {
   }
 }
 
-# Phase 4: Override method-level caching on GET /questions
+# Phase 4: Override method-level caching on GET /questions/{certId}/{examId}
 resource "aws_api_gateway_method_settings" "questions_cache" {
   rest_api_id = aws_api_gateway_rest_api.main.id
   stage_name  = aws_api_gateway_stage.dev.stage_name
-  method_path = "questions/GET"
+  method_path = "{certId}/{examId}/GET"
 
   settings {
     metrics_enabled        = true
-    caching_enabled        = true
-    cache_ttl_in_seconds   = 300
+    caching_enabled        = false
     throttling_burst_limit = 1000
     throttling_rate_limit  = 500
   }

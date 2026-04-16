@@ -1,13 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Hub } from 'aws-amplify/utils';
-import { getCurrentUser, fetchUserAttributes, signIn, signOut, type AuthUser } from 'aws-amplify/auth';
+import { 
+  getCurrentUser, 
+  fetchUserAttributes, 
+  signIn, 
+  signOut, 
+  fetchAuthSession, 
+  signUp,
+  confirmSignUp,
+  resendSignUpCode,
+  type AuthUser 
+} from 'aws-amplify/auth';
 
 interface AuthContextType {
   user: AuthUser | null;
   attributes: any;
+  isAdmin: boolean;
   loading: boolean;
   login: typeof signIn;
   logout: typeof signOut;
+  register: typeof signUp;
+  confirmRegister: typeof confirmSignUp;
+  resendCode: typeof resendSignUpCode;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [attributes, setAttributes] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         case 'signedOut':
           setUser(null);
           setAttributes(null);
+          setIsAdmin(false);
           setLoading(false);
           break;
       }
@@ -51,12 +67,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const attrs = await fetchUserAttributes();
       console.log('User attributes fetched successfully');
       
+      const session = await fetchAuthSession();
+      const groups = session.tokens?.idToken?.payload['cognito:groups'] || [];
+      const adminStatus = Array.isArray(groups) ? groups.includes('Admins') : false;
+      
       setUser(currentUser);
       setAttributes(attrs);
+      setIsAdmin(adminStatus);
     } catch (err: any) {
       console.error('Auth check failed:', err.name, err.message);
       setUser(null);
       setAttributes(null);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
@@ -75,7 +97,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, attributes, loading, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      attributes, 
+      isAdmin, 
+      loading, 
+      login, 
+      logout,
+      register: signUp,
+      confirmRegister: confirmSignUp,
+      resendCode: resendSignUpCode
+    }}>
       {children}
     </AuthContext.Provider>
   );
