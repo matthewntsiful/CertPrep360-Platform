@@ -49,15 +49,15 @@ variable "ssm_parameter_arns" {
 }
 
 variable "timeout" {
-  description = "The amount of time your Lambda Function has to run in seconds"
+  description = "The amount of time (in seconds) the Lambda function has to run"
   type        = number
-  default     = 3
+  default     = 30
 }
 
 variable "memory_size" {
-  description = "Amount of memory in MB your Lambda Function can use at runtime"
+  description = "Amount of memory in MB the Lambda function can use"
   type        = number
-  default     = 128
+  default     = 256
 }
 
 variable "tags" {

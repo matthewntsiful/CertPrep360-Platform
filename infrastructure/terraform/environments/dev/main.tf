@@ -193,8 +193,6 @@ module "lambda_admin_manage_content" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   cognito_user_pool_arn     = module.cognito.user_pool_arn
   enable_cognito_access     = true
-  timeout                   = 30
-  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -210,8 +208,6 @@ module "lambda_admin_analytics" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   cognito_user_pool_arn     = module.cognito.user_pool_arn
   enable_cognito_access     = true
-  timeout                   = 30
-  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
     USER_POOL_ID = module.cognito.user_pool_id

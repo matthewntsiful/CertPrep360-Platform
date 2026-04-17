@@ -13,6 +13,8 @@ import Sitemap from './pages/Sitemap';
 import Status from './pages/Status';
 import AdminOverview from './pages/AdminOverview';
 import AdminContentManager from './pages/AdminContentManager';
+import AdminAnalytics from './pages/AdminAnalytics';
+import AdminUserManager from './pages/AdminUserManager';
 import SignUp from './pages/SignUp';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLayout from './components/AdminLayout';
@@ -82,8 +84,8 @@ function App() {
                 <Route index element={<AdminOverview />} />
                 <Route path="ai-generator" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">AI Content Factory<br/><span className="text-slate-800 text-[8px]">Phase 3 Deployment Required</span></div>} />
                 <Route path="content" element={<AdminContentManager />} />
-                <Route path="users" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">User Identity Manager<br/><span className="text-slate-800 text-[8px]">Coming Soon</span></div>} />
-                <Route path="analytics" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">Advanced Platform Intel<br/><span className="text-slate-800 text-[8px]">Coming Soon</span></div>} />
+                <Route path="users" element={<AdminUserManager />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="settings" element={<div className="p-10 text-slate-500 font-mono text-xs uppercase tracking-widest text-center py-40">System Configuration<br/><span className="text-slate-800 text-[8px]">Coming Soon</span></div>} />
               </Route>
             </Routes>

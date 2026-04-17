@@ -35,10 +35,13 @@ resource "aws_api_gateway_model" "submit_results_model" {
 }
 
 resource "aws_api_gateway_authorizer" "cognito" {
-  name          = "CognitoAuthorizer"
-  type          = "COGNITO_USER_POOLS"
-  rest_api_id   = aws_api_gateway_rest_api.main.id
-  provider_arns = [var.cognito_user_pool_arn]
+  name                             = "CognitoAuthorizer"
+  type                             = "COGNITO_USER_POOLS"
+  rest_api_id                      = aws_api_gateway_rest_api.main.id
+  provider_arns                    = [var.cognito_user_pool_arn]
+  # TTL=0 disables authorizer result caching. Default 300s was causing
+  # stale failed-auth responses to be served for 5 minutes → ERR_TIMED_OUT.
+  authorizer_result_ttl_in_seconds = 0
 }
 
 # Generic structure for endpoints
@@ -583,6 +586,15 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.options_admin_content.id,
       aws_api_gateway_method.options_admin_stats.id,
       aws_api_gateway_method.get_admin_content.id,
+      aws_api_gateway_method.post_admin_content.id,
+      aws_api_gateway_method.delete_admin_content.id,
+      aws_api_gateway_method.get_admin_stats.id,
+      aws_api_gateway_integration.admin_content_get_lambda.id,
+      aws_api_gateway_integration.admin_content_post_lambda.id,
+      aws_api_gateway_integration.admin_content_delete_lambda.id,
+      aws_api_gateway_integration.admin_stats_lambda.id,
+      aws_api_gateway_resource.admin_stats.id,
+      aws_api_gateway_resource.admin_content.id,
       aws_api_gateway_gateway_response.default_4xx.id,
       aws_api_gateway_gateway_response.default_5xx.id,
     ]))
@@ -600,8 +612,9 @@ resource "aws_api_gateway_stage" "dev" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = "dev"
 
-  cache_cluster_enabled = true
-  cache_cluster_size    = "0.5"
+  # Cache cluster disabled: was causing ERR_TIMED_OUT by routing requests
+  # through cache infrastructure even when per-method caching was off.
+  cache_cluster_enabled = false
 }
 
 # Phase 4: Global Stage-level throttling — 1000 req/s burst, 500 steady rate

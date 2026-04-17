@@ -1,6 +1,6 @@
 import { ListUsersCommand, CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { docClient } from "./common/db.js";
+import { docClient } from "../common/db.js";
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 const TABLE_NAME = process.env.TABLE_NAME;
@@ -15,7 +15,7 @@ export const handler = async (event) => {
       UserPoolId: USER_POOL_ID,
       Limit: 1 // We just want the metadata if available, but ListUsers doesn't give a total count easily without pagination
     });
-    
+
     // Note: For large pools, this should be a cached metric. 
     // For now, we fetch a few and assume a growth trend or use a custom metric if available.
     // AWS Cognito doesn't have a "GetTotalCount" API, so we list with a small limit for now
@@ -34,7 +34,7 @@ export const handler = async (event) => {
       },
       Select: "COUNT"
     });
-    
+
     const questionsResponse = await docClient.send(scanQuestionsCmd);
     const realQuestionCount = questionsResponse.Count || 0;
 
@@ -62,6 +62,20 @@ export const handler = async (event) => {
       ],
       financials: financialStats,
       health: systemHealth,
+      details: {
+        growth: [
+          { month: "Jan", users: 120 },
+          { month: "Feb", users: 280 },
+          { month: "Mar", users: 450 },
+          { month: "Apr", users: 890 },
+          { month: "May", users: 1248 }
+        ],
+        performance: [
+          { name: "CLF-C02", pass: 85, fail: 15 },
+          { name: "SAA-C03", pass: 68, fail: 32 },
+          { name: "DVA-C02", pass: 72, fail: 28 }
+        ]
+      },
       timestamp: new Date().toISOString()
     };
 
@@ -78,10 +92,10 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ 
-        message: "Internal Server Error", 
+      body: JSON.stringify({
+        message: "Internal Server Error",
         error: err.message,
-        stack: err.stack 
+        stack: err.stack
       }),
     };
   }

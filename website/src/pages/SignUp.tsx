@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Mail, Lock, UserPlus, ArrowRight, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { Mail, Lock, UserPlus, ArrowRight, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -129,7 +129,7 @@ const SignUp: React.FC = () => {
 
                 <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 space-y-2">
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    <Shield Check className="w-3 h-3 text-emerald-500" /> Password Requirements
+                    <ShieldCheck className="w-3 h-3 text-emerald-500" /> Password Requirements
                   </div>
                   <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">
                     Min 8 chars, 1 Uppercase, 1 Number, 1 Symbol

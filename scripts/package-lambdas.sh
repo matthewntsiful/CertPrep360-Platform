@@ -38,6 +38,13 @@ for dir in "$SOURCE_DIR"/*/; do
     # Copy package.json
     cp "$SOURCE_DIR/$PACKAGE_JSON" "$STAGING_DIR/"
     
+    # Rewrite relative imports in index.js to match the flattened zip structure
+    if [ -f "$STAGING_DIR/index.js" ]; then
+        # Ensure compatibility with macOS sed by providing backup extension
+        sed -i.bak 's/\.\.\/common/\.\/common/g' "$STAGING_DIR/index.js"
+        rm -f "$STAGING_DIR/index.js.bak"
+    fi
+    
     # Install dependencies
     echo "  📦 Installing dependencies for $DIR_NAME..."
     (cd "$STAGING_DIR" && npm install --production --no-package-lock --no-audit)
