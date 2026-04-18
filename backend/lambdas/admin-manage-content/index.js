@@ -27,33 +27,47 @@ export const handler = async (event) => {
             const certId = event.queryStringParameters?.certId;
             const examId = event.queryStringParameters?.examId;
 
-            let command;
-            if (examId) {
-                // If we have an examId, we can query by PK
-                command = new QueryCommand({
-                    TableName: TABLE_NAME,
-                    KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-                    ExpressionAttributeValues: {
-                        ":pk": `EXAM#${examId}`,
-                        ":skPrefix": "QUESTION#"
-                    }
-                });
-            } else {
-                // Otherwise, perform a Scan (Admin only, low frequency)
-                command = new ScanCommand({
-                    TableName: TABLE_NAME,
-                    FilterExpression: "#type = :qType",
-                    ExpressionAttributeNames: {
-                        "#type": "type"
-                    },
-                    ExpressionAttributeValues: {
-                        ":qType": "QUESTION"
-                    }
-                });
-            }
+            let items = [];
+            let lastEvaluatedKey = undefined;
 
-            const response = await docClient.send(command);
-            let items = response.Items || [];
+            do {
+                let command;
+                const params = {
+                    TableName: TABLE_NAME,
+                    ExclusiveStartKey: lastEvaluatedKey
+                };
+
+                if (examId) {
+                    // If we have an examId, we can query by PK
+                    command = new QueryCommand({
+                        ...params,
+                        KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                        ExpressionAttributeValues: {
+                            ":pk": `EXAM#${examId}`,
+                            ":skPrefix": "QUESTION#"
+                        }
+                    });
+                } else {
+                    // Otherwise, perform a Scan (Admin only, low frequency)
+                    command = new ScanCommand({
+                        ...params,
+                        FilterExpression: "#type = :qType",
+                        ExpressionAttributeNames: {
+                            "#type": "type"
+                        },
+                        ExpressionAttributeValues: {
+                            ":qType": "QUESTION"
+                        }
+                    });
+                }
+
+                const response = await docClient.send(command);
+                if (response.Items) {
+                    items.push(...response.Items);
+                }
+                lastEvaluatedKey = response.LastEvaluatedKey;
+
+            } while (lastEvaluatedKey);
 
             // Post-filter by certId if provided and we did a Scan
             if (certId && !examId) {
