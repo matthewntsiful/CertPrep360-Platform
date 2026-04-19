@@ -8,83 +8,105 @@ const USER_POOL_ID = process.env.USER_POOL_ID;
 
 export const handler = async (event) => {
   console.log("Admin Analytics Event:", JSON.stringify(event, null, 2));
+  
+  const action = event.queryStringParameters?.action || 'summary';
 
   try {
-    // 1. Fetch User Stats from Cognito
+    if (action === 'listUsers') {
+      const listUsersCmd = new ListUsersCommand({
+        UserPoolId: USER_POOL_ID,
+        Limit: 60
+      });
+      const usersResponse = await cognitoClient.send(listUsersCmd);
+      
+      const formattedUsers = usersResponse.Users.map(u => ({
+        id: u.Attributes.find(a => a.Name === 'sub')?.Value,
+        email: u.Attributes.find(a => a.Name === 'email')?.Value,
+        status: u.UserStatus,
+        joined: u.UserCreateDate,
+        enabled: u.Enabled
+      }));
+
+      return {
+        statusCode: 200,
+        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        body: JSON.stringify(formattedUsers),
+      };
+    }
+
+    // Default: summary action
+    // 1. Fetch real user count
     const listUsersCmd = new ListUsersCommand({
       UserPoolId: USER_POOL_ID,
-      Limit: 1 // We just want the metadata if available, but ListUsers doesn't give a total count easily without pagination
+      Limit: 1
     });
+    // Cognito doesn't give a total count easily without pagination, so we approximate or scan.
+    // For small/medium pools, we can list with Pagination.
+    let totalUsersCount = 0;
+    let nextToken = undefined;
+    do {
+      const cmd = new ListUsersCommand({ UserPoolId: USER_POOL_ID, PaginationToken: nextToken, Limit: 60 });
+      const resp = await cognitoClient.send(cmd);
+      totalUsersCount += (resp.Users?.length || 0);
+      nextToken = resp.PaginationToken;
+    } while (nextToken);
 
-    // Note: For large pools, this should be a cached metric. 
-    // For now, we fetch a few and assume a growth trend or use a custom metric if available.
-    // AWS Cognito doesn't have a "GetTotalCount" API, so we list with a small limit for now
-    // and mock the 'Total' for the 'Wow' factor while showing real registration velocity.
-    const usersResponse = await cognitoClient.send(listUsersCmd);
-    const mockTotalUsers = 1248; // Keeping the 'High Fidelity' mock as requested but with real live context
-    const realLiveUsers = (usersResponse.Users?.length || 0) + 1200; // Blending real check with mock to keep it premium
-
-    // 2. Fetch Content Stats from DynamoDB
-    // We scan for Questions (items with SK starting with QUESTION#)
-    const scanQuestionsCmd = new ScanCommand({
+    // 2. Aggregate EXAM_ATTEMPT records from DynamoDB
+    const scanAttemptsCmd = new ScanCommand({
       TableName: TABLE_NAME,
-      FilterExpression: "begins_with(SK, :qPrefix)",
-      ExpressionAttributeValues: {
-        ":qPrefix": "QUESTION#"
-      },
-      Select: "COUNT"
+      FilterExpression: "#type = :t",
+      ExpressionAttributeNames: { "#type": "type" },
+      ExpressionAttributeValues: { ":t": "EXAM_ATTEMPT" }
     });
 
-    const questionsResponse = await docClient.send(scanQuestionsCmd);
-    const realQuestionCount = questionsResponse.Count || 0;
+    const attemptsResponse = await docClient.send(scanAttemptsCmd);
+    const attempts = attemptsResponse.Items || [];
+    
+    // Performance aggregation
+    const performanceMap = {};
+    attempts.forEach(a => {
+      const examName = a.examId || 'Unknown';
+      if (!performanceMap[examName]) performanceMap[examName] = { name: examName, pass: 0, fail: 0 };
+      if (a.score >= 70) performanceMap[examName].pass++;
+      else performanceMap[examName].fail++;
+    });
 
-    // 3. Mock Financial Stats (As per instruction to 'put a pin' and use mockups)
-    const financialStats = {
-      mrr: 4250,
-      totalRevenue: 12840,
-      growth: "+14.2%",
-      activeSubscriptions: 84
-    };
-
-    // 4. System Health (Mock / Derived)
-    const systemHealth = {
-      status: "Nominal",
-      latency: "42ms",
-      uptime: "99.99%"
-    };
+    // Content Stats - Paginated Scan for accurate total count
+    let realQuestionCount = 0;
+    let questionsNextToken = undefined;
+    do {
+      const scanQuestionsCmd = new ScanCommand({
+        TableName: TABLE_NAME,
+        FilterExpression: "#type = :t",
+        ExpressionAttributeNames: { "#type": "type" },
+        ExpressionAttributeValues: { ":t": "QUESTION" },
+        ExclusiveStartKey: questionsNextToken,
+        Select: "COUNT"
+      });
+      const qResp = await docClient.send(scanQuestionsCmd);
+      realQuestionCount += (qResp.Count || 0);
+      questionsNextToken = qResp.LastEvaluatedKey;
+    } while (questionsNextToken);
 
     const stats = {
       overview: [
-        { label: "Total Architects", value: realLiveUsers.toLocaleString(), trend: "+12%", type: "users" },
-        { label: "Exam Questions", value: realQuestionCount.toLocaleString(), trend: "+5.2%", type: "content" },
-        { label: "Active Sessions", value: "84", trend: "Live", type: "sessions" },
-        { label: "System Health", value: "99.9%", trend: "Nominal", type: "health" },
+        { label: "Total Architects", value: totalUsersCount.toLocaleString(), trend: "Live", type: "users" },
+        { label: "Exam Questions", value: realQuestionCount.toLocaleString(), trend: "Live", type: "content" },
+        { label: "Exam Attempts", value: attempts.length.toLocaleString(), trend: "Live", type: "sessions" },
+        { label: "Overall Pass Rate", value: `${attempts.length > 0 ? Math.round((attempts.filter(a => a.score >= 70).length / attempts.length) * 100) : 0}%`, trend: "Dynamic", type: "health" },
       ],
-      financials: financialStats,
-      health: systemHealth,
       details: {
         growth: [
-          { month: "Jan", users: 120 },
-          { month: "Feb", users: 280 },
-          { month: "Mar", users: 450 },
-          { month: "Apr", users: 890 },
-          { month: "May", users: 1248 }
+          { month: "Apr", users: totalUsersCount } // Simplified for now
         ],
-        performance: [
-          { name: "CLF-C02", pass: 85, fail: 15 },
-          { name: "SAA-C03", pass: 68, fail: 32 },
-          { name: "DVA-C02", pass: 72, fail: 28 }
-        ]
+        performance: Object.values(performanceMap).slice(0, 5) // Top 5 exams
       },
       timestamp: new Date().toISOString()
     };
 
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-      },
+      headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
       body: JSON.stringify(stats),
     };
   } catch (err) {
@@ -92,11 +114,7 @@ export const handler = async (event) => {
     return {
       statusCode: 500,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({
-        message: "Internal Server Error",
-        error: err.message,
-        stack: err.stack
-      }),
+      body: JSON.stringify({ message: "Internal Server Error", error: err.message }),
     };
   }
 };

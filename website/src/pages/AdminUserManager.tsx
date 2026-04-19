@@ -22,15 +22,8 @@ const AdminUserManager: React.FC = () => {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        // For now, we fetch stats which contains the list, or a dedicated list call
-        await adminService.getStats();
-        // Mocking a few users for UI demonstration until we add the dedicated Cognito list endpoint
-        const mockUsers = [
-          { id: '1', email: 'test@blakkbrother.com', status: 'Confirmed', group: 'Admins', joined: '2026-04-14' },
-          { id: '2', email: 'architect.zero@example.com', status: 'Confirmed', group: 'Users', joined: '2026-04-15' },
-          { id: '3', email: 'cloud.master@example.com', status: 'Pending', group: 'Users', joined: '2026-04-16' },
-        ];
-        setUsers(mockUsers);
+        const data = await adminService.listUsers();
+        setUsers(data);
       } catch (err) {
         console.error("Failed to load users:", err);
       } finally {
@@ -94,19 +87,21 @@ const AdminUserManager: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Shield className={`w-3 h-3 ${item.group === 'Admins' ? 'text-orange-500' : 'text-slate-500'}`} />
-                    <Text className={`text-[10px] font-black uppercase tracking-widest ${item.group === 'Admins' ? 'text-orange-500' : 'text-slate-400'}`}>
-                      {item.group}
+                    <Shield className="w-3 h-3 text-slate-500" />
+                    <Text className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Operative
                     </Text>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge color={item.status === 'Confirmed' ? 'emerald' : 'orange'} size="xs">
+                  <Badge color={item.status === 'CONFIRMED' ? 'emerald' : 'orange'} size="xs">
                     {item.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Text className="text-xs font-medium text-slate-500">{item.joined}</Text>
+                  <Text className="text-xs font-medium text-slate-500">
+                    {new Date(item.joined).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </Text>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
