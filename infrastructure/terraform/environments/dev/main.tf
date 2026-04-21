@@ -215,6 +215,22 @@ module "lambda_admin_analytics" {
   tags = local.tags
 }
 
+module "lambda_ai_generate_content" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-AIGenerateContent"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/build/ai-generate-content.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  enable_bedrock_access     = true
+  timeout                   = 60 # AI generation takes longer
+  memory_size               = 512
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+  }
+  tags = local.tags
+}
+
 module "api_gateway" {
   source                               = "../../modules/api-gateway"
   api_name                             = "CertPrep360-Dev-API"
@@ -225,6 +241,7 @@ module "api_gateway" {
   get_dynamic_quiz_lambda_invoke_arn   = module.lambda_get_dynamic_quiz.invoke_arn
   admin_manage_content_lambda_invoke_arn = module.lambda_admin_manage_content.invoke_arn
   admin_analytics_lambda_invoke_arn      = module.lambda_admin_analytics.invoke_arn
+  ai_generate_content_lambda_invoke_arn  = module.lambda_ai_generate_content.invoke_arn
   custom_domain_name                   = local.api_subdomain
   certificate_arn                       = module.route53.api_certificate_arn
   tags                                 = local.tags

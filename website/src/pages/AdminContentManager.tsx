@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminService } from '../services/adminService';
 import { RESOURCES_DATA } from '../data/resourcesData';
+import AdminAIFactory from './AdminAIFactory';
 
 const AdminContentManager: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -32,6 +33,7 @@ const AdminContentManager: React.FC = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'MANAGEMENT' | 'AI_LAB'>('MANAGEMENT');
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -56,6 +58,13 @@ const AdminContentManager: React.FC = () => {
     };
     fetchQuestions();
   }, []);
+
+  // UX Fix: Auto-expand the selected certification so users see the questions immediately
+  useEffect(() => {
+    if (selectedCert !== "all") {
+      setExpandedCerts(prev => ({ ...prev, [selectedCert]: true }));
+    }
+  }, [selectedCert]);
 
   const filteredQuestions = questions.filter(q => {
     const matchesSearch = q.text?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -182,7 +191,27 @@ const AdminContentManager: React.FC = () => {
           </button>
         </div>
 
-        {/* Filters Bar */}
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-4 border-b border-slate-800/50 pb-4">
+          <button 
+            onClick={() => setActiveTab('MANAGEMENT')}
+            className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'MANAGEMENT' ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Management Index
+            {activeTab === 'MANAGEMENT' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+          </button>
+          <button 
+            onClick={() => setActiveTab('AI_LAB')}
+            className={`px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === 'AI_LAB' ? 'text-purple-500' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            AI Content Factory
+            {activeTab === 'AI_LAB' && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500" />}
+          </button>
+        </div>
+
+        {activeTab === 'MANAGEMENT' ? (
+          <>
+            {/* Filters Bar */}
         <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] flex flex-col lg:flex-row gap-6 items-center">
           <div className="flex-1 w-full relative group">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-white transition-colors" />
@@ -382,6 +411,10 @@ const AdminContentManager: React.FC = () => {
             Ensure content accuracy before committing upserts to the master exam index.
           </p>
         </div>
+        </>
+      ) : (
+        <AdminAIFactory />
+      )}
       </div>
 
       {/* Slide-over Question Editor */}

@@ -45,5 +45,11 @@ export const adminService = {
     body: JSON.stringify({ q_id, exam_id })
   }),
 
-  listUsers: () => authFetch('/admin/stats?action=listUsers')
+  listUsers: () => authFetch('/admin/stats?action=listUsers'),
+
+  generateAIContent: (payload: { certId: string, topic?: string, count?: number, domain?: string }) => 
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
 };

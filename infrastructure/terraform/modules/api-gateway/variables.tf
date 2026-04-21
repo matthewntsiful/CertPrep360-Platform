@@ -34,7 +34,12 @@ variable "admin_manage_content_lambda_invoke_arn" {
 }
 
 variable "admin_analytics_lambda_invoke_arn" {
-  description = "The invoke ARN of the Global Admin Analytics Lambda function"
+  description = "Invoke ARN of the admin analytics Lambda"
+  type        = string
+}
+
+variable "ai_generate_content_lambda_invoke_arn" {
+  description = "Invoke ARN of the AI generate content Lambda"
   type        = string
 }
 

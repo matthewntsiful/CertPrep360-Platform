@@ -100,6 +100,32 @@ resource "aws_iam_role_policy_attachment" "cognito" {
   policy_arn = aws_iam_policy.cognito_access[0].arn
 }
 
+resource "aws_iam_policy" "bedrock_access" {
+  count       = var.enable_bedrock_access ? 1 : 0
+  name        = "${var.function_name}-bedrock-access"
+  description = "Allow Lambda to invoke Bedrock models"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "bedrock" {
+  count      = var.enable_bedrock_access ? 1 : 0
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.bedrock_access[0].arn
+}
+
 resource "aws_lambda_function" "main" {
   filename         = var.zip_path
   source_code_hash = filesha256(var.zip_path)

@@ -25,7 +25,13 @@ variable "api_gateway_execution_arn" {
 }
 
 variable "enable_cognito_access" {
-  description = "Whether to grant this Lambda access to Cognito"
+  description = "Whether to give Lambda access to Cognito"
+  type        = bool
+  default     = false
+}
+
+variable "enable_bedrock_access" {
+  description = "Whether to give Lambda access to AWS Bedrock"
   type        = bool
   default     = false
 }
