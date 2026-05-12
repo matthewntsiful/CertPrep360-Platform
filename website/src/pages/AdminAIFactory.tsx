@@ -77,7 +77,7 @@ const AdminAIFactory: React.FC = () => {
           const mappedQuestions = response.questions.map((q: any, idx: number) => ({
             ...q,
             exam_id: examId,
-            q_id: `${examId}_Q${String(drafts.length + currentCount + idx + 1).padStart(3, '0')}`
+            q_id: `${examId}_Q${String(currentCount + idx + 1).padStart(3, '0')}`
           }));
           setDrafts(prev => [...prev, ...mappedQuestions]);
         }
