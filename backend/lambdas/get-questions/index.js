@@ -17,19 +17,22 @@ export const handler = async (event) => {
     }
 
     try {
-        const command = new QueryCommand({
-            TableName: TABLE_NAME,
-            KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-            ExpressionAttributeValues: {
-                ":pk": `CERT#${certId.toUpperCase()}`,
-                ":skPrefix": `EXAM#${examId}#QUESTION#`,
-            },
-        });
-
-        const response = await docClient.send(command);
-
-        // Normalize the response to match the frontend expectation
-        const items = response.Items || [];
+        const items = [];
+        let lastKey = undefined;
+        do {
+            const command = new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                ExpressionAttributeValues: {
+                    ":pk": `CERT#${certId.toUpperCase()}`,
+                    ":skPrefix": `EXAM#${examId}#QUESTION#`,
+                },
+                ExclusiveStartKey: lastKey,
+            });
+            const response = await docClient.send(command);
+            items.push(...(response.Items || []));
+            lastKey = response.LastEvaluatedKey;
+        } while (lastKey);
         const questions = items.map(item => ({
             q_id: item.q_id,
             text: item.text,
