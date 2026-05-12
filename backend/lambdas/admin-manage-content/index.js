@@ -38,13 +38,13 @@ export const handler = async (event) => {
                 };
 
                 if (examId) {
-                    // If we have an examId, we can query by PK
+                    // Query by certId + examId using the standard schema
                     command = new QueryCommand({
                         ...params,
                         KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
                         ExpressionAttributeValues: {
-                            ":pk": `EXAM#${examId}`,
-                            ":skPrefix": "QUESTION#"
+                            ":pk": `CERT#${certId?.toUpperCase() || examId.split('-EXAM-')[0]}`,
+                            ":skPrefix": `EXAM#${examId}#QUESTION#`
                         }
                     });
                 } else {
@@ -99,8 +99,8 @@ export const handler = async (event) => {
             const command = new PutCommand({
                 TableName: TABLE_NAME,
                 Item: {
-                    PK: `EXAM#${exam_id}`,
-                    SK: `QUESTION#${q_id}`,
+                    PK: `CERT#${cert_id}`,
+                    SK: `EXAM#${exam_id}#QUESTION#${q_id}`,
                     "GSI1-PK": `DOMAIN#${domain || "Unassigned"}`,
                     "GSI1-SK": `CERT#${cert_id}`,
                     cert_id,
@@ -140,8 +140,8 @@ export const handler = async (event) => {
             const command = new DeleteCommand({
                 TableName: TABLE_NAME,
                 Key: {
-                    PK: `EXAM#${exam_id}`,
-                    SK: `QUESTION#${q_id}`
+                    PK: `CERT#${cert_id}`,
+                    SK: `EXAM#${exam_id}#QUESTION#${q_id}`
                 }
             });
 
