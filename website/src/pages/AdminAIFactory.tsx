@@ -46,6 +46,37 @@ const AdminAIFactory: React.FC = () => {
   const [mode, setMode] = useState<'full' | 'topup'>('full');
   const [examStatus, setExamStatus] = useState<{existing: number, missing: number, startFrom: number} | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [existingExams, setExistingExams] = useState<string[]>([]);
+  const [loadingExams, setLoadingExams] = useState(false);
+
+  const loadExistingExams = async (certId: string) => {
+    setLoadingExams(true);
+    setExamStatus(null);
+    try {
+      const questions = await adminService.getQuestions(certId);
+      const exams = [...new Set((Array.isArray(questions) ? questions : []).map((q: any) => q.exam_id).filter(Boolean))].sort();
+      setExistingExams(exams);
+      if (exams.length > 0) setExamId(exams[0]);
+    } catch {
+      setExistingExams([]);
+    } finally {
+      setLoadingExams(false);
+    }
+  };
+
+  const handleModeSwitch = (newMode: 'full' | 'topup') => {
+    setMode(newMode);
+    setExamStatus(null);
+    setDrafts([]);
+    if (newMode === 'topup') loadExistingExams(selectedCert);
+  };
+
+  const handleCertChange = (certId: string) => {
+    setSelectedCert(certId);
+    setExamStatus(null);
+    setDrafts([]);
+    if (mode === 'topup') loadExistingExams(certId);
+  };
 
   const handleCheckStatus = async () => {
     setIsChecking(true);
@@ -169,7 +200,7 @@ const AdminAIFactory: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Certification</label>
                 <select 
                   value={selectedCert}
-                  onChange={(e) => setSelectedCert(e.target.value)}
+                  onChange={(e) => handleCertChange(e.target.value)}
                   className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-400 focus:border-purple-500/50 transition-all cursor-pointer"
                 >
                   {Object.keys(BLUEPRINTS).map(id => (
@@ -179,14 +210,27 @@ const AdminAIFactory: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Exam Identifier (SK Prefix)</label>
-                <input 
-                  type="text" 
-                  value={examId}
-                  onChange={(e) => setExamId(e.target.value.toUpperCase())}
-                  className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-white focus:border-purple-500/50 transition-all"
-                  placeholder="e.g. SAA-C03-EXAM-04"
-                />
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Exam Identifier</label>
+                {mode === 'topup' ? (
+                  <select
+                    value={examId}
+                    onChange={(e) => { setExamId(e.target.value); setExamStatus(null); }}
+                    disabled={loadingExams}
+                    className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-400 focus:border-blue-500/50 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {loadingExams && <option>Loading exams...</option>}
+                    {!loadingExams && existingExams.length === 0 && <option>No exams found</option>}
+                    {existingExams.map(e => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={examId}
+                    onChange={(e) => setExamId(e.target.value.toUpperCase())}
+                    className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-white focus:border-purple-500/50 transition-all"
+                    placeholder="e.g. SAA-C03-EXAM-17"
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
@@ -202,13 +246,13 @@ const AdminAIFactory: React.FC = () => {
               {/* Mode Toggle */}
               <div className="flex rounded-2xl overflow-hidden border border-slate-800">
                 <button
-                  onClick={() => { setMode('full'); setExamStatus(null); }}
+                  onClick={() => handleModeSwitch('full')}
                   className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
                     mode === 'full' ? 'bg-purple-600 text-white' : 'bg-slate-950 text-slate-500 hover:text-slate-300'
                   }`}
                 >Full Set</button>
                 <button
-                  onClick={() => setMode('topup')}
+                  onClick={() => handleModeSwitch('topup')}
                   className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
                     mode === 'topup' ? 'bg-blue-600 text-white' : 'bg-slate-950 text-slate-500 hover:text-slate-300'
                   }`}
