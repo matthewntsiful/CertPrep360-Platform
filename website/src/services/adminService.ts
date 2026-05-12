@@ -27,6 +27,7 @@ async function authFetch(path: string, options: RequestInit = {}) {
 
 export const adminService = {
   getStats: () => authFetch('/admin/stats'),
+  getCatalog: () => authFetch('/admin/stats?action=catalog'),
   
   getQuestions: (certId?: string, examId?: string) => {
     const params = new URLSearchParams();

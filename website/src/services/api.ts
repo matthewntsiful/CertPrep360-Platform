@@ -48,6 +48,23 @@ export async function fetchUserAnalytics(): Promise<UserAnalytics | null> {
   }
 }
 
+export interface CertCatalog {
+  [certId: string]: {
+    totalQuestions: number;
+    examCount: number;
+    exams: string[];
+  };
+}
+
+export async function fetchCatalog(): Promise<CertCatalog> {
+  try {
+    return await authFetch('/admin/stats?action=catalog') as CertCatalog;
+  } catch (error) {
+    console.error('Failed to fetch catalog:', error);
+    return {};
+  }
+}
+
 /**
  * Fetches a dynamic domain-specific quiz from the backend GSI endpoint.
  */

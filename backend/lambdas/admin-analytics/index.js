@@ -1,5 +1,5 @@
 import { ListUsersCommand, CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
-import { ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 
 const cognitoClient = new CognitoIdentityProviderClient({});
@@ -12,6 +12,52 @@ export const handler = async (event) => {
   const action = event.queryStringParameters?.action || 'summary';
 
   try {
+    if (action === 'catalog') {
+      // Scan all QUESTION items and aggregate by cert_id and exam_id
+      const items = [];
+      let lastKey = undefined;
+      do {
+        const cmd = new ScanCommand({
+          TableName: TABLE_NAME,
+          FilterExpression: "#type = :t",
+          ExpressionAttributeNames: { "#type": "type" },
+          ExpressionAttributeValues: { ":t": "QUESTION" },
+          ProjectionExpression: "cert_id, exam_id",
+          ExclusiveStartKey: lastKey
+        });
+        const resp = await docClient.send(cmd);
+        items.push(...(resp.Items || []));
+        lastKey = resp.LastEvaluatedKey;
+      } while (lastKey);
+
+      // Build catalog: { certId: { totalQuestions, exams: Set } }
+      const catalog = {};
+      items.forEach(item => {
+        const cert = item.cert_id;
+        const exam = item.exam_id;
+        if (!cert || !exam) return;
+        if (!catalog[cert]) catalog[cert] = { totalQuestions: 0, exams: new Set() };
+        catalog[cert].totalQuestions++;
+        catalog[cert].exams.add(exam);
+      });
+
+      // Serialize Sets to arrays
+      const result = {};
+      Object.entries(catalog).forEach(([cert, data]) => {
+        result[cert] = {
+          totalQuestions: data.totalQuestions,
+          examCount: data.exams.size,
+          exams: [...data.exams].sort()
+        };
+      });
+
+      return {
+        statusCode: 200,
+        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        body: JSON.stringify(result),
+      };
+    }
+
     if (action === 'listUsers') {
       const listUsersCmd = new ListUsersCommand({
         UserPoolId: USER_POOL_ID,

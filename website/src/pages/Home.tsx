@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Trophy, Zap, ArrowRight, ShieldCheck, Star, Award, Shield, Layout as LayoutIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fetchCatalog, type CertCatalog } from '../services/api';
 
 const CERT_CATEGORIES = [
   {
@@ -57,6 +58,16 @@ const Home: React.FC = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeCategory, setActiveCategory] = React.useState('All');
+  const [catalog, setCatalog] = React.useState<CertCatalog>({});
+
+  React.useEffect(() => {
+    if (user) fetchCatalog().then(setCatalog);
+  }, [user]);
+
+  const getCertStats = (certCode: string) => {
+    const key = Object.keys(catalog).find(k => k.toUpperCase() === certCode.toUpperCase());
+    return key ? { questions: catalog[key].totalQuestions, exams: catalog[key].examCount } : { questions: 0, exams: 0 };
+  };
 
   const categories = ['All', 'Foundational', 'Associate', 'Professional', 'Specialty'];
 
@@ -174,57 +185,50 @@ const Home: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.05 * i }}
-                    onClick={() => {
-                      navigate(`/certification/${cert.id}`);
-                    }}
+                    onClick={() => navigate(`/certification/${cert.id}`)}
                     className={`group relative p-8 rounded-3xl bg-slate-900 border transition-all cursor-pointer overflow-hidden ${
-                      cert.questions > 0 
-                      ? 'border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/40 hover:shadow-2xl hover:shadow-orange-500/10' 
+                      getCertStats(cert.code).questions > 0
+                      ? 'border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/40 hover:shadow-2xl hover:shadow-orange-500/10'
                       : 'border-slate-800/50 hover:border-blue-500/40 hover:bg-slate-800/20'
                     }`}
                   >
-                    {/* Background ID Watermark */}
                     <div className={`absolute -right-4 -top-4 text-7xl font-black rotate-12 select-none transition-colors ${
-                       cert.questions > 0 ? 'text-white/[0.03] group-hover:text-orange-500/[0.05]' : 'text-white/[0.01]'
+                       getCertStats(cert.code).questions > 0 ? 'text-white/[0.03] group-hover:text-orange-500/[0.05]' : 'text-white/[0.01]'
                     }`}>
                       {cert.id.split('-')[0].toUpperCase()}
                     </div>
 
                     <div className="flex items-start justify-between mb-8">
                       <div className={`w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center border transition-all p-3 ${
-                        cert.questions > 0 ? 'border-slate-700 group-hover:border-orange-500/50 group-hover:bg-slate-700' : 'border-slate-800'
+                        getCertStats(cert.code).questions > 0 ? 'border-slate-700 group-hover:border-orange-500/50 group-hover:bg-slate-700' : 'border-slate-800'
                       }`}>
-                        <img 
-                          src={`/assets/badges/${cert.id.split('-')[0]}.png`} 
-                          alt={cert.title}
-                          className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110"
-                        />
+                        <img src={`/assets/badges/${cert.id.split('-')[0]}.png`} alt={cert.title} className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110" />
                       </div>
                       <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
-                        cert.questions > 0 ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'
+                        getCertStats(cert.code).questions > 0 ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'
                       }`}>
-                        {cert.questions > 0 ? 'Live Exam' : 'Study Roadmap'}
+                        {getCertStats(cert.code).questions > 0 ? 'Live Exam' : 'Study Roadmap'}
                       </div>
                     </div>
-                    
+
                     <h4 className="text-xl font-bold mb-1 leading-tight text-white">{cert.title}</h4>
                     <p className="text-slate-500 text-sm font-mono mb-6 uppercase tracking-wider">{cert.code}</p>
-                    
+
                     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-800 group-hover:border-slate-700 transition-colors">
                       <div>
                         <div className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Questions</div>
-                        <div className={`text-lg font-bold font-mono ${cert.questions > 0 ? 'text-white' : 'text-slate-700'}`}>{cert.questions}</div>
+                        <div className={`text-lg font-bold font-mono ${getCertStats(cert.code).questions > 0 ? 'text-white' : 'text-slate-700'}`}>{getCertStats(cert.code).questions}</div>
                       </div>
                       <div>
                         <div className="text-[10px] text-slate-500 uppercase tracking-widest font-black mb-1">Engines</div>
-                        <div className={`text-lg font-bold font-mono ${cert.exams > 0 ? 'text-white' : 'text-slate-700'}`}>{cert.exams}</div>
+                        <div className={`text-lg font-bold font-mono ${getCertStats(cert.code).exams > 0 ? 'text-white' : 'text-slate-700'}`}>{getCertStats(cert.code).exams}</div>
                       </div>
                     </div>
 
                     <div className={`mt-8 flex items-center gap-2 text-xs font-black transition-all uppercase tracking-widest ${
-                      cert.questions > 0 ? 'text-orange-500 group-hover:gap-4' : 'text-blue-500 group-hover:gap-4'
+                      getCertStats(cert.code).questions > 0 ? 'text-orange-500 group-hover:gap-4' : 'text-blue-500 group-hover:gap-4'
                     }`}>
-                      {cert.questions > 0 ? (
+                      {getCertStats(cert.code).questions > 0 ? (
                         <>Launch Session <ArrowRight className="w-4 h-4" /></>
                       ) : (
                         <>View Study Resources <ArrowRight className="w-4 h-4" /></>

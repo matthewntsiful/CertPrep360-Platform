@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -11,14 +11,27 @@ import {
   CheckCircle2,
   Clock,
   Target,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react';
 import { RESOURCES_DATA } from '../data/resourcesData';
+import { fetchCatalog } from '../services/api';
 
 const ExamHub: React.FC = () => {
   const { certId } = useParams<{ certId: string }>();
   const navigate = useNavigate();
   const cert = certId ? RESOURCES_DATA[certId] : null;
+  const [exams, setExams] = React.useState<string[]>([]);
+  const [loadingExams, setLoadingExams] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!cert) return;
+    fetchCatalog().then(catalog => {
+      const key = Object.keys(catalog).find(k => k.toUpperCase() === cert.certId.toUpperCase());
+      setExams(key ? catalog[key].exams : []);
+      setLoadingExams(false);
+    });
+  }, [cert?.certId]);
 
   if (!cert) {
     return (
@@ -152,49 +165,56 @@ const ExamHub: React.FC = () => {
               <Target className="w-6 h-6 text-orange-500" />
               Practice Exams
             </h2>
-            <p className="text-slate-400 text-sm">16 rigorous modules to master {cert.code}. Start from foundational scenarios and progress to expert-level architecture simulators.</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 16 }).map((_, idx) => {
-                const examNum = idx + 1;
-                const tier = examNum <= 4 ? "Foundational" : examNum <= 10 ? "Intermediate" : examNum <= 14 ? "Advanced" : "Expert";
-                const tierColor = examNum <= 4 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" : 
-                                  examNum <= 10 ? "text-blue-500 bg-blue-500/10 border-blue-500/20" : 
-                                  examNum <= 14 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" : 
-                                  "text-red-500 bg-red-500/10 border-red-500/20";
-                
-                const padNum = String(examNum).padStart(2, '0');
-                const targetExamId = `${cert.certId.toUpperCase()}-EXAM-${padNum}`;
-                
-                return (
-                  <motion.button
-                    key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.02 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate(`/exam/${cert.certId}/${targetExamId}`)}
-                    className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/80 transition-all text-left flex flex-col justify-between min-h-[140px] group relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                      <Target className="w-16 h-16" />
-                    </div>
-                    <div className="relative z-10 w-full">
-                      <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded inline-block border ${tierColor} mb-4`}>
-                        {tier}
+            <p className="text-slate-400 text-sm">{exams.length} exam modules available for {cert.code}.</p>
+
+            {loadingExams ? (
+              <div className="flex items-center gap-3 text-slate-500 py-10">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-xs font-bold uppercase tracking-widest">Loading exams...</span>
+              </div>
+            ) : exams.length === 0 ? (
+              <div className="p-10 bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl text-center">
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">No exams available yet for this certification</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {exams.map((examId, idx) => {
+                  const examNum = idx + 1;
+                  const tier = examNum <= 4 ? "Foundational" : examNum <= 10 ? "Intermediate" : examNum <= 14 ? "Advanced" : "Expert";
+                  const tierColor = examNum <= 4 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
+                                    examNum <= 10 ? "text-blue-500 bg-blue-500/10 border-blue-500/20" :
+                                    examNum <= 14 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" :
+                                    "text-red-500 bg-red-500/10 border-red-500/20";
+                  const padNum = String(examNum).padStart(2, '0');
+
+                  return (
+                    <motion.button
+                      key={examId}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.02 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate(`/exam/${cert.certId}/${examId}`)}
+                      className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/80 transition-all text-left flex flex-col justify-between min-h-[140px] group relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                        <Target className="w-16 h-16" />
                       </div>
-                      <div className="mt-auto">
-                        <div className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Exam Module</div>
-                        <div className="text-3xl font-black text-white group-hover:text-orange-500 transition-colors">
-                          {padNum}
+                      <div className="relative z-10 w-full">
+                        <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded inline-block border ${tierColor} mb-4`}>
+                          {tier}
+                        </div>
+                        <div className="mt-auto">
+                          <div className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Exam Module</div>
+                          <div className="text-3xl font-black text-white group-hover:text-orange-500 transition-colors">{padNum}</div>
                         </div>
                       </div>
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
