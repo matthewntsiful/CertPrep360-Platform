@@ -43,27 +43,50 @@ const AdminAIFactory: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [drafts, setDrafts] = useState<AIGeneratedQuestion[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
+  const [mode, setMode] = useState<'full' | 'topup'>('full');
+  const [examStatus, setExamStatus] = useState<{existing: number, missing: number, startFrom: number} | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
-  const handleGenerateFullSet = async () => {
+  const handleCheckStatus = async () => {
+    setIsChecking(true);
+    setExamStatus(null);
+    try {
+      const questions = await adminService.getQuestions(selectedCert, examId);
+      const existing = Array.isArray(questions) ? questions.length : 0;
+      const missing = Math.max(0, 65 - existing);
+      setExamStatus({ existing, missing, startFrom: existing + 1 });
+    } catch (err: any) {
+      setExamStatus({ existing: 0, missing: 65, startFrom: 1 });
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    const startFrom = mode === 'topup' && examStatus ? examStatus.startFrom : 1;
+    const totalToGenerate = mode === 'topup' && examStatus ? examStatus.missing : 65;
+
+    if (totalToGenerate === 0) {
+      setStatusMessage("Exam already has 65 questions. Nothing to generate.");
+      return;
+    }
+
     setIsGenerating(true);
     setProgress(0);
     setDrafts([]);
     setStatusMessage("Initializing Blueprint Engine...");
 
     const blueprint = BLUEPRINTS[selectedCert];
-    const totalQuestions = 65;
-    const batchSize = 1; // Reduced to 1 to bypass 29s API Gateway timeout with Claude 4.5 Sonnet
-    const iterations = Math.ceil(totalQuestions / batchSize);
+    const batchSize = 1;
+    const iterations = totalToGenerate;
 
     try {
       for (let i = 0; i < iterations; i++) {
-        const currentCount = i * batchSize;
-        const progressPercent = Math.round((currentCount / totalQuestions) * 100);
+        const progressPercent = Math.round((i / iterations) * 100);
         setProgress(progressPercent);
-        
-        // Randomly pick a domain based on weights if not specified
+
         const domainObj = blueprint.domains[i % blueprint.domains.length];
-        setStatusMessage(`Manufacturing Batch ${i + 1}/${iterations}: ${domainObj.name}...`);
+        setStatusMessage(`Manufacturing Q${String(startFrom + i).padStart(3, '0')} / ${String(startFrom + totalToGenerate - 1).padStart(3, '0')}: ${domainObj.name}...`);
 
         const response = await adminService.generateAIContent({
           certId: selectedCert,
@@ -73,18 +96,17 @@ const AdminAIFactory: React.FC = () => {
         });
 
         if (response.questions) {
-          // Map to correct exam_id from user input
           const mappedQuestions = response.questions.map((q: any, idx: number) => ({
             ...q,
             exam_id: examId,
-            q_id: `${examId}_Q${String(currentCount + idx + 1).padStart(3, '0')}`
+            q_id: `${examId}_Q${String(startFrom + i + idx).padStart(3, '0')}`
           }));
           setDrafts(prev => [...prev, ...mappedQuestions]);
         }
       }
-      
+
       setProgress(100);
-      setStatusMessage("Manufacturing Complete. Ready for Catalog Integration.");
+      setStatusMessage(`Manufacturing Complete — ${totalToGenerate} questions ready.`);
     } catch (err: any) {
       console.error("Generation failed:", err);
       setStatusMessage(`Error: ${err.message}`);
@@ -177,13 +199,54 @@ const AdminAIFactory: React.FC = () => {
                 />
               </div>
 
-              <button 
-                onClick={handleGenerateFullSet}
-                disabled={isGenerating}
+              {/* Mode Toggle */}
+              <div className="flex rounded-2xl overflow-hidden border border-slate-800">
+                <button
+                  onClick={() => { setMode('full'); setExamStatus(null); }}
+                  className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                    mode === 'full' ? 'bg-purple-600 text-white' : 'bg-slate-950 text-slate-500 hover:text-slate-300'
+                  }`}
+                >Full Set</button>
+                <button
+                  onClick={() => setMode('topup')}
+                  className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                    mode === 'topup' ? 'bg-blue-600 text-white' : 'bg-slate-950 text-slate-500 hover:text-slate-300'
+                  }`}
+                >Top Up</button>
+              </div>
+
+              {/* Top Up: Check Status */}
+              {mode === 'topup' && (
+                <div className="space-y-3">
+                  <button
+                    onClick={handleCheckStatus}
+                    disabled={isChecking}
+                    className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all disabled:opacity-50"
+                  >
+                    {isChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                    Check Exam Status
+                  </button>
+                  {examStatus && (
+                    <div className={`p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-widest space-y-1 ${
+                      examStatus.missing === 0
+                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    }`}>
+                      <p>Existing: {examStatus.existing} / 65</p>
+                      <p>Missing: {examStatus.missing} questions</p>
+                      {examStatus.missing > 0 && <p>Will generate: Q{String(examStatus.startFrom).padStart(3,'0')} → Q{String(examStatus.startFrom + examStatus.missing - 1).padStart(3,'0')}</p>}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating || (mode === 'topup' && (!examStatus || examStatus.missing === 0))}
                 className="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
               >
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                Generate 65-Question Set
+                {mode === 'full' ? 'Generate 65-Question Set' : `Fill ${examStatus?.missing ?? '?'} Missing Questions`}
               </button>
             </div>
           </div>
@@ -192,7 +255,7 @@ const AdminAIFactory: React.FC = () => {
             <div className="flex items-start gap-4">
               <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                Sonnet 4.5 generates content in batches of 5 to maintain maximum technical fidelity and bypass timeout limits.
+                Full Set generates all 65 questions from scratch. Top Up checks existing questions and fills only the gaps — safe to run on partially complete exams.
               </p>
             </div>
           </div>
@@ -208,7 +271,7 @@ const AdminAIFactory: React.FC = () => {
                   <h2 className="text-sm font-black uppercase tracking-widest text-white">Manufacturing Pipeline</h2>
                 </div>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                  {drafts.length} / 65 Questions
+                  {drafts.length} / {mode === 'topup' && examStatus ? examStatus.missing : 65} Questions
                 </span>
               </div>
 
