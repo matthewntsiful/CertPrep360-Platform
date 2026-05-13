@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { Shield, Menu, Twitter, Linkedin, Github, Zap } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Shield, Menu, X, Twitter, Linkedin, Github, Zap, LogOut } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,8 +11,8 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, loading } = useAuth();
-
+  const { user, isAdmin, loading, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
     if (target === 'certifications') {
       e.preventDefault();
@@ -23,6 +23,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     }
   };
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.hash === '#certifications' && location.pathname === '/') {
@@ -53,56 +57,51 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            {user && (
-              <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-            )}
-            {isAdmin && (
-              <Link to="/admin" className="text-orange-500 hover:text-orange-400 transition-colors font-bold">Admin Hub</Link>
-            )}
-            <a 
-              href="#certifications" 
-              onClick={(e) => handleNavClick(e, 'certifications')}
-              className="hover:text-white transition-colors"
-            >
-              Certifications
-            </a>
-            <Link to="/login" className="hover:text-white transition-colors">Practice</Link>
+            {user && <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>}
+            {isAdmin && <Link to="/admin" className="text-orange-500 hover:text-orange-400 transition-colors font-bold">Admin Hub</Link>}
+            <a href="#certifications" onClick={(e) => handleNavClick(e, 'certifications')} className="hover:text-white transition-colors">Certifications</a>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {loading ? (
               <div className="w-24 h-9 bg-slate-900 animate-pulse rounded-lg" />
             ) : user ? (
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-slate-900 border border-slate-800 hover:border-orange-500/50 text-white rounded-lg text-sm font-bold transition-all flex items-center gap-2 group"
-              >
-                <div className="w-6 h-6 rounded bg-orange-500/10 flex items-center justify-center">
-                   <Zap className="w-3 h-3 text-orange-500" />
-                </div>
-                Dashboard
-              </button>
-            ) : (
               <>
-                <Link 
-                  to="/login"
-                  className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
-                >
-                  Log in
-                </Link>
-                <button 
-                  onClick={() => navigate('/login')}
-                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/20"
-                >
-                  Get Started
+                <button onClick={() => navigate('/dashboard')} className="hidden md:flex px-4 py-2 bg-slate-900 border border-slate-800 hover:border-orange-500/50 text-white rounded-lg text-sm font-bold transition-all items-center gap-2">
+                  <Zap className="w-3 h-3 text-orange-500" /> Dashboard
+                </button>
+                <button onClick={() => logout()} className="hidden md:flex px-4 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-bold transition-all items-center gap-2">
+                  <LogOut className="w-3 h-3" /> Log Out
                 </button>
               </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden md:block px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors">Log in</Link>
+                <button onClick={() => navigate('/login')} className="hidden md:block px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/20">Get Started</button>
+              </>
             )}
-            <button className="md:hidden p-2 text-slate-400">
-              <Menu className="w-6 h-6" />
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-slate-400 hover:text-white transition-colors">
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur-md px-4 py-6 space-y-4">
+            <Link to="/" className="block py-3 text-sm font-medium text-slate-400 hover:text-white border-b border-slate-800/50 transition-colors">Home</Link>
+            {user && <Link to="/dashboard" className="block py-3 text-sm font-medium text-slate-400 hover:text-white border-b border-slate-800/50 transition-colors">Dashboard</Link>}
+            {isAdmin && <Link to="/admin" className="block py-3 text-sm font-bold text-orange-500 hover:text-orange-400 border-b border-slate-800/50 transition-colors">Admin Hub</Link>}
+            <a href="#certifications" onClick={(e) => { handleNavClick(e, 'certifications'); setMobileOpen(false); }} className="block py-3 text-sm font-medium text-slate-400 hover:text-white border-b border-slate-800/50 transition-colors">Certifications</a>
+            {user ? (
+              <button onClick={() => logout()} className="w-full mt-2 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                <LogOut className="w-4 h-4" /> Log Out
+              </button>
+            ) : (
+              <button onClick={() => { navigate('/login'); setMobileOpen(false); }} className="w-full mt-2 py-3 bg-orange-500 text-white rounded-xl text-sm font-bold">Get Started</button>
+            )}
+          </div>
+        )}
       </header>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 py-12">
