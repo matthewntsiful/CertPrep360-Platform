@@ -3,7 +3,7 @@ import { fetchAuthSession } from '@aws-amplify/auth';
 const API_URL = import.meta.env.VITE_API_URL;
 
 async function authFetch(path: string, options: RequestInit = {}) {
-  const session = await fetchAuthSession();
+  const session = await fetchAuthSession({ forceRefresh: true });
   const token = session.tokens?.idToken?.toString();
   
   if (!token) throw new Error('Root privileges required: No auth token available');
