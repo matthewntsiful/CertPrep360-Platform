@@ -40,17 +40,6 @@ const BLUEPRINTS = {
       { name: "Troubleshooting and Optimization", weight: 0.18 }
     ]
   },
-  "SOA-C02": {
-    name: "SysOps Administrator Associate",
-    domains: [
-      { name: "Monitoring, Logging, and Remediation", weight: 0.20 },
-      { name: "Reliability and Business Continuity", weight: 0.16 },
-      { name: "Deployment, Provisioning, and Automation", weight: 0.18 },
-      { name: "Security and Compliance", weight: 0.16 },
-      { name: "Networking and Content Delivery", weight: 0.18 },
-      { name: "Cost and Performance Optimization", weight: 0.12 }
-    ]
-  },
   "SAP-C02": {
     name: "Solutions Architect Professional",
     domains: [
@@ -91,15 +80,6 @@ const BLUEPRINTS = {
       { name: "Network Security, Compliance, and Governance", weight: 0.24 }
     ]
   },
-  "MLS-C01": {
-    name: "Machine Learning Specialty",
-    domains: [
-      { name: "Data Engineering", weight: 0.20 },
-      { name: "Exploratory Data Analysis", weight: 0.24 },
-      { name: "Modeling", weight: 0.36 },
-      { name: "Machine Learning Implementation and Operations", weight: 0.20 }
-    ]
-  },
   "COE-C01": {
     name: "CloudOps Engineer Associate",
     domains: [
@@ -129,14 +109,14 @@ const BLUEPRINTS = {
       { name: "AI Solutions and Safety", weight: 0.18 }
     ]
   },
-  "AIP-C01": {
-    name: "Generative AI Developer",
+  "GDP-C01": {
+    name: "Generative AI Developer Professional",
     domains: [
       { name: "Foundation Model Integration", weight: 0.31 },
       { name: "Implementation and Integration", weight: 0.26 },
       { name: "AI Safety, Security, and Governance", weight: 0.20 },
       { name: "Operational Efficiency", weight: 0.12 },
-      { name: "Prompt Engineering", weight: 0.11 }
+      { name: "Testing and Validation", weight: 0.11 }
     ]
   }
 };

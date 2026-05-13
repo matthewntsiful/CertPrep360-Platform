@@ -103,38 +103,17 @@ export const RESOURCES_DATA: Record<string, CertResources> = {
       { name: 'Troubleshooting & Optimization', percent: 18 }
     ]
   },
-  'soa-c02': {
-    certId: 'soa-c02',
-    title: 'SysOps Administrator',
-    code: 'SOA-C02',
-    level: 'Associate',
-    summary: 'Validates experience in deploying, managing, and operating workloads on AWS.',
-    fee: '$150',
-    duration: '130 Minutes',
-    passingScore: '72%',
-    officialLinks: [
-      { title: 'Official Certification Page', url: 'https://aws.amazon.com/certification/certified-sysops-admin-associate/', type: 'official' }
-    ],
-    domains: [
-      { name: 'Monitoring, Logging, and Remediation', percent: 20 },
-      { name: 'Reliability and Business Continuity', percent: 16 },
-      { name: 'Deployment, Provisioning, and Automation', percent: 18 },
-      { name: 'Security and Compliance', percent: 16 },
-      { name: 'Networking and Content Delivery', percent: 18 },
-      { name: 'Cost and Performance Optimization', percent: 12 }
-    ]
-  },
   'coe-c01': {
     certId: 'coe-c01',
     title: 'CloudOps Engineer',
     code: 'COE-C01',
     level: 'Associate',
-    summary: 'Validates expertise in automating, managing, and operating cloud systems effectively.',
+    summary: 'Validates technical ability to deploy, manage, and operate workloads on AWS.',
     fee: '$150',
     duration: '130 Minutes',
     passingScore: '72%',
     officialLinks: [
-      { title: 'Official Certification Page', url: 'https://aws.amazon.com/certification/certified-sysops-admin-associate/', type: 'official' }
+      { title: 'Official Certification Page', url: 'https://aws.amazon.com/certification/certified-cloudops-engineer-associate/', type: 'official' }
     ],
     domains: [
       { name: 'Monitoring, Logging, and Remediation', percent: 20 },
@@ -226,14 +205,14 @@ export const RESOURCES_DATA: Record<string, CertResources> = {
   'gdp-c01': {
     certId: 'gdp-c01',
     title: 'Generative AI Developer',
-    code: 'AIP-C01',
+    code: 'GDP-C01',
     level: 'Professional',
-    summary: 'Validates ability to architect, implement, and optimize generative AI systems on AWS.',
+    summary: 'Showcase advanced skills in building and deploying production-ready AI solutions using AWS services like Amazon Bedrock.',
     fee: '$300',
     duration: '180 Minutes',
     passingScore: '75%',
     officialLinks: [
-      { title: 'Official Certification Page', url: 'https://aws.amazon.com/certification/certified-generative-ai-developer-professional/', type: 'official' }
+      { title: 'Official Certification Page', url: 'https://aws.amazon.com/certification/certified-generative-ai-developer/', type: 'official' }
     ],
     domains: [
       { name: 'Foundation Model Integration', percent: 31 },
@@ -282,23 +261,4 @@ export const RESOURCES_DATA: Record<string, CertResources> = {
       { name: 'Security Governance', percent: 32 }
     ]
   },
-  'mls-c01': {
-    certId: 'mls-c01',
-    title: 'Machine Learning Specialty',
-    code: 'MLS-C01',
-    level: 'Specialty',
-    summary: 'Validates expertise in building, deploying, and maintaining ML solutions on AWS.',
-    fee: '$300',
-    duration: '170 Minutes',
-    passingScore: '75%',
-    officialLinks: [
-      { title: 'Official Certification Page', url: 'https://aws.amazon.com/certification/certified-machine-learning-specialty/', type: 'official' }
-    ],
-    domains: [
-      { name: 'Data Engineering', percent: 20 },
-      { name: 'Exploratory Data Analysis', percent: 24 },
-      { name: 'Modeling', percent: 36 },
-      { name: 'ML Operations', percent: 20 }
-    ]
-  }
 };

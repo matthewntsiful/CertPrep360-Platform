@@ -12,43 +12,42 @@ const CERT_CATEGORIES = [
     color: "text-emerald-500",
     icon: ShieldCheck,
     certs: [
-      { id: 'clf-c02', code: 'CLF-C02', title: 'Cloud Practitioner', questions: 0, exams: 0 },
-      { id: 'aif-c01', code: 'AIF-C01', title: 'AI Practitioner', questions: 0, exams: 0 }
+      { id: 'clf-c02', code: 'CLF-C02', title: 'Cloud Practitioner' },
+      { id: 'aif-c01', code: 'AIF-C01', title: 'AI Practitioner' }
     ]
   },
   {
     name: "Associate",
-    description: "Build a strong technical foundation in specific roles",
+    description: "Validate core AWS skills. Prior cloud or IT experience recommended.",
     color: "text-blue-500",
     icon: Award,
     certs: [
-      { id: 'saa-c03', code: 'SAA-C03', title: 'Solutions Architect', questions: 1075, exams: 16 },
-      { id: 'dva-c02', code: 'DVA-C02', title: 'Developer', questions: 0, exams: 0 },
-      { id: 'coe-c01', code: 'COE-C01', title: 'CloudOps Engineer', questions: 0, exams: 0 },
-      { id: 'dea-c01', code: 'DEA-C01', title: 'Data Engineer', questions: 0, exams: 0 },
-      { id: 'mle-c01', code: 'MLE-C01', title: 'Machine Learning Engineer', questions: 0, exams: 0 }
+      { id: 'mle-c01', code: 'MLE-C01', title: 'Machine Learning Engineer' },
+      { id: 'saa-c03', code: 'SAA-C03', title: 'Solutions Architect' },
+      { id: 'dva-c02', code: 'DVA-C02', title: 'Developer' },
+      { id: 'dea-c01', code: 'DEA-C01', title: 'Data Engineer' },
+      { id: 'coe-c01', code: 'COE-C01', title: 'CloudOps Engineer' }
     ]
   },
   {
     name: "Professional",
-    description: "Demonstrate advanced technical skills and experience",
+    description: "Master advanced AWS architecture and solutions. 2+ years AWS experience required.",
     color: "text-purple-500",
     icon: Star,
     certs: [
-      { id: 'sap-c02', code: 'SAP-C01/02', title: 'Solutions Architect', questions: 0, exams: 0 },
-      { id: 'dop-c02', code: 'DOP-C02', title: 'DevOps Engineer', questions: 0, exams: 0 },
-      { id: 'gdp-c01', code: 'AIP-C01', title: 'Generative AI Developer', questions: 0, exams: 0 }
+      { id: 'gdp-c01', code: 'GDP-C01', title: 'Generative AI Developer' },
+      { id: 'sap-c02', code: 'SAP-C02', title: 'Solutions Architect' },
+      { id: 'dop-c02', code: 'DOP-C02', title: 'DevOps Engineer' }
     ]
   },
   {
     name: "Specialty",
-    description: "Deep dive into specialized technical domains",
+    description: "Demonstrate expertise in specific AWS technologies and services.",
     color: "text-red-500",
     icon: Shield,
     certs: [
-      { id: 'ans-c01', code: 'ANS-C01', title: 'Advanced Networking', questions: 0, exams: 0 },
-      { id: 'scs-c02', code: 'SCS-C02', title: 'Security', questions: 0, exams: 0 },
-      { id: 'mls-c01', code: 'MLS-C01', title: 'Machine Learning', questions: 0, exams: 0 }
+      { id: 'ans-c01', code: 'ANS-C01', title: 'Advanced Networking' },
+      { id: 'scs-c02', code: 'SCS-C02', title: 'Security' }
     ]
   }
 ];
