@@ -148,10 +148,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div>
               <h4 className="text-white font-bold mb-6 uppercase tracking-widest text-xs">Resources</h4>
               <ul className="space-y-4 text-sm text-slate-400 font-medium">
-                <li><a href="#" className="hover:text-orange-500 transition-colors">Knowledge Base</a></li>
-                <li><a href="#" className="hover:text-orange-500 transition-colors">Sample Questions</a></li>
-                <li><a href="#" className="hover:text-orange-500 transition-colors">Community Forum</a></li>
-                <li><a href="#" className="hover:text-orange-500 transition-colors">Contact Support</a></li>
+                <li><Link to="/knowledge-base" className="hover:text-orange-500 transition-colors">Knowledge Base</Link></li>
+                <li><Link to="/sample-questions" className="hover:text-orange-500 transition-colors">Sample Questions</Link></li>
+                <li><Link to="/community" className="hover:text-orange-500 transition-colors">Community Forum</Link></li>
+                <li><Link to="/support" className="hover:text-orange-500 transition-colors">Contact Support</Link></li>
               </ul>
             </div>
 

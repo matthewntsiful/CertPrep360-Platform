@@ -17,6 +17,10 @@ import AdminAnalytics from './pages/AdminAnalytics';
 import AdminUserManager from './pages/AdminUserManager';
 import AdminAIFactory from './pages/AdminAIFactory';
 import SignUp from './pages/SignUp';
+import KnowledgeBase from './pages/KnowledgeBase';
+import SampleQuestions from './pages/SampleQuestions';
+import CommunityForum from './pages/CommunityForum';
+import ContactSupport from './pages/ContactSupport';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -72,6 +76,10 @@ function App() {
               <Route path="/terms" element={<Terms />} />
               <Route path="/sitemap" element={<Sitemap />} />
               <Route path="/status" element={<Status />} />
+              <Route path="/knowledge-base" element={<KnowledgeBase />} />
+              <Route path="/sample-questions" element={<SampleQuestions />} />
+              <Route path="/community" element={<CommunityForum />} />
+              <Route path="/support" element={<ContactSupport />} />
 
               {/* Admin Routes */}
               <Route 
