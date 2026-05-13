@@ -177,6 +177,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-[10px] font-black uppercase tracking-widest">
             <p>© {new Date().getFullYear()} CertPrep360 Platform. All rights reserved.</p>
+            <p className="text-slate-600 text-[9px] font-medium normal-case tracking-normal text-center max-w-lg">
+              AWS certification badges are trademarks of Amazon Web Services, Inc. CertPrep360 is not affiliated with, endorsed by, or sponsored by Amazon Web Services. All certification names and logos are property of their respective owners.
+            </p>
             <div className="flex gap-8">
               <Link to="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
               <Link to="/status" className="hover:text-white transition-colors">Status</Link>
