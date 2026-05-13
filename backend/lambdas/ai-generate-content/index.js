@@ -21,6 +21,16 @@ const BLUEPRINTS = {
       { name: "Billing, Pricing, and Support", weight: 0.12 }
     ]
   },
+  "AIF-C01": {
+    name: "AI Practitioner",
+    domains: [
+      { name: "Fundamentals of AI and ML", weight: 0.20 },
+      { name: "Fundamentals of Generative AI", weight: 0.24 },
+      { name: "Applications of Foundation Models", weight: 0.28 },
+      { name: "Guidelines for Responsible AI", weight: 0.14 },
+      { name: "Security, Compliance, and Governance", weight: 0.14 }
+    ]
+  },
   "DVA-C02": {
     name: "Developer Associate",
     domains: [
@@ -28,6 +38,105 @@ const BLUEPRINTS = {
       { name: "Security", weight: 0.26 },
       { name: "Deployment", weight: 0.24 },
       { name: "Troubleshooting and Optimization", weight: 0.18 }
+    ]
+  },
+  "SOA-C02": {
+    name: "SysOps Administrator Associate",
+    domains: [
+      { name: "Monitoring, Logging, and Remediation", weight: 0.20 },
+      { name: "Reliability and Business Continuity", weight: 0.16 },
+      { name: "Deployment, Provisioning, and Automation", weight: 0.18 },
+      { name: "Security and Compliance", weight: 0.16 },
+      { name: "Networking and Content Delivery", weight: 0.18 },
+      { name: "Cost and Performance Optimization", weight: 0.12 }
+    ]
+  },
+  "SAP-C02": {
+    name: "Solutions Architect Professional",
+    domains: [
+      { name: "Design Solutions for Organizational Complexity", weight: 0.26 },
+      { name: "Design for New Solutions", weight: 0.29 },
+      { name: "Continuous Improvement for Existing Solutions", weight: 0.25 },
+      { name: "Accelerate Workload Migration and Modernization", weight: 0.20 }
+    ]
+  },
+  "DOP-C02": {
+    name: "DevOps Engineer Professional",
+    domains: [
+      { name: "SDLC Automation", weight: 0.22 },
+      { name: "Configuration Management and IaC", weight: 0.17 },
+      { name: "Resilient Cloud Solutions", weight: 0.15 },
+      { name: "Monitoring and Logging", weight: 0.15 },
+      { name: "Incident and Event Response", weight: 0.14 },
+      { name: "Security and Compliance", weight: 0.17 }
+    ]
+  },
+  "SCS-C02": {
+    name: "Security Specialty",
+    domains: [
+      { name: "Threat Detection and Incident Response", weight: 0.14 },
+      { name: "Security Logging and Monitoring", weight: 0.18 },
+      { name: "Infrastructure Security", weight: 0.20 },
+      { name: "Identity and Access Management", weight: 0.16 },
+      { name: "Data Protection", weight: 0.18 },
+      { name: "Management and Security Governance", weight: 0.14 }
+    ]
+  },
+  "ANS-C01": {
+    name: "Advanced Networking Specialty",
+    domains: [
+      { name: "Network Design", weight: 0.30 },
+      { name: "Network Implementation", weight: 0.26 },
+      { name: "Network Management and Operation", weight: 0.20 },
+      { name: "Network Security, Compliance, and Governance", weight: 0.24 }
+    ]
+  },
+  "MLS-C01": {
+    name: "Machine Learning Specialty",
+    domains: [
+      { name: "Data Engineering", weight: 0.20 },
+      { name: "Exploratory Data Analysis", weight: 0.24 },
+      { name: "Modeling", weight: 0.36 },
+      { name: "Machine Learning Implementation and Operations", weight: 0.20 }
+    ]
+  },
+  "COE-C01": {
+    name: "CloudOps Engineer Associate",
+    domains: [
+      { name: "Monitoring, Logging, and Remediation", weight: 0.20 },
+      { name: "Reliability and Business Continuity", weight: 0.16 },
+      { name: "Deployment, Provisioning, and Automation", weight: 0.18 },
+      { name: "Security and Compliance", weight: 0.16 },
+      { name: "Networking and Content Delivery", weight: 0.18 },
+      { name: "Cost and Performance Optimization", weight: 0.12 }
+    ]
+  },
+  "DEA-C01": {
+    name: "Data Engineer Associate",
+    domains: [
+      { name: "Data Ingestion and Transformation", weight: 0.34 },
+      { name: "Data Store Management", weight: 0.26 },
+      { name: "Data Operations and Support", weight: 0.22 },
+      { name: "Data Security and Governance", weight: 0.18 }
+    ]
+  },
+  "MLE-C01": {
+    name: "Machine Learning Engineer Associate",
+    domains: [
+      { name: "Data Preparation for ML", weight: 0.28 },
+      { name: "ML Model Development", weight: 0.26 },
+      { name: "ML Implementation and Operations", weight: 0.28 },
+      { name: "AI Solutions and Safety", weight: 0.18 }
+    ]
+  },
+  "AIP-C01": {
+    name: "Generative AI Developer",
+    domains: [
+      { name: "Foundation Model Integration", weight: 0.31 },
+      { name: "Implementation and Integration", weight: 0.26 },
+      { name: "AI Safety, Security, and Governance", weight: 0.20 },
+      { name: "Operational Efficiency", weight: 0.12 },
+      { name: "Prompt Engineering", weight: 0.11 }
     ]
   }
 };
