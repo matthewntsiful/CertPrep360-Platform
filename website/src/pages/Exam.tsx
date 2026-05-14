@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useExamStore } from '../store/useExamStore';
 import { useTimer } from '../hooks/useTimer';
@@ -13,16 +13,24 @@ import PauseOverlay from '../components/exam/PauseOverlay';
 const ExamPage: React.FC = () => {
   const { certId, examId } = useParams<{ certId: string; examId: string }>();
   const { status, startExam, questions, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
+  const loadedRef = useRef<string>('');
 
   useTimer();
+
+  // Load exam only when certId/examId changes — never re-run on status change
+  useEffect(() => {
+    const key = `${certId}/${examId}`;
+    if (!certId || !examId) return;
+    if (loadedRef.current === key) return; // already loaded this exam
+    loadedRef.current = key;
+    startExam(certId, examId);
+  }, [certId, examId]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
       if (status !== 'running') return;
-
       switch (e.key) {
         case 'ArrowRight': e.preventDefault(); nextQuestion(); break;
         case 'ArrowLeft':  e.preventDefault(); prevQuestion(); break;
@@ -34,12 +42,7 @@ const ExamPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKey);
   }, [status, currentQuestionIndex, nextQuestion, prevQuestion, toggleFlag, toggleTimer]);
 
-  useEffect(() => {
-    if (status === 'running' && questions.length === 0) { startExam(certId!, examId!); return; }
-    if (status === 'running' && useExamStore.getState().examId !== examId) { startExam(certId!, examId!); return; }
-    if (status === 'completed' && useExamStore.getState().examId !== examId) { startExam(certId!, examId!); return; }
-    if (status === 'idle' && certId && examId) startExam(certId, examId);
-  }, [status, certId, examId, startExam, questions.length]);
+  if (status === 'completed') return <ExamResults />;
 
   if (status === 'idle' || (status === 'running' && questions.length === 0)) {
     return (
@@ -49,8 +52,6 @@ const ExamPage: React.FC = () => {
       </div>
     );
   }
-
-  if (status === 'completed') return <ExamResults />;
 
   return (
     <div className="max-w-4xl mx-auto pb-32 space-y-6">
