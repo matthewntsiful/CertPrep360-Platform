@@ -36,7 +36,7 @@ const ExamPage: React.FC = () => {
 
   useEffect(() => {
     if (status === 'running' && questions.length === 0) { startExam(certId!, examId!); return; }
-    if (status === 'running' && useExamStore.getState().examId !== examId) { startExam(certId!, examId!); return; }
+    if (status === 'completed' || (status === 'running' && useExamStore.getState().examId !== examId)) { startExam(certId!, examId!); return; }
     if (status === 'idle' && certId && examId) startExam(certId, examId);
   }, [status, certId, examId, startExam, questions.length]);
 

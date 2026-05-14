@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, XCircle, RotateCcw, Home as HomeIcon, Clock, Target, CheckCircle2, ChevronDown, ChevronUp, BookOpen, ExternalLink, Share2, X } from 'lucide-react';
+import { Trophy, XCircle, RotateCcw, Home as HomeIcon, Clock, Target, CheckCircle2, Share2, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { RESOURCES_DATA } from '../../data/resourcesData';
+import ReviewMode from './ReviewMode';
 
 const ExamResults: React.FC = () => {
   const navigate = useNavigate();
   const { questions, answers, resetExam, startTime, certId, examId } = useExamStore();
-  const [showReview, setShowReview] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'wrong' | 'correct' | 'skipped'>('all');
-  const [expandedQ, setExpandedQ] = useState<number | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [inReview, setInReview] = useState(false);
+
+  if (inReview) return <ReviewMode onClose={() => setInReview(false)} />;
 
   const certMetadata = RESOURCES_DATA[certId.toLowerCase()];
 
@@ -37,21 +38,29 @@ const ExamResults: React.FC = () => {
   const passed = score >= (parseInt(certMetadata?.passingScore) || 72);
   const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
 
-  const filteredResults = questionResults.filter(r => {
-    if (filter === 'correct') return r.isCorrect;
-    if (filter === 'wrong') return !r.isCorrect && !r.skipped;
-    if (filter === 'skipped') return r.skipped;
-    return true;
-  });
+  const [copied, setCopied] = useState(false);
+  const shareUrl = 'https://aws-exams.matthewntsiful.com';
+  const shareText = `🎯 ${passed ? '✅ PASSED' : '📚 Practice Run'} — I scored ${score}% on the AWS ${certId} Practice Exam on CertPrep360!\n\n${correctCount}/${questions.length} correct in ${timeTaken} minutes.\n\nPrepare for your AWS certification 👇\n${shareUrl}`;
 
-  const shareText = `I scored ${score}% on the ${certId} Practice Exam on CertPrep360! ${passed ? "✅ Passed!" : "📚 Keep studying!"} #AWS #CloudCertification`;
-  const shareUrl = "https://aws-exams.matthewntsiful.com";
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleNativeShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: `CertPrep360 — ${certId} Result`, text: shareText, url: shareUrl });
+    }
+  };
+
   const shareLinks = [
-    { label: "X", color: "bg-black hover:bg-slate-800", url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}` },
-    { label: "LinkedIn", color: "bg-blue-700 hover:bg-blue-600", url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}` },
-    { label: "WhatsApp", color: "bg-green-600 hover:bg-green-500", url: `https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}` },
-    { label: "Reddit", color: "bg-orange-600 hover:bg-orange-500", url: `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}` },
-    { label: "Telegram", color: "bg-sky-500 hover:bg-sky-400", url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}` },
+    { label: 'X (Twitter)', emoji: '𝕏', color: 'bg-black hover:bg-slate-800 border-slate-700', url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}` },
+    { label: 'LinkedIn', emoji: 'in', color: 'bg-blue-700 hover:bg-blue-600 border-blue-600', url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(shareText)}` },
+    { label: 'WhatsApp', emoji: '💬', color: 'bg-green-600 hover:bg-green-500 border-green-500', url: `https://wa.me/?text=${encodeURIComponent(shareText)}` },
+    { label: 'Telegram', emoji: '✈️', color: 'bg-sky-500 hover:bg-sky-400 border-sky-400', url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}` },
+    { label: 'Reddit', emoji: '🤖', color: 'bg-orange-600 hover:bg-orange-500 border-orange-500', url: `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}` },
+    { label: 'Facebook', emoji: 'f', color: 'bg-blue-600 hover:bg-blue-500 border-blue-500', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}` },
   ];
 
   return (
@@ -116,122 +125,19 @@ const ExamResults: React.FC = () => {
         </div>
       </div>
 
-      {/* Answer Review */}
-      <div className="rounded-[2.5rem] bg-slate-900 border border-slate-800 overflow-hidden">
-        <button onClick={() => setShowReview(!showReview)}
-          className="w-full p-8 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <div className="text-left">
-              <h3 className="text-lg font-black text-white">Review Answers</h3>
-              <p className="text-xs text-slate-500 font-medium">
-                {correctCount} correct · {questionResults.filter(r => !r.isCorrect && !r.skipped).length} wrong · {questionResults.filter(r => r.skipped).length} skipped
-              </p>
-            </div>
-          </div>
-          {showReview ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-        </button>
-
-        <AnimatePresence>
-          {showReview && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-              <div className="px-8 pb-8 space-y-6">
-
-                {/* Filter tabs */}
-                <div className="flex gap-2 flex-wrap">
-                  {(['all','correct','wrong','skipped'] as const).map(f => (
-                    <button key={f} onClick={() => setFilter(f)}
-                      className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                        filter === f ? 'bg-white text-slate-950' : 'bg-slate-800 text-slate-400 hover:text-white'
-                      }`}>
-                      {f} {f === 'all' ? `(${questions.length})` : f === 'correct' ? `(${correctCount})` : f === 'wrong' ? `(${questionResults.filter(r => !r.isCorrect && !r.skipped).length})` : `(${questionResults.filter(r => r.skipped).length})`}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Questions */}
-                <div className="space-y-3">
-                  {filteredResults.map(({ q, userAns, isCorrect, skipped }) => {
-                    const globalIdx = questions.indexOf(q);
-                    const isExpanded = expandedQ === globalIdx;
-                    return (
-                      <div key={q.q_id} className={`rounded-2xl border overflow-hidden ${
-                        skipped ? 'border-slate-700 bg-slate-950/50' :
-                        isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'
-                      }`}>
-                        <button onClick={() => setExpandedQ(isExpanded ? null : globalIdx)}
-                          className="w-full p-4 flex items-center gap-4 text-left hover:bg-white/5 transition-colors">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black ${
-                            skipped ? 'bg-slate-800 text-slate-500' :
-                            isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                          }`}>{globalIdx + 1}</div>
-                          <p className="text-xs text-slate-300 flex-1 line-clamp-2">{q.text}</p>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {skipped ? <span className="text-[9px] font-black text-slate-500 uppercase">Skipped</span> :
-                             isCorrect ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> :
-                             <XCircle className="w-4 h-4 text-red-500" />}
-                            {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                          </div>
-                        </button>
-
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-                              <div className="px-4 pb-4 space-y-3 border-t border-slate-800/50 pt-4">
-                                {/* Options */}
-                                <div className="space-y-2">
-                                  {Object.entries(q.options).map(([letter, text]) => {
-                                    const isUserAns = Array.isArray(userAns) ? userAns.includes(letter) : userAns === letter;
-                                    const isCorrectAns = q.correct.includes(letter);
-                                    return (
-                                      <div key={letter} className={`p-3 rounded-xl border text-xs flex items-start gap-3 ${
-                                        isCorrectAns ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' :
-                                        isUserAns && !isCorrectAns ? 'bg-red-500/10 border-red-500/30 text-red-300' :
-                                        'bg-slate-900 border-slate-800 text-slate-500'
-                                      }`}>
-                                        <span className="font-black shrink-0">{letter}.</span>
-                                        <span>{text as string}</span>
-                                        {isCorrectAns && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 ml-auto mt-0.5" />}
-                                        {isUserAns && !isCorrectAns && <XCircle className="w-3.5 h-3.5 text-red-500 shrink-0 ml-auto mt-0.5" />}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-
-                                {/* Explanation */}
-                                {q.explanation && (
-                                  <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Explanation</p>
-                                    <p className="text-xs text-slate-300 leading-relaxed">{q.explanation}</p>
-                                  </div>
-                                )}
-
-                                {/* Resources */}
-                                {q.resources?.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {q.resources.map((r: any, i: number) => (
-                                      <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition-colors">
-                                        {r.type} <ExternalLink className="w-3 h-3" />
-                                      </a>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Answer Review Button */}
+      <button onClick={() => setInReview(true)}
+        className="w-full p-6 rounded-[2rem] bg-slate-900 border border-slate-800 hover:border-blue-500/40 hover:bg-slate-800/50 transition-all flex items-center gap-4 group">
+        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <BookOpen className="w-6 h-6" />
+        </div>
+        <div className="text-left">
+          <p className="text-base font-black text-white">Review Answers</p>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
+            {correctCount} correct · {questionResults.filter(r => !r.isCorrect && !r.skipped).length} wrong · {questionResults.filter(r => r.skipped).length} skipped — read each question and reveal the answer at your own pace
+          </p>
+        </div>
+      </button>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -260,21 +166,50 @@ const ExamResults: React.FC = () => {
               className="fixed inset-0 z-[201] flex items-center justify-center p-4">
               <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 w-full max-w-md space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-black text-white">Share Your Result</h3>
+                  <div>
+                    <h3 className="text-xl font-black text-white">Share Your Result</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Let your network know how you did</p>
+                  </div>
                   <button onClick={() => setShowShare(false)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800">
-                  <p className="text-sm text-slate-300 leading-relaxed">{shareText}</p>
+
+                {/* Score card preview */}
+                <div className={`p-5 rounded-2xl border space-y-1 ${passed ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-slate-950 border-slate-800'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CertPrep360</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${passed ? 'text-emerald-500' : 'text-orange-500'}`}>{passed ? '✅ Passed' : '📚 Practice'}</span>
+                  </div>
+                  <p className="text-2xl font-black text-white">{score}%</p>
+                  <p className="text-xs text-slate-400">{certId} · {correctCount}/{questions.length} correct · {timeTaken}m</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+
+                {/* Platform grid */}
+                <div className="grid grid-cols-3 gap-2">
                   {shareLinks.map(link => (
                     <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer"
-                      className={`${link.color} text-white rounded-2xl py-3 px-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:scale-105`}>
-                      <Share2 className="w-3.5 h-3.5" /> {link.label}
+                      className={`${link.color} border text-white rounded-2xl py-3 px-2 text-[10px] font-black uppercase tracking-widest flex flex-col items-center justify-center gap-1.5 transition-all hover:scale-105`}>
+                      <span className="text-base">{link.emoji}</span>
+                      <span>{link.label}</span>
                     </a>
                   ))}
+                </div>
+
+                {/* Copy + Native share */}
+                <div className="flex gap-2">
+                  <button onClick={handleCopy}
+                    className={`flex-1 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all border ${
+                      copied ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                    }`}>
+                    {copied ? '✅ Copied!' : '📋 Copy Text'}
+                  </button>
+                  {typeof navigator !== 'undefined' && 'share' in navigator && (
+                    <button onClick={handleNativeShare}
+                      className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+                      📤 Share
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>

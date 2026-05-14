@@ -58,7 +58,7 @@ export const useExamStore = create<ExamStore>()(
       startTime: null,
 
       startExam: async (certId, examId) => {
-        set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME });
+        set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME, currentQuestionIndex: 0, certId, examId });
         
         try {
           const questions = await authFetch(`/questions/${certId}/${examId}`) as Question[];
