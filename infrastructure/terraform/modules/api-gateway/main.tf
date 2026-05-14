@@ -235,6 +235,23 @@ resource "aws_api_gateway_integration" "admin_content_delete_lambda" {
   uri                     = var.admin_manage_content_lambda_invoke_arn
 }
 
+resource "aws_api_gateway_method" "patch_admin_content" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.admin_content.id
+  http_method   = "PATCH"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "admin_content_patch_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.admin_content.id
+  http_method             = aws_api_gateway_method.patch_admin_content.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.admin_manage_content_lambda_invoke_arn
+}
+
 # /admin/stats
 resource "aws_api_gateway_resource" "admin_stats" {
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -330,7 +347,7 @@ resource "aws_api_gateway_integration_response" "options_questions" {
   status_code = aws_api_gateway_method_response.options_questions.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -375,7 +392,7 @@ resource "aws_api_gateway_integration_response" "options_results" {
   status_code = aws_api_gateway_method_response.options_results.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -420,7 +437,7 @@ resource "aws_api_gateway_integration_response" "options_analytics" {
   status_code = aws_api_gateway_method_response.options_analytics.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -465,7 +482,7 @@ resource "aws_api_gateway_integration_response" "options_dynamic_quiz" {
   status_code = aws_api_gateway_method_response.options_dynamic_quiz.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -510,7 +527,7 @@ resource "aws_api_gateway_integration_response" "options_admin_content" {
   status_code = aws_api_gateway_method_response.options_admin_content.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -555,7 +572,7 @@ resource "aws_api_gateway_integration_response" "options_admin_stats" {
   status_code = aws_api_gateway_method_response.options_admin_stats.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -600,7 +617,7 @@ resource "aws_api_gateway_integration_response" "options_admin_ai" {
   status_code = aws_api_gateway_method_response.options_admin_ai.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
@@ -613,7 +630,7 @@ resource "aws_api_gateway_gateway_response" "default_4xx" {
   response_parameters = {
     "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
   }
 }
 
@@ -624,7 +641,7 @@ resource "aws_api_gateway_gateway_response" "default_5xx" {
   response_parameters = {
     "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
   }
 }
 
@@ -637,6 +654,7 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.dynamic_quiz_lambda,
     aws_api_gateway_integration.admin_content_post_lambda,
     aws_api_gateway_integration.admin_content_delete_lambda,
+    aws_api_gateway_integration.admin_content_patch_lambda,
     aws_api_gateway_integration.admin_content_get_lambda,
     aws_api_gateway_integration.admin_stats_lambda,
     aws_api_gateway_integration.admin_ai_generate_lambda,
@@ -670,6 +688,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.admin_content_get_lambda.id,
       aws_api_gateway_integration.admin_content_post_lambda.id,
       aws_api_gateway_integration.admin_content_delete_lambda.id,
+      aws_api_gateway_integration.admin_content_patch_lambda.id,
       aws_api_gateway_integration.admin_stats_lambda.id,
       aws_api_gateway_resource.admin_stats.id,
       aws_api_gateway_resource.admin_content.id,
