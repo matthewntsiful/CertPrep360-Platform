@@ -87,7 +87,7 @@ export const handler = async (event) => {
         if (httpMethod === "PATCH") {
             // Partial update - only updates specified fields, never touches text/options/correct
             const body = JSON.parse(event.body || "{}");
-            const { q_id, cert_id, exam_id, fields } = body;
+            const { q_id, cert_id, exam_id, sk, fields } = body;
 
             if (!q_id || !cert_id || !exam_id || !fields) {
                 return {
@@ -96,6 +96,10 @@ export const handler = async (event) => {
                     body: JSON.stringify({ message: "Missing q_id, cert_id, exam_id, or fields." }),
                 };
             }
+
+            // Use explicit SK if provided to handle legacy q_id formats
+            // Without this, legacy q_ids create new items instead of updating existing ones
+            const itemSK = sk || `EXAM#${exam_id}#QUESTION#${q_id}`;
 
             // Build dynamic update expression from allowed fields only
             const ALLOWED = ['explanation', 'resources', 'text', 'options', 'domain'];
@@ -115,13 +119,11 @@ export const handler = async (event) => {
 
             const command = new UpdateCommand({
                 TableName: TABLE_NAME,
-                Key: {
-                    PK: `CERT#${cert_id}`,
-                    SK: `EXAM#${exam_id}#QUESTION#${q_id}`
-                },
+                Key: { PK: `CERT#${cert_id}`, SK: itemSK },
                 UpdateExpression,
                 ExpressionAttributeNames,
-                ExpressionAttributeValues
+                ExpressionAttributeValues,
+                ConditionExpression: 'attribute_exists(PK)'
             });
 
             await docClient.send(command);

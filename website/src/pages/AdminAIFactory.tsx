@@ -255,7 +255,7 @@ const AdminAIFactory: React.FC = () => {
       const fields: any = {};
       if (q._enriched) { fields.explanation = q.explanation; fields.resources = q.resources; }
       if (q._fixed) { fields.text = q.text; fields.options = q.options; fields.explanation = q.explanation; fields.resources = q.resources; }
-      await adminService.partialUpdateQuestion(q.q_id, q.cert_id, q.exam_id, fields);
+      await adminService.partialUpdateQuestion(q.q_id, q.cert_id, q.exam_id, fields, q.SK || q.sk);
       count++;
     }
     alert(`${count} questions updated successfully!`);

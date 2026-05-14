@@ -66,9 +66,9 @@ export const adminService = {
       body: JSON.stringify({ mode: 'fix', certId, question })
     }),
 
-  partialUpdateQuestion: (q_id: string, cert_id: string, exam_id: string, fields: Record<string, any>) =>
+  partialUpdateQuestion: (q_id: string, cert_id: string, exam_id: string, fields: Record<string, any>, sk?: string) =>
     authFetch('/admin/content', {
       method: 'PATCH',
-      body: JSON.stringify({ q_id, cert_id, exam_id, fields })
+      body: JSON.stringify({ q_id, cert_id, exam_id, sk, fields })
     })
 };
