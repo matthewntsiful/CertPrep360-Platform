@@ -61,7 +61,10 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
-        run: terraform plan -out=tfplan
+        run: |
+          terraform plan -out=tfplan \
+            -var="google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" \
+            -var="google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}"
 
       - name: Terraform Apply
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
