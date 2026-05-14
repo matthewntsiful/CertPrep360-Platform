@@ -1,4 +1,4 @@
-import { PutCommand, DeleteCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, DeleteCommand, UpdateCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
@@ -81,6 +81,55 @@ export const handler = async (event) => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(items),
+            };
+        }
+
+        if (httpMethod === "PATCH") {
+            // Partial update - only updates specified fields, never touches text/options/correct
+            const body = JSON.parse(event.body || "{}");
+            const { q_id, cert_id, exam_id, fields } = body;
+
+            if (!q_id || !cert_id || !exam_id || !fields) {
+                return {
+                    statusCode: 400,
+                    headers: { "Access-Control-Allow-Origin": "*" },
+                    body: JSON.stringify({ message: "Missing q_id, cert_id, exam_id, or fields." }),
+                };
+            }
+
+            // Build dynamic update expression from allowed fields only
+            const ALLOWED = ['explanation', 'resources', 'text', 'options', 'domain'];
+            const updates = Object.entries(fields).filter(([k]) => ALLOWED.includes(k));
+
+            if (updates.length === 0) {
+                return {
+                    statusCode: 400,
+                    headers: { "Access-Control-Allow-Origin": "*" },
+                    body: JSON.stringify({ message: "No valid fields to update." }),
+                };
+            }
+
+            const UpdateExpression = 'SET ' + updates.map(([k], i) => `#f${i} = :v${i}`).join(', ');
+            const ExpressionAttributeNames = Object.fromEntries(updates.map(([k], i) => [`#f${i}`, k]));
+            const ExpressionAttributeValues = Object.fromEntries(updates.map(([k, v], i) => [`:v${i}`, v]));
+
+            const command = new UpdateCommand({
+                TableName: TABLE_NAME,
+                Key: {
+                    PK: `CERT#${cert_id}`,
+                    SK: `EXAM#${exam_id}#QUESTION#${q_id}`
+                },
+                UpdateExpression,
+                ExpressionAttributeNames,
+                ExpressionAttributeValues
+            });
+
+            await docClient.send(command);
+
+            return {
+                statusCode: 200,
+                headers: { "Access-Control-Allow-Origin": "*" },
+                body: JSON.stringify({ message: `Partially updated question: ${q_id}` }),
             };
         }
 

@@ -121,13 +121,114 @@ const BLUEPRINTS = {
   }
 };
 
+const invokeModel = async (prompt, maxTokens = 4000) => {
+  const payload = {
+    anthropic_version: "bedrock-2023-05-31",
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7
+  };
+  const command = new InvokeModelCommand({
+    modelId: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    contentType: "application/json",
+    accept: "application/json",
+    body: JSON.stringify(payload)
+  });
+  const response = await client.send(command);
+  const result = JSON.parse(new TextDecoder().decode(response.body));
+  return result.content[0].text;
+};
+
 export const handler = async (event) => {
   console.log("AI Factory Request:", JSON.stringify(event));
 
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    const { certId, topic, context, count = 1, domain } = body;
+    const { mode = 'generate', certId, topic, context, count = 1, domain, question } = body;
 
+    // ── ENRICH MODE ──────────────────────────────────────────────────────────
+    if (mode === 'enrich') {
+      if (!question) return { statusCode: 400, headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "question object required" }) };
+
+      const optionsText = Object.entries(question.options || {})
+        .map(([k, v]) => `${k}. ${v}`).join('\n');
+
+      const prompt = `You are an AWS certification expert. Given this exam question, write a detailed explanation and provide relevant AWS documentation links.
+
+Question: ${question.text}
+Options:\n${optionsText}
+Correct Answer: ${question.correct}
+Domain: ${question.domain}
+Certification: ${certId}
+
+Return ONLY a JSON object in this exact format:
+{
+  "explanation": "3-5 sentence explanation of why the correct answer is right and briefly why each wrong answer is incorrect. Be specific about AWS services and concepts.",
+  "resources": [
+    { "type": "📖 AWS Docs", "url": "https://docs.aws.amazon.com/..." },
+    { "type": "📖 AWS Docs", "url": "https://docs.aws.amazon.com/..." }
+  ]
+}
+
+Return ONLY the JSON object. No other text.`;
+
+      const aiText = await invokeModel(prompt, 1500);
+      const jsonStr = aiText.substring(aiText.indexOf('{'), aiText.lastIndexOf('}') + 1);
+      const enriched = JSON.parse(jsonStr);
+
+      return {
+        statusCode: 200,
+        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        body: JSON.stringify(enriched)
+      };
+    }
+
+    // ── FIX MODE ─────────────────────────────────────────────────────────────
+    if (mode === 'fix') {
+      if (!question) return { statusCode: 400, headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "question object required" }) };
+
+      const optionsText = Object.entries(question.options || {})
+        .map(([k, v]) => `${k}. ${v}`).join('\n');
+
+      const prompt = `You are an AWS certification expert. The following exam question has wording issues or is incomplete. Rewrite it clearly and completely.
+
+Original Question: ${question.text}
+Original Options:\n${optionsText}
+Correct Answer: ${question.correct}
+Domain: ${question.domain}
+Certification: ${certId}
+
+Rules:
+- Keep the same AWS technical concept and correct answer
+- Fix any garbled text, artifacts, or incomplete sentences
+- Complete any truncated options
+- Keep the same difficulty level and domain
+- Do NOT change which option is correct
+
+Return ONLY a JSON object in this exact format:
+{
+  "text": "The rewritten question text",
+  "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
+  "explanation": "3-5 sentence explanation of why the correct answer is right.",
+  "resources": [
+    { "type": "📖 AWS Docs", "url": "https://docs.aws.amazon.com/..." }
+  ]
+}
+
+Return ONLY the JSON object. No other text.`;
+
+      const aiText = await invokeModel(prompt, 2000);
+      const jsonStr = aiText.substring(aiText.indexOf('{'), aiText.lastIndexOf('}') + 1);
+      const fixed = JSON.parse(jsonStr);
+
+      return {
+        statusCode: 200,
+        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        body: JSON.stringify(fixed)
+      };
+    }
+
+    // ── GENERATE MODE (default) ───────────────────────────────────────────────
     if (!certId || !BLUEPRINTS[certId]) {
       return {
         statusCode: 400,
@@ -139,72 +240,30 @@ export const handler = async (event) => {
     const blueprint = BLUEPRINTS[certId];
     const targetDomain = domain || blueprint.domains[Math.floor(Math.random() * blueprint.domains.length)].name;
 
-    const systemPrompt = `You are an elite AWS Certification Psychometrician specializing in ${blueprint.name} (${certId}).
-Your goal is to generate high-fidelity exam questions that match the official exam difficulty and style.
+    const generatePrompt = `You are an elite AWS Certification Psychometrician specializing in ${blueprint.name} (${certId}).
+Generate ${count} high-fidelity exam question(s) for domain: ${targetDomain}.
+${topic ? `Focus topic: ${topic}` : ''}
+${context ? `Context: ${context}` : ''}
 
-REQUIRED JSON FORMAT:
-Return an array of question objects. Each object must strictly follow this structure:
-{
-  "q_id": "string (unique)",
+Return ONLY a JSON array of question objects:
+[{
+  "q_id": "unique_id",
   "cert_id": "${certId}",
   "type": "QUESTION",
   "domain": "${targetDomain}",
-  "text": "The scenario-based question text",
-  "options": {
-    "A": "Response",
-    "B": "Response",
-    "C": "Response",
-    "D": "Response"
-  },
+  "text": "scenario-based question",
+  "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
   "correct": "A|B|C|D",
-  "explanation": "Detailed professional explanation of why the correct choice is right and others are wrong.",
-  "resources": [
-    { "type": "📖 AWS Docs", "url": "https://docs.aws.amazon.com/..." }
-  ]
-}
+  "explanation": "Detailed explanation of correct and incorrect answers.",
+  "resources": [{ "type": "📖 AWS Docs", "url": "https://docs.aws.amazon.com/..." }]
+}]`;
 
-CONSTRAINTS:
-- No conversational text. ONLY return the JSON array.
-- Scenarios must be expert-level.
-- Questions must be technically accurate.
-- If context text is provided, base the questions on that text while staying within the ${certId} domain.`;
-
-    const userPrompt = `Generate ${count} question(s) for the topic: ${topic || "General " + targetDomain}.
-Target Domain: ${targetDomain}
-Content Context: ${context || "None provided"}`;
-
-    const payload = {
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 4000,
-      messages: [
-        {
-          role: "user",
-          content: `${systemPrompt}\n\n${userPrompt}`
-        }
-      ],
-      temperature: 0.7
-    };
-
-    const command = new InvokeModelCommand({
-      modelId: "us.anthropic.claude-sonnet-4-5-20250929-v1:0", // Claude 4.5 Sonnet (Elite tier via Inference Profile)
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify(payload)
-    });
-
-    const response = await client.send(command);
-    const result = JSON.parse(new TextDecoder().decode(response.body));
-    
-    // Parse the AI response text into JSON
-    const aiText = result.content[0].text;
-    const questions = JSON.parse(aiText.substring(aiText.indexOf("["), aiText.lastIndexOf("]") + 1));
+    const aiText = await invokeModel(generatePrompt);
+    const questions = JSON.parse(aiText.substring(aiText.indexOf('['), aiText.lastIndexOf(']') + 1));
 
     return {
       statusCode: 200,
-      headers: { 
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-      },
+      headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
       body: JSON.stringify({ questions })
     };
 

@@ -8,7 +8,9 @@ import {
   Trash2,
   Rocket,
   Info,
-  LayoutGrid
+  LayoutGrid,
+  Sparkles,
+  Wrench
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminService } from '../services/adminService';
@@ -43,7 +45,7 @@ const AdminAIFactory: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [drafts, setDrafts] = useState<AIGeneratedQuestion[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
-  const [mode, setMode] = useState<'full' | 'topup'>('full');
+  const [mode, setMode] = useState<'full' | 'topup' | 'enrich' | 'fix'>('full');
   const [examStatus, setExamStatus] = useState<{existing: number, missing: number, startFrom: number} | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [existingExams, setExistingExams] = useState<string[]>([]);
@@ -64,18 +66,19 @@ const AdminAIFactory: React.FC = () => {
     }
   };
 
-  const handleModeSwitch = (newMode: 'full' | 'topup') => {
+  const handleModeSwitch = (newMode: 'full' | 'topup' | 'enrich' | 'fix') => {
     setMode(newMode);
     setExamStatus(null);
     setDrafts([]);
-    if (newMode === 'topup') loadExistingExams(selectedCert);
+    setStatusMessage('');
+    if (newMode === 'topup' || newMode === 'enrich' || newMode === 'fix') loadExistingExams(selectedCert);
   };
 
   const handleCertChange = (certId: string) => {
     setSelectedCert(certId);
     setExamStatus(null);
     setDrafts([]);
-    if (mode === 'topup') loadExistingExams(certId);
+    if (mode === 'topup' || mode === 'enrich' || mode === 'fix') loadExistingExams(certId);
   };
 
   const handleCheckStatus = async () => {
@@ -170,6 +173,98 @@ const AdminAIFactory: React.FC = () => {
     }
   };
 
+  // Enrich & Fix state
+  const [enrichFixQuestions, setEnrichFixQuestions] = useState<any[]>([]);
+  const [enrichFixLoading, setEnrichFixLoading] = useState(false);
+  const [enrichFixProgress, setEnrichFixProgress] = useState(0);
+  const [enrichFixStatus, setEnrichFixStatus] = useState('');
+  const [enrichFixResults, setEnrichFixResults] = useState<any[]>([]);
+  const [scanIssues, setScanIssues] = useState<any[]>([]);
+
+  const ARTIFACTS = /[a-z]{2,4}\s*$|\s+[a-z]{1,3}\s*$|\.\s*[a-z]{1,4}\s*$/;
+
+  const loadQuestionsForExam = async () => {
+    setEnrichFixLoading(true);
+    setEnrichFixResults([]);
+    setScanIssues([]);
+    try {
+      const questions = await adminService.getQuestions(selectedCert, examId);
+      const qs = Array.isArray(questions) ? questions : [];
+      setEnrichFixQuestions(qs);
+      if (mode === 'fix') {
+        const issues = qs.filter(q => {
+          const hasArtifact = ARTIFACTS.test(q.text || '');
+          const hasShortOption = Object.values(q.options || {}).some((v: any) => v.length < 10);
+          const hasShortText = (q.text || '').length < 60;
+          return hasArtifact || hasShortOption || hasShortText;
+        });
+        setScanIssues(issues);
+      }
+    } catch { setEnrichFixQuestions([]); }
+    finally { setEnrichFixLoading(false); }
+  };
+
+  const handleEnrich = async () => {
+    const toProcess = enrichFixQuestions.filter(q =>
+      !q.explanation || q.explanation.length < 100 || !q.resources?.length
+    );
+    if (toProcess.length === 0) { setEnrichFixStatus('All questions already have rich explanations.'); return; }
+    setIsGenerating(true);
+    setEnrichFixProgress(0);
+    setEnrichFixResults([]);
+    const results: any[] = [];
+    for (let i = 0; i < toProcess.length; i++) {
+      setEnrichFixProgress(Math.round((i / toProcess.length) * 100));
+      setEnrichFixStatus(`Enriching Q${i + 1}/${toProcess.length}: ${toProcess[i].q_id}...`);
+      try {
+        const enriched = await adminService.enrichQuestion(selectedCert, toProcess[i]);
+        results.push({ ...toProcess[i], ...enriched, _enriched: true });
+      } catch { results.push({ ...toProcess[i], _error: true }); }
+    }
+    setEnrichFixProgress(100);
+    setEnrichFixStatus(`Enrichment complete — ${results.filter(r => !r._error).length} questions ready.`);
+    setEnrichFixResults(results);
+    setIsGenerating(false);
+  };
+
+  const handleFix = async (questionsToFix: any[]) => {
+    if (questionsToFix.length === 0) return;
+    setIsGenerating(true);
+    setEnrichFixProgress(0);
+    setEnrichFixResults([]);
+    const results: any[] = [];
+    for (let i = 0; i < questionsToFix.length; i++) {
+      setEnrichFixProgress(Math.round((i / questionsToFix.length) * 100));
+      setEnrichFixStatus(`Fixing Q${i + 1}/${questionsToFix.length}: ${questionsToFix[i].q_id}...`);
+      try {
+        const fixed = await adminService.fixQuestion(selectedCert, questionsToFix[i]);
+        results.push({ ...questionsToFix[i], ...fixed, _fixed: true });
+      } catch { results.push({ ...questionsToFix[i], _error: true }); }
+    }
+    setEnrichFixProgress(100);
+    setEnrichFixStatus(`Fix complete — ${results.filter(r => !r._error).length} questions ready.`);
+    setEnrichFixResults(results);
+    setIsGenerating(false);
+  };
+
+  const handlePublishEnrichFix = async () => {
+    if (!window.confirm(`Publish ${enrichFixResults.length} updated questions?`)) return;
+    setIsGenerating(true);
+    setEnrichFixStatus('Publishing to DynamoDB...');
+    let count = 0;
+    for (const q of enrichFixResults.filter(r => !r._error)) {
+      const fields: any = {};
+      if (q._enriched) { fields.explanation = q.explanation; fields.resources = q.resources; }
+      if (q._fixed) { fields.text = q.text; fields.options = q.options; fields.explanation = q.explanation; fields.resources = q.resources; }
+      await adminService.partialUpdateQuestion(q.q_id, q.cert_id, q.exam_id, fields);
+      count++;
+    }
+    alert(`${count} questions updated successfully!`);
+    setEnrichFixResults([]);
+    setEnrichFixStatus('');
+    setIsGenerating(false);
+  };
+
   return (
     <div className="space-y-10">
       {/* Header */}
@@ -244,19 +339,18 @@ const AdminAIFactory: React.FC = () => {
               </div>
 
               {/* Mode Toggle */}
-              <div className="flex rounded-2xl overflow-hidden border border-slate-800">
-                <button
-                  onClick={() => handleModeSwitch('full')}
-                  className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
-                    mode === 'full' ? 'bg-purple-600 text-white' : 'bg-slate-950 text-slate-500 hover:text-slate-300'
-                  }`}
-                >Full Set</button>
-                <button
-                  onClick={() => handleModeSwitch('topup')}
-                  className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
-                    mode === 'topup' ? 'bg-blue-600 text-white' : 'bg-slate-950 text-slate-500 hover:text-slate-300'
-                  }`}
-                >Top Up</button>
+              <div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden border border-slate-800">
+                {[
+                  { id: 'full', label: 'Full Set', color: 'bg-purple-600' },
+                  { id: 'topup', label: 'Top Up', color: 'bg-blue-600' },
+                  { id: 'enrich', label: 'Enrich', color: 'bg-emerald-600' },
+                  { id: 'fix', label: 'Fix', color: 'bg-amber-600' },
+                ].map(m => (
+                  <button key={m.id} onClick={() => handleModeSwitch(m.id as any)}
+                    className={`py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                      mode === m.id ? `${m.color} text-white` : 'bg-slate-950 text-slate-500 hover:text-slate-300'
+                    }`}>{m.label}</button>
+                ))}
               </div>
 
               {/* Top Up: Check Status */}
@@ -284,14 +378,58 @@ const AdminAIFactory: React.FC = () => {
                 </div>
               )}
 
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || (mode === 'topup' && (!examStatus || examStatus.missing === 0))}
-                className="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
-              >
-                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                {mode === 'full' ? 'Generate 65-Question Set' : `Fill ${examStatus?.missing ?? '?'} Missing Questions`}
-              </button>
+              {/* Enrich / Fix: Load Questions */}
+              {(mode === 'enrich' || mode === 'fix') && (
+                <div className="space-y-3">
+                  <button
+                    onClick={loadQuestionsForExam}
+                    disabled={enrichFixLoading}
+                    className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all disabled:opacity-50"
+                  >
+                    {enrichFixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                    {mode === 'enrich' ? 'Scan Exam Quality' : 'Scan for Issues'}
+                  </button>
+                  {enrichFixQuestions.length > 0 && (
+                    <div className={`p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-widest space-y-1 ${
+                      mode === 'enrich' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    }`}>
+                      <p>Total questions: {enrichFixQuestions.length}</p>
+                      {mode === 'enrich' && (
+                        <p>Need enrichment: {enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 100 || !q.resources?.length).length}</p>
+                      )}
+                      {mode === 'fix' && (
+                        <p>Issues detected: {scanIssues.length}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action Button */}
+              {(mode === 'enrich' || mode === 'fix') ? (
+                <button
+                  onClick={mode === 'enrich' ? handleEnrich : () => handleFix(scanIssues)}
+                  disabled={isGenerating || enrichFixQuestions.length === 0 || (mode === 'fix' && scanIssues.length === 0)}
+                  className={`w-full py-5 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale ${
+                    mode === 'enrich' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-500/10' : 'bg-gradient-to-r from-amber-600 to-orange-600 shadow-amber-500/10'
+                  }`}
+                >
+                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : mode === 'enrich' ? <Sparkles className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
+                  {mode === 'enrich'
+                    ? `Enrich ${enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 100 || !q.resources?.length).length} Questions`
+                    : `Fix ${scanIssues.length} Issues`
+                  }
+                </button>
+              ) : (
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || (mode === 'topup' && (!examStatus || examStatus.missing === 0))}
+                  className="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
+                >
+                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
+                  {mode === 'full' ? 'Generate 65-Question Set' : `Fill ${examStatus?.missing ?? '?'} Missing Questions`}
+                </button>
+              )}
             </div>
           </div>
 
@@ -299,7 +437,10 @@ const AdminAIFactory: React.FC = () => {
             <div className="flex items-start gap-4">
               <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                Full Set generates all 65 questions from scratch. Top Up checks existing questions and fills only the gaps — safe to run on partially complete exams.
+                {mode === 'full' && 'Full Set generates all 65 questions from scratch for a new exam.'}
+                {mode === 'topup' && 'Top Up fills only missing questions in an existing exam.'}
+                {mode === 'enrich' && 'Enrich adds detailed explanations and AWS doc links. Question text and answers are never changed.'}
+                {mode === 'fix' && 'Fix rewrites questions with wording issues or incomplete content. Correct answer is never changed.'}
               </p>
             </div>
           </div>
@@ -307,6 +448,56 @@ const AdminAIFactory: React.FC = () => {
 
         {/* Manufacturing Progress & drafts */}
         <div className="lg:col-span-2 space-y-6">
+
+          {/* Enrich / Fix Results Panel */}
+          {(mode === 'enrich' || mode === 'fix') && (isGenerating || enrichFixResults.length > 0) && (
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {mode === 'enrich' ? <Sparkles className="w-5 h-5 text-emerald-500" /> : <Wrench className="w-5 h-5 text-amber-500" />}
+                  <h2 className="text-sm font-black uppercase tracking-widest text-white">
+                    {mode === 'enrich' ? 'Enrichment Pipeline' : 'Fix Pipeline'}
+                  </h2>
+                </div>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                  {enrichFixResults.length} processed
+                </span>
+              </div>
+              <div className="space-y-3">
+                <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${enrichFixProgress}%` }}
+                    className={`h-full rounded-full ${mode === 'enrich' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`} />
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">{enrichFixStatus}</p>
+              </div>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                {enrichFixResults.map((q) => (
+                  <div key={q.q_id} className={`p-4 rounded-2xl border space-y-2 ${
+                    q._error ? 'bg-red-500/5 border-red-500/20' : mode === 'enrich' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{q.q_id} • {q.domain}</span>
+                      {q._error ? <span className="text-[9px] text-red-400 font-bold">FAILED</span> : <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
+                    </div>
+                    {mode === 'fix' && !q._error && (
+                      <p className="text-[10px] text-slate-300 leading-relaxed">{q.text}</p>
+                    )}
+                    {!q._error && (
+                      <p className="text-[10px] text-slate-400 leading-relaxed">{q.explanation}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {enrichFixResults.length > 0 && !isGenerating && (
+                <div className="pt-4 border-t border-slate-800 flex justify-end">
+                  <button onClick={handlePublishEnrichFix}
+                    className="flex items-center gap-3 px-10 py-5 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all">
+                    <Rocket className="w-5 h-5" /> Publish Updates
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {(isGenerating || drafts.length > 0) && (
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-8">
               <div className="flex items-center justify-between">

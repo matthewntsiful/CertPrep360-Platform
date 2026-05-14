@@ -51,6 +51,24 @@ export const adminService = {
   generateAIContent: (payload: { certId: string, topic?: string, count?: number, domain?: string }) => 
     authFetch('/admin/ai/generate', {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ mode: 'generate', ...payload })
+    }),
+
+  enrichQuestion: (certId: string, question: any) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'enrich', certId, question })
+    }),
+
+  fixQuestion: (certId: string, question: any) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'fix', certId, question })
+    }),
+
+  partialUpdateQuestion: (q_id: string, cert_id: string, exam_id: string, fields: Record<string, any>) =>
+    authFetch('/admin/content', {
+      method: 'PATCH',
+      body: JSON.stringify({ q_id, cert_id, exam_id, fields })
     })
 };
