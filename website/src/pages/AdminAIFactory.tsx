@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Wand2, 
-  Settings, 
   RefreshCcw, 
   CheckCircle2, 
   Loader2,
@@ -266,204 +265,254 @@ const AdminAIFactory: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex items-center gap-3">
+        <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-[10px] font-black uppercase tracking-[0.2em] border border-purple-500/20">AI Content Lab</span>
+        <span className="text-slate-600">/</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sonnet 4.5 Tier</span>
+      </div>
+      <h1 className="text-4xl font-black tracking-tighter text-white">AI Content Factory</h1>
+
+      {/* TOP BAR — Cert + Exam Selector */}
+      <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-[10px] font-black uppercase tracking-[0.2em] border border-purple-500/20">
-              AI Content Lab
-            </span>
-            <span className="text-slate-600">/</span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sonnet 4.5 Tier</span>
-          </div>
-          <h1 className="text-4xl font-black tracking-tighter text-white">Full Exam Factory</h1>
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Certification</label>
+          <select
+            value={selectedCert}
+            onChange={(e) => handleCertChange(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-300 cursor-pointer"
+          >
+            {Object.keys(BLUEPRINTS).map(id => (
+              <option key={id} value={id}>{id} — {BLUEPRINTS[id].name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            {mode === 'full' ? 'New Exam ID' : 'Select Exam'}
+          </label>
+          {mode === 'full' ? (
+            <div className="relative">
+              <input
+                type="text"
+                value={examId}
+                onChange={(e) => setExamId(e.target.value.toUpperCase())}
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-sm font-medium text-white"
+                placeholder={`e.g. ${selectedCert}-EXAM-${String((existingExams.length || 0) + 1).padStart(2,'0')}`}
+              />
+              {existingExams.length > 0 && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                  Next: {selectedCert}-EXAM-{String(existingExams.length + 1).padStart(2,'0')}
+                </span>
+              )}
+            </div>
+          ) : (
+            <select
+              value={examId}
+              onChange={(e) => { setExamId(e.target.value); setExamStatus(null); setEnrichFixQuestions([]); setScanIssues([]); setEnrichFixResults([]); }}
+              disabled={loadingExams}
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-300 cursor-pointer disabled:opacity-50"
+            >
+              {loadingExams && <option>Loading...</option>}
+              {!loadingExams && existingExams.length === 0 && <option>No exams found</option>}
+              {existingExams.map(e => <option key={e} value={e}>{e}</option>)}
+            </select>
+          )}
         </div>
       </div>
 
+      {/* MODE CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { id: 'full',   icon: Wand2,     label: 'Generate',  desc: 'New exam from scratch',        color: 'purple', active: 'bg-purple-600 border-purple-500 text-white', inactive: 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-purple-500/40' },
+          { id: 'topup',  icon: RefreshCcw, label: 'Top Up',   desc: 'Fill missing questions',       color: 'blue',   active: 'bg-blue-600 border-blue-500 text-white',   inactive: 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-blue-500/40' },
+          { id: 'enrich', icon: Sparkles,  label: 'Enrich',    desc: 'Add explanations & resources', color: 'emerald', active: 'bg-emerald-600 border-emerald-500 text-white', inactive: 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-emerald-500/40' },
+          { id: 'fix',    icon: Wrench,    label: 'Fix',       desc: 'Repair wording issues',        color: 'amber',  active: 'bg-amber-600 border-amber-500 text-white',  inactive: 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-amber-500/40' },
+        ].map(m => (
+          <button key={m.id} onClick={() => handleModeSwitch(m.id as any)}
+            className={`p-5 rounded-[2rem] border transition-all text-left space-y-3 ${ mode === m.id ? m.active : m.inactive }`}
+          >
+            <m.icon className="w-6 h-6" />
+            <div>
+              <p className="text-sm font-black uppercase tracking-widest">{m.label}</p>
+              <p className={`text-[10px] font-medium mt-0.5 ${ mode === m.id ? 'text-white/70' : 'text-slate-600' }`}>{m.desc}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* WORKSPACE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Configuration Panel */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-8">
-            <div className="flex items-center gap-3 text-white">
-              <Settings className="w-5 h-5 text-purple-500" />
-              <h2 className="text-sm font-black uppercase tracking-widest">Blueprint Parameters</h2>
+
+        {/* Left — Controls */}
+        <div className="space-y-4">
+
+          {/* Generate controls */}
+          {mode === 'full' && (
+            <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Focus Topic (Optional)</p>
+              <textarea
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-4 text-sm text-white min-h-[100px]"
+                placeholder="e.g. Focus on S3 Lifecycle and DynamoDB replication..."
+              />
+              <button onClick={handleGenerate} disabled={isGenerating}
+                className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                Generate 65 Questions
+              </button>
             </div>
+          )}
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Certification</label>
-                <select 
-                  value={selectedCert}
-                  onChange={(e) => handleCertChange(e.target.value)}
-                  className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-400 focus:border-purple-500/50 transition-all cursor-pointer"
-                >
-                  {Object.keys(BLUEPRINTS).map(id => (
-                    <option key={id} value={id}>{id} - {BLUEPRINTS[id].name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Exam Identifier</label>
-                {mode === 'topup' ? (
-                  <select
-                    value={examId}
-                    onChange={(e) => { setExamId(e.target.value); setExamStatus(null); }}
-                    disabled={loadingExams}
-                    className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-400 focus:border-blue-500/50 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {loadingExams && <option>Loading exams...</option>}
-                    {!loadingExams && existingExams.length === 0 && <option>No exams found</option>}
-                    {existingExams.map(e => <option key={e} value={e}>{e}</option>)}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={examId}
-                    onChange={(e) => setExamId(e.target.value.toUpperCase())}
-                    className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-white focus:border-purple-500/50 transition-all"
-                    placeholder="e.g. SAA-C03-EXAM-17"
-                  />
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Focus Topic (Optional)</label>
-                <textarea 
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="w-full bg-slate-950 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-white focus:border-purple-500/50 transition-all min-h-[100px]"
-                  placeholder="e.g. Focus on S3 Lifecycle Policies and DynamoDB replication..."
-                />
-              </div>
-
-              {/* Mode Toggle */}
-              <div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden border border-slate-800">
-                {[
-                  { id: 'full', label: 'Full Set', color: 'bg-purple-600' },
-                  { id: 'topup', label: 'Top Up', color: 'bg-blue-600' },
-                  { id: 'enrich', label: 'Enrich', color: 'bg-emerald-600' },
-                  { id: 'fix', label: 'Fix', color: 'bg-amber-600' },
-                ].map(m => (
-                  <button key={m.id} onClick={() => handleModeSwitch(m.id as any)}
-                    className={`py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
-                      mode === m.id ? `${m.color} text-white` : 'bg-slate-950 text-slate-500 hover:text-slate-300'
-                    }`}>{m.label}</button>
-                ))}
-              </div>
-
-              {/* Top Up: Check Status */}
-              {mode === 'topup' && (
-                <div className="space-y-3">
-                  <button
-                    onClick={handleCheckStatus}
-                    disabled={isChecking}
-                    className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all disabled:opacity-50"
-                  >
-                    {isChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                    Check Exam Status
-                  </button>
-                  {examStatus && (
-                    <div className={`p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-widest space-y-1 ${
-                      examStatus.missing === 0
-                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                    }`}>
-                      <p>Existing: {examStatus.existing} / 65</p>
-                      <p>Missing: {examStatus.missing} questions</p>
-                      {examStatus.missing > 0 && <p>Will generate: Q{String(examStatus.startFrom).padStart(3,'0')} → Q{String(examStatus.startFrom + examStatus.missing - 1).padStart(3,'0')}</p>}
-                    </div>
-                  )}
+          {/* Top Up controls */}
+          {mode === 'topup' && (
+            <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+              <button onClick={handleCheckStatus} disabled={isChecking}
+                className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 disabled:opacity-50">
+                {isChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                Check Status
+              </button>
+              {examStatus && (
+                <div className={`p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-widest space-y-1 ${
+                  examStatus.missing === 0 ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                }`}>
+                  <p>Existing: {examStatus.existing} / 65</p>
+                  <p>Missing: {examStatus.missing}</p>
+                  {examStatus.missing > 0 && <p>Will fill: Q{String(examStatus.startFrom).padStart(3,'0')} → Q{String(examStatus.startFrom + examStatus.missing - 1).padStart(3,'0')}</p>}
                 </div>
               )}
+              <button onClick={handleGenerate} disabled={isGenerating || !examStatus || examStatus.missing === 0}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                Fill {examStatus?.missing ?? '?'} Questions
+              </button>
+            </div>
+          )}
 
-              {/* Enrich / Fix: Load Questions */}
-              {(mode === 'enrich' || mode === 'fix') && (
-                <div className="space-y-3">
-                  <button
-                    onClick={loadQuestionsForExam}
-                    disabled={enrichFixLoading}
-                    className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all disabled:opacity-50"
-                  >
-                    {enrichFixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                    {mode === 'enrich' ? 'Scan Exam Quality' : 'Scan for Issues'}
-                  </button>
-                  {enrichFixQuestions.length > 0 && (
-                    <div className={`p-4 rounded-2xl border text-[10px] font-bold uppercase tracking-widest space-y-1 ${
-                      mode === 'enrich' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                    }`}>
-                      <p>Total questions: {enrichFixQuestions.length}</p>
-                      {mode === 'enrich' && (
-                        <p>Need enrichment: {enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 100 || !q.resources?.length).length}</p>
-                      )}
-                      {mode === 'fix' && (
-                        <p>Issues detected: {scanIssues.length}</p>
-                      )}
-                    </div>
-                  )}
+          {/* Enrich controls */}
+          {mode === 'enrich' && (
+            <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+              <button onClick={loadQuestionsForExam} disabled={enrichFixLoading}
+                className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 disabled:opacity-50">
+                {enrichFixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                Scan Quality
+              </button>
+              {enrichFixQuestions.length > 0 && (
+                <div className="p-4 rounded-2xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest space-y-1">
+                  <p>Total: {enrichFixQuestions.length}</p>
+                  <p>Need enrichment: {enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 100 || !q.resources?.length).length}</p>
                 </div>
               )}
+              <button onClick={handleEnrich} disabled={isGenerating || enrichFixQuestions.length === 0}
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Enrich Questions
+              </button>
+            </div>
+          )}
 
-              {/* Action Button */}
-              {(mode === 'enrich' || mode === 'fix') ? (
-                <button
-                  onClick={mode === 'enrich' ? handleEnrich : () => handleFix(scanIssues)}
-                  disabled={isGenerating || enrichFixQuestions.length === 0 || (mode === 'fix' && scanIssues.length === 0)}
-                  className={`w-full py-5 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale ${
-                    mode === 'enrich' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 shadow-emerald-500/10' : 'bg-gradient-to-r from-amber-600 to-orange-600 shadow-amber-500/10'
-                  }`}
-                >
-                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : mode === 'enrich' ? <Sparkles className="w-5 h-5" /> : <Wrench className="w-5 h-5" />}
-                  {mode === 'enrich'
-                    ? `Enrich ${enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 100 || !q.resources?.length).length} Questions`
-                    : `Fix ${scanIssues.length} Issues`
-                  }
-                </button>
-              ) : (
-                <button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || (mode === 'topup' && (!examStatus || examStatus.missing === 0))}
-                  className="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-purple-500/10 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale"
-                >
-                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-                  {mode === 'full' ? 'Generate 65-Question Set' : `Fill ${examStatus?.missing ?? '?'} Missing Questions`}
-                </button>
+          {/* Fix controls */}
+          {mode === 'fix' && (
+            <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+              <button onClick={loadQuestionsForExam} disabled={enrichFixLoading}
+                className="w-full py-4 bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 disabled:opacity-50">
+                {enrichFixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                Scan for Issues
+              </button>
+              {enrichFixQuestions.length > 0 && (
+                <div className="p-4 rounded-2xl border bg-amber-500/10 border-amber-500/20 text-amber-400 text-[10px] font-bold uppercase tracking-widest space-y-1">
+                  <p>Total: {enrichFixQuestions.length}</p>
+                  <p>Issues found: {scanIssues.length}</p>
+                </div>
               )}
+              <button onClick={() => handleFix(scanIssues)} disabled={isGenerating || scanIssues.length === 0}
+                className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
+                Fix {scanIssues.length} Issues
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="p-6 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
-            <div className="flex items-start gap-4">
-              <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                {mode === 'full' && 'Full Set generates all 65 questions from scratch for a new exam.'}
-                {mode === 'topup' && 'Top Up fills only missing questions in an existing exam.'}
-                {mode === 'enrich' && 'Enrich adds detailed explanations and AWS doc links. Question text and answers are never changed.'}
-                {mode === 'fix' && 'Fix rewrites questions with wording issues or incomplete content. Correct answer is never changed.'}
-              </p>
-            </div>
+          {/* Info */}
+          <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-3">
+            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+              {mode === 'full' && 'Generates all 65 questions for a brand new exam.'}
+              {mode === 'topup' && 'Fills only the missing questions in an existing exam.'}
+              {mode === 'enrich' && 'Adds detailed explanations and AWS docs. Question text is never changed.'}
+              {mode === 'fix' && 'Rewrites questions with wording issues. Correct answer is never changed.'}
+            </p>
           </div>
         </div>
 
-        {/* Manufacturing Progress & drafts */}
+        {/* Right — Output */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Enrich / Fix Results Panel */}
+          {/* Generate / TopUp pipeline */}
+          {(mode === 'full' || mode === 'topup') && (isGenerating || drafts.length > 0) && (
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <RefreshCcw className={`w-5 h-5 text-blue-500 ${isGenerating ? 'animate-spin' : ''}`} />
+                  <h2 className="text-sm font-black uppercase tracking-widest text-white">Pipeline</h2>
+                </div>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{drafts.length} / {mode === 'topup' && examStatus ? examStatus.missing : 65}</span>
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" />
+                </div>
+                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest animate-pulse">{statusMessage}</p>
+              </div>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                <AnimatePresence initial={false}>
+                  {drafts.map((q, i) => (
+                    <motion.div key={q.q_id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                      className="p-5 bg-slate-950 border border-slate-800/50 rounded-2xl space-y-3 group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Draft #{i+1} • {q.domain}</span>
+                        <Trash2 className="w-3.5 h-3.5 text-slate-600 hover:text-red-500 cursor-pointer" onClick={() => setDrafts(drafts.filter(d => d.q_id !== q.q_id))} />
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">{q.text}</p>
+                      <div className="grid grid-cols-1 gap-2">
+                        {Object.entries(q.options).map(([key, value]) => (
+                          <div key={key} className={`p-3 rounded-xl border text-[10px] font-medium ${
+                            q.correct === key ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}><span className="font-black mr-2 opacity-50">{key}.</span>{value as React.ReactNode}</div>
+                        ))}
+                      </div>
+                      <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                        <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">Explanation</p>
+                        <p className="text-[10px] text-slate-400">{q.explanation}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+              {drafts.length > 0 && !isGenerating && (
+                <div className="pt-4 border-t border-slate-800 flex justify-end">
+                  <button onClick={handlePublish} className="flex items-center gap-3 px-10 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all">
+                    <Rocket className="w-4 h-4" /> Deploy to Catalog
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enrich / Fix pipeline */}
           {(mode === 'enrich' || mode === 'fix') && (isGenerating || enrichFixResults.length > 0) && (
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {mode === 'enrich' ? <Sparkles className="w-5 h-5 text-emerald-500" /> : <Wrench className="w-5 h-5 text-amber-500" />}
-                  <h2 className="text-sm font-black uppercase tracking-widest text-white">
-                    {mode === 'enrich' ? 'Enrichment Pipeline' : 'Fix Pipeline'}
-                  </h2>
+                  <h2 className="text-sm font-black uppercase tracking-widest text-white">{mode === 'enrich' ? 'Enrichment' : 'Fix'} Pipeline</h2>
                 </div>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                  {enrichFixResults.length} processed
-                </span>
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{enrichFixResults.length} processed</span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
                   <motion.div initial={{ width: 0 }} animate={{ width: `${enrichFixProgress}%` }}
                     className={`h-full rounded-full ${mode === 'enrich' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`} />
@@ -477,120 +526,31 @@ const AdminAIFactory: React.FC = () => {
                   }`}>
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{q.q_id} • {q.domain}</span>
-                      {q._error ? <span className="text-[9px] text-red-400 font-bold">FAILED</span> : <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
+                      {q._error ? <span className="text-[9px] text-red-400 font-bold">Failed</span> : <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
                     </div>
-                    {mode === 'fix' && !q._error && (
-                      <p className="text-[10px] text-slate-300 leading-relaxed">{q.text}</p>
-                    )}
-                    {!q._error && (
-                      <p className="text-[10px] text-slate-400 leading-relaxed">{q.explanation}</p>
-                    )}
+                    {mode === 'fix' && !q._error && <p className="text-[10px] text-slate-300 leading-relaxed">{q.text}</p>}
+                    {!q._error && <p className="text-[10px] text-slate-400 leading-relaxed">{q.explanation}</p>}
                   </div>
                 ))}
               </div>
               {enrichFixResults.length > 0 && !isGenerating && (
                 <div className="pt-4 border-t border-slate-800 flex justify-end">
-                  <button onClick={handlePublishEnrichFix}
-                    className="flex items-center gap-3 px-10 py-5 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all">
-                    <Rocket className="w-5 h-5" /> Publish Updates
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          {(isGenerating || drafts.length > 0) && (
-            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <RefreshCcw className={`w-5 h-5 text-blue-500 ${isGenerating ? 'animate-spin' : ''}`} />
-                  <h2 className="text-sm font-black uppercase tracking-widest text-white">Manufacturing Pipeline</h2>
-                </div>
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                  {drafts.length} / {mode === 'topup' && examStatus ? examStatus.missing : 65} Questions
-                </span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="space-y-4">
-                <div className="h-3 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
-                  />
-                </div>
-                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest animate-pulse">
-                  {statusMessage}
-                </p>
-              </div>
-
-              {/* Draft List */}
-              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
-                <AnimatePresence initial={false}>
-                  {drafts.map((q, i) => (
-                    <motion.div 
-                      key={q.q_id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-5 bg-slate-950 border border-slate-800/50 rounded-2xl space-y-3 group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Draft #{i+1} • {q.domain}</span>
-                        <div className="flex items-center gap-2">
-                           <CheckCircle2 className="w-3.5 h-3.5 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                           <Trash2 className="w-3.5 h-3.5 text-slate-600 hover:text-red-500 cursor-pointer transition-colors" onClick={() => setDrafts(drafts.filter(d => d.q_id !== q.q_id))} />
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <p className="text-xs font-medium text-slate-300 leading-relaxed font-outfit">{q.text}</p>
-                        
-                        <div className="grid grid-cols-1 gap-2">
-                          {Object.entries(q.options).map(([key, value]) => (
-                            <div 
-                              key={key} 
-                              className={`p-3 rounded-xl border text-[10px] font-medium leading-relaxed ${
-                                q.correct === key 
-                                  ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                                  : 'bg-slate-900 border-slate-800 text-slate-400'
-                              }`}
-                            >
-                              <span className="font-black mr-2 opacity-50">{key}.</span> {value as React.ReactNode}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-blue-500 block mb-1">Explanation</span>
-                          <p className="text-[10px] text-slate-400 leading-relaxed">{q.explanation}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-
-              {drafts.length > 0 && !isGenerating && (
-                <div className="pt-4 border-t border-slate-800 flex justify-end">
-                  <button 
-                    onClick={handlePublish}
-                    className="flex items-center gap-3 px-10 py-5 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-white/10 hover:scale-105 active:scale-95 transition-all"
-                  >
-                    <Rocket className="w-5 h-5" /> Deploy Set to Catalog
+                  <button onClick={handlePublishEnrichFix} className="flex items-center gap-3 px-10 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all">
+                    <Rocket className="w-4 h-4" /> Publish Updates
                   </button>
                 </div>
               )}
             </div>
           )}
 
-          {!isGenerating && drafts.length === 0 && (
-            <div className="h-[600px] bg-slate-950/20 border-2 border-dashed border-slate-800 rounded-[3rem] flex flex-col items-center justify-center gap-6 p-20 text-center">
-              <div className="w-20 h-20 rounded-3xl bg-slate-900 flex items-center justify-center border border-slate-800 text-slate-700">
-                <LayoutGrid className="w-10 h-10" />
+          {/* Empty state */}
+          {!isGenerating && drafts.length === 0 && enrichFixResults.length === 0 && (
+            <div className="h-[500px] bg-slate-950/20 border-2 border-dashed border-slate-800 rounded-[3rem] flex flex-col items-center justify-center gap-4 text-center">
+              <div className="w-16 h-16 rounded-3xl bg-slate-900 flex items-center justify-center border border-slate-800 text-slate-700">
+                <LayoutGrid className="w-8 h-8" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-black text-slate-500 uppercase tracking-widest">Pipeline Empty</h3>
-                <p className="text-xs text-slate-600 font-medium max-w-xs mx-auto">Select a blueprint and trigger the engine to begin manufacturing full exam sets.</p>
-              </div>
+              <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Workspace Empty</p>
+              <p className="text-xs text-slate-600 max-w-xs">Select a mode above and configure the options to get started.</p>
             </div>
           )}
         </div>
