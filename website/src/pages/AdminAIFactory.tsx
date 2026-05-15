@@ -178,6 +178,7 @@ const AdminAIFactory: React.FC = () => {
   const [enrichFixProgress, setEnrichFixProgress] = useState(0);
   const [enrichFixStatus, setEnrichFixStatus] = useState('');
   const [enrichFixResults, setEnrichFixResults] = useState<any[]>([]);
+  const [forceEnrich, setForceEnrich] = useState(false);
   const [scanIssues, setScanIssues] = useState<any[]>([]);
 
   const ARTIFACTS = /[a-z]{2,4}\s*$|\s+[a-z]{1,3}\s*$|\.\s*[a-z]{1,4}\s*$/;
@@ -204,10 +205,12 @@ const AdminAIFactory: React.FC = () => {
   };
 
   const handleEnrich = async () => {
-    const toProcess = enrichFixQuestions.filter(q =>
-      !q.explanation || q.explanation.length < 100 || !q.resources?.length
-    );
-    if (toProcess.length === 0) { setEnrichFixStatus('All questions already have rich explanations.'); return; }
+    const toProcess = forceEnrich
+      ? enrichFixQuestions
+      : enrichFixQuestions.filter(q =>
+          !q.explanation || q.explanation.length < 300 || !q.resources?.length
+        );
+    if (toProcess.length === 0) { setEnrichFixStatus('All questions already have rich explanations. Enable Force Re-enrich to override.'); return; }
     setIsGenerating(true);
     setEnrichFixProgress(0);
     setEnrichFixResults([]);
@@ -403,13 +406,22 @@ const AdminAIFactory: React.FC = () => {
               {enrichFixQuestions.length > 0 && (
                 <div className="p-4 rounded-2xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest space-y-1">
                   <p>Total: {enrichFixQuestions.length}</p>
-                  <p>Need enrichment: {enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 100 || !q.resources?.length).length}</p>
+                  <p>Need enrichment: {forceEnrich ? enrichFixQuestions.length : enrichFixQuestions.filter(q => !q.explanation || q.explanation.length < 300 || !q.resources?.length).length}</p>
                 </div>
               )}
+              {/* Force Re-enrich toggle */}
+              <button type="button" onClick={() => setForceEnrich(!forceEnrich)}
+                className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest border transition-all ${
+                  forceEnrich
+                    ? 'bg-orange-500/10 border-orange-500/30 text-orange-400'
+                    : 'bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300'
+                }`}>
+                {forceEnrich ? '⚡ Force Re-enrich: ON — All 65 questions' : 'Force Re-enrich All (override threshold)'}
+              </button>
               <button onClick={handleEnrich} disabled={isGenerating || enrichFixQuestions.length === 0}
                 className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">
                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Enrich Questions
+                {forceEnrich ? `Re-enrich All ${enrichFixQuestions.length} Questions` : 'Enrich Questions'}
               </button>
             </div>
           )}
