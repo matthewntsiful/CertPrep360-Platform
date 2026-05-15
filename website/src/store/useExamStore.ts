@@ -157,6 +157,14 @@ export const useExamStore = create<ExamStore>()(
         if (state && Array.isArray(state.flaggedQuestions)) {
           state.flaggedQuestions = new Set(state.flaggedQuestions);
         }
+        // Normalize answer keys from strings back to numbers
+        if (state && state.answers) {
+          const normalized: Record<number, string | string[]> = {};
+          Object.entries(state.answers).forEach(([k, v]) => {
+            normalized[Number(k)] = v as string | string[];
+          });
+          state.answers = normalized;
+        }
       },
     }
   )

@@ -14,7 +14,7 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
   const [filter, setFilter] = useState<'all' | 'wrong' | 'correct' | 'skipped'>('all');
 
   const questionResults = questions.map((q, i) => {
-    const userAns = answers[i];
+    const userAns = answers[i] ?? (answers as any)[String(i)];
     let isCorrect = false;
     if (userAns) {
       isCorrect = Array.isArray(userAns)
@@ -61,7 +61,7 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
           { key: 'wrong', label: `❌ Wrong (${questionResults.filter(r => !r.isCorrect && !r.skipped).length})` },
           { key: 'skipped', label: `⬜ Skipped (${questionResults.filter(r => r.skipped).length})` },
         ] as const).map(f => (
-          <button key={f.key} onClick={() => handleFilter(f.key)}
+          <button type="button" key={f.key} onClick={() => handleFilter(f.key)}
             className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
               filter === f.key ? 'bg-white text-slate-950' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
             }`}>

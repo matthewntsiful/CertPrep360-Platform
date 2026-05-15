@@ -18,7 +18,7 @@ const ExamResults: React.FC = () => {
   let correctCount = 0;
   const domainPerformance: Record<string, { correct: number; total: number }> = {};
   const questionResults = questions.map((q, i) => {
-    const userAns = answers[i];
+    const userAns = answers[i] ?? (answers as any)[String(i)];
     const domain = q.domain || 'General';
     if (!domainPerformance[domain]) domainPerformance[domain] = { correct: 0, total: 0 };
     domainPerformance[domain].total++;
