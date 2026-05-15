@@ -12,7 +12,6 @@ const ExamResults: React.FC = () => {
   const [showShare, setShowShare] = useState(false);
   const [inReview, setInReview] = useState(false);
 
-  if (inReview) return <ReviewMode onClose={() => setInReview(false)} />;
 
   const certMetadata = RESOURCES_DATA[certId.toLowerCase()];
 
@@ -62,6 +61,8 @@ const ExamResults: React.FC = () => {
     { label: 'Reddit', emoji: '🤖', color: 'bg-orange-600 hover:bg-orange-500 border-orange-500', url: `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}` },
     { label: 'Facebook', emoji: 'f', color: 'bg-blue-600 hover:bg-blue-500 border-blue-500', url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}` },
   ];
+
+  if (inReview) return <ReviewMode onClose={() => setInReview(false)} />;
 
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-4xl mx-auto space-y-10 py-12">
