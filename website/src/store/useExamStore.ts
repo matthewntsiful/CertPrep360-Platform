@@ -44,6 +44,34 @@ interface ExamStore extends ExamSession {
 
 const INITIAL_TIME = 130 * 60; // 130 minutes
 
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+const scheduleSync = (state: ExamStore) => {
+  if (state.status !== 'running' || !state.examId || state.examId.startsWith('Dynamic-')) return;
+  
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    try {
+      const sessionData = {
+        answers: state.answers,
+        flaggedQuestions: Array.from(state.flaggedQuestions),
+        timeLeft: state.timeLeft,
+        currentQuestionIndex: state.currentQuestionIndex,
+        startTime: state.startTime,
+      };
+      await authFetch('/session', {
+        method: 'POST',
+        body: JSON.stringify({
+          examId: state.examId,
+          certId: state.certId,
+          sessionData
+        })
+      });
+    } catch (e) {
+      console.error('Failed to sync session to backend:', e);
+    }
+  }, 2000);
+};
+
 export const useExamStore = create<ExamStore>()(
   persist(
     (set) => ({
@@ -63,12 +91,27 @@ export const useExamStore = create<ExamStore>()(
         
         try {
           const questions = await authFetch(`/questions/${certId}/${examId}`) as Question[];
+          
+          let session = null;
+          try {
+            const res = await authFetch(`/session/${certId}/${examId}`);
+            if (res.session && res.session.sessionData) {
+              session = res.session.sessionData;
+            }
+          } catch (e) {
+            console.warn('No active session found or error loading session');
+          }
+
           set({
             certId,
             examId,
             questions,
             status: 'running',
-            startTime: Date.now(),
+            answers: session?.answers || {},
+            flaggedQuestions: session?.flaggedQuestions ? new Set(session.flaggedQuestions) : new Set(),
+            timeLeft: session?.timeLeft || INITIAL_TIME,
+            currentQuestionIndex: session?.currentQuestionIndex || 0,
+            startTime: session?.startTime || Date.now(),
           });
         } catch (error) {
           console.error('Failed to load questions:', error);
@@ -90,26 +133,48 @@ export const useExamStore = create<ExamStore>()(
         });
       },
 
-      setAnswer: (index, answer) => set((state) => ({
-        answers: { ...state.answers, [index]: answer }
-      })),
+      setAnswer: (index, answer) => {
+        set((state) => {
+          const nextState = { ...state, answers: { ...state.answers, [index]: answer } };
+          scheduleSync(nextState as ExamStore);
+          return nextState;
+        });
+      },
 
-      toggleFlag: (index) => set((state) => {
-        const next = new Set(state.flaggedQuestions);
-        if (next.has(index)) next.delete(index);
-        else next.add(index);
-        return { flaggedQuestions: next };
-      }),
+      toggleFlag: (index) => {
+        set((state) => {
+          const next = new Set(state.flaggedQuestions);
+          if (next.has(index)) next.delete(index);
+          else next.add(index);
+          const nextState = { ...state, flaggedQuestions: next };
+          scheduleSync(nextState as ExamStore);
+          return nextState;
+        });
+      },
 
-      nextQuestion: () => set((state) => ({
-        currentQuestionIndex: Math.min(state.currentQuestionIndex + 1, state.questions.length - 1)
-      })),
+      nextQuestion: () => {
+        set((state) => {
+          const nextState = { ...state, currentQuestionIndex: Math.min(state.currentQuestionIndex + 1, state.questions.length - 1) };
+          scheduleSync(nextState as ExamStore);
+          return nextState;
+        });
+      },
 
-      prevQuestion: () => set((state) => ({
-        currentQuestionIndex: Math.max(state.currentQuestionIndex - 1, 0)
-      })),
+      prevQuestion: () => {
+        set((state) => {
+          const nextState = { ...state, currentQuestionIndex: Math.max(state.currentQuestionIndex - 1, 0) };
+          scheduleSync(nextState as ExamStore);
+          return nextState;
+        });
+      },
 
-      goToQuestion: (index) => set({ currentQuestionIndex: index }),
+      goToQuestion: (index) => {
+        set((state) => {
+          const nextState = { ...state, currentQuestionIndex: index };
+          scheduleSync(nextState as ExamStore);
+          return nextState;
+        });
+      },
 
       setStudyMode: (enabled) => set({ studyMode: enabled }),
 
@@ -120,6 +185,7 @@ export const useExamStore = create<ExamStore>()(
       tick: () => set((state) => {
         if (state.status !== 'running') return state;
         if (state.timeLeft <= 0) return { status: 'completed' as const };
+        // We do not scheduleSync on every tick to avoid flooding, sync relies on user actions
         return { timeLeft: state.timeLeft - 1 };
       }),
 

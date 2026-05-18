@@ -7,6 +7,7 @@ export interface UserAnalytics {
   weakestDomain: string;
   certificationsTracked: string[];
   recentAttempts: Array<{
+    id?: string;
     examId: string;
     certId: string;
     score: number;
@@ -36,6 +37,18 @@ async function authFetch(path: string, options: RequestInit = {}) {
   return response.json();
 }
 
+async function publicFetch(path: string, options: RequestInit = {}) {
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  if (!response.ok) throw new Error(`API error: ${response.status}`);
+  return response.json();
+}
+
 /**
  * Fetches real user analytics from the backend API.
  */
@@ -48,6 +61,13 @@ export async function fetchUserAnalytics(): Promise<UserAnalytics | null> {
   }
 }
 
+/**
+ * Fetches a specific exam attempt by ID.
+ */
+export async function fetchAttempt(attemptId: string): Promise<any> {
+  return await authFetch(`/analytics?attemptId=${attemptId}`);
+}
+
 export interface CertCatalog {
   [certId: string]: {
     totalQuestions: number;
@@ -58,7 +78,7 @@ export interface CertCatalog {
 
 export async function fetchCatalog(): Promise<CertCatalog> {
   try {
-    return await authFetch('/admin/stats?action=catalog') as CertCatalog;
+    return await publicFetch('/catalog') as CertCatalog;
   } catch (error) {
     console.error('Failed to fetch catalog:', error);
     return {};
@@ -75,4 +95,24 @@ export async function fetchDynamicQuiz(domain: string, certId = 'SAA-C03', limit
     console.error('Failed to fetch dynamic quiz:', error);
     return null;
   }
+}
+
+/**
+ * Initializes a Paystack transaction and returns the authorization URL.
+ */
+export async function initializePayment(amount: number) {
+  return await authFetch('/payment/initialize', {
+    method: 'POST',
+    body: JSON.stringify({ amount })
+  });
+}
+
+/**
+ * Verifies a Paystack transaction after the user completes payment.
+ */
+export async function verifyPayment(reference: string) {
+  return await authFetch('/payment/verify', {
+    method: 'POST',
+    body: JSON.stringify({ reference })
+  });
 }

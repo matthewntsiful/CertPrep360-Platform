@@ -231,6 +231,48 @@ module "lambda_ai_generate_content" {
   tags = local.tags
 }
 
+module "lambda_manage_session" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-ManageSession"
+  handler                   = "manage-session/index.handler"
+  zip_path                  = "${path.module}/build/manage-session.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+  }
+  tags = local.tags
+}
+
+module "lambda_process_payment" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-ProcessPayment"
+  handler                   = "process-payment/index.handler"
+  zip_path                  = "${path.module}/build/process-payment.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  ssm_parameter_arns        = module.ssm.payment_parameter_arns
+  environment_variables = {
+    TABLE_NAME            = module.dynamodb.table_name
+    PAYSTACK_SECRET_PARAM = "/certprep360/dev/payments/paystack_secret_key"
+  }
+  tags = local.tags
+}
+
+module "lambda_get_catalog" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-GetCatalog"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/build/get-catalog.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
+  }
+  tags = local.tags
+}
+
 module "api_gateway" {
   source                               = "../../modules/api-gateway"
   api_name                             = "CertPrep360-Dev-API"
@@ -241,7 +283,10 @@ module "api_gateway" {
   get_dynamic_quiz_lambda_invoke_arn   = module.lambda_get_dynamic_quiz.invoke_arn
   admin_manage_content_lambda_invoke_arn = module.lambda_admin_manage_content.invoke_arn
   admin_analytics_lambda_invoke_arn      = module.lambda_admin_analytics.invoke_arn
+  get_catalog_lambda_invoke_arn         = module.lambda_get_catalog.invoke_arn
   ai_generate_content_lambda_invoke_arn  = module.lambda_ai_generate_content.invoke_arn
+  manage_session_lambda_invoke_arn       = module.lambda_manage_session.invoke_arn
+  process_payment_lambda_invoke_arn      = module.lambda_process_payment.invoke_arn
   custom_domain_name                   = local.api_subdomain
   certificate_arn                       = module.route53.api_certificate_arn
   tags                                 = local.tags

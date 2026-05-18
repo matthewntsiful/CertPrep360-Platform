@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
   Table, 
@@ -16,22 +17,10 @@ import { adminService } from '../services/adminService';
 import { Loader2, UserPlus, Shield, Mail } from 'lucide-react';
 
 const AdminUserManager: React.FC = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const data = await adminService.listUsers();
-        setUsers(data);
-      } catch (err) {
-        console.error("Failed to load users:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadUsers();
-  }, []);
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ['adminUsers'],
+    queryFn: () => adminService.listUsers(),
+  });
 
   if (loading) {
     return (
@@ -75,7 +64,7 @@ const AdminUserManager: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((item) => (
+            {users.map((item: any) => (
               <TableRow key={item.id} className="hover:bg-slate-800/50 transition-all cursor-pointer group">
                 <TableCell>
                   <div className="flex items-center gap-3">

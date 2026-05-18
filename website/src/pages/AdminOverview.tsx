@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -15,35 +16,24 @@ import { fetchAuthSession } from '@aws-amplify/auth';
 import { adminService } from '../services/adminService';
 
 const AdminOverview: React.FC = () => {
-  const [stats, setStats] = useState<any[]>([]);
-  const [financials, setFinancials] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isMfaActive, setIsMfaActive] = useState(false);
+  const { data: adminData, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['adminOverviewStats'],
+    queryFn: async () => {
+      // 1. Check MFA Status from Token
+      const session = await fetchAuthSession();
+      const amr = (session.tokens?.idToken?.payload?.amr as string[]) || [];
+      const mfaActive = amr.includes('mfa');
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        // 1. Check MFA Status from Token
-        const session = await fetchAuthSession();
-        const amr = (session.tokens?.idToken?.payload?.amr as string[]) || [];
-        setIsMfaActive(amr.includes('mfa'));
+      // 2. Fetch Stats
+      const data = await adminService.getStats();
+      return { mfaActive, data };
+    }
+  });
 
-        // 2. Fetch Stats
-        const data = await adminService.getStats();
-        setStats(data.overview);
-        setFinancials(data.financials);
-      } catch (err: any) {
-        console.error("Failed to fetch admin stats:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const isMfaActive = adminData?.mfaActive || false;
+  const stats = adminData?.data?.overview || [];
+  const financials = adminData?.data?.financials || null;
+  const error = queryError?.message || null;
 
   const recentIncidents = [
     { id: 1, type: "API", message: "Bedrock Latency Spike - US-East-1", time: "14 mins ago", severity: "low" },
@@ -99,7 +89,7 @@ const AdminOverview: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {stats.map((stat, i) => {
+        {stats.map((stat: any, i: number) => {
           const Icon = stat.type === 'users' ? Users : 
                        stat.type === 'content' ? Database :
                        stat.type === 'sessions' ? Zap : Activity;

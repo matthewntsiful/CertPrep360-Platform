@@ -38,8 +38,23 @@ variable "admin_analytics_lambda_invoke_arn" {
   type        = string
 }
 
+variable "get_catalog_lambda_invoke_arn" {
+  description = "Invoke ARN of the Get Catalog Lambda"
+  type        = string
+}
+
 variable "ai_generate_content_lambda_invoke_arn" {
   description = "Invoke ARN of the AI generate content Lambda"
+  type        = string
+}
+
+variable "manage_session_lambda_invoke_arn" {
+  description = "Invoke ARN of the Manage Session Lambda"
+  type        = string
+}
+
+variable "process_payment_lambda_invoke_arn" {
+  description = "Invoke ARN of the Process Payment Lambda"
   type        = string
 }
 

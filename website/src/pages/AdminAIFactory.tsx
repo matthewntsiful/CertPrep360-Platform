@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { 
-  Wand2, 
   RefreshCcw, 
+  Wand2, 
+  Trash2, 
   CheckCircle2, 
-  Loader2,
-  Trash2,
-  Rocket,
-  Info,
-  LayoutGrid,
   Sparkles,
-  Wrench
+  Wrench,
+  Loader2,
+  Info,
+  Rocket,
+  LayoutGrid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminService } from '../services/adminService';
@@ -41,6 +42,7 @@ const AdminAIFactory: React.FC = () => {
   const [examId, setExamId] = useState("SAA-C03-EXAM-04");
   const [topic, setTopic] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [drafts, setDrafts] = useState<AIGeneratedQuestion[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
@@ -110,48 +112,68 @@ const AdminAIFactory: React.FC = () => {
     setStatusMessage("Initializing Blueprint Engine...");
 
     const blueprint = BLUEPRINTS[selectedCert];
-    const batchSize = 1;
     const iterations = totalToGenerate;
 
     try {
-      for (let i = 0; i < iterations; i++) {
-        const progressPercent = Math.round((i / iterations) * 100);
-        setProgress(progressPercent);
-
-        const domainObj = blueprint.domains[i % blueprint.domains.length];
-        setStatusMessage(`Manufacturing Q${String(startFrom + i).padStart(3, '0')} / ${String(startFrom + totalToGenerate - 1).padStart(3, '0')}: ${domainObj.name}...`);
-
-        const response = await adminService.generateAIContent({
-          certId: selectedCert,
-          count: batchSize,
-          domain: domainObj.name,
-          topic: topic || undefined
-        });
-
-        if (response.questions) {
-          const mappedQuestions = response.questions.map((q: any, idx: number) => ({
-            ...q,
-            exam_id: examId,
-            q_id: `${examId}_Q${String(startFrom + i + idx).padStart(3, '0')}`
-          }));
-          setDrafts(prev => [...prev, ...mappedQuestions]);
+      const concurrency = 5;
+      let completed = 0;
+      
+      for (let i = 0; i < iterations; i += concurrency) {
+        const batchEnd = Math.min(i + concurrency, iterations);
+        const promises = [];
+        
+        for (let j = i; j < batchEnd; j++) {
+          const domainObj = blueprint.domains[j % blueprint.domains.length];
+          promises.push(
+            adminService.generateAIContent({
+              certId: selectedCert,
+              count: 1,
+              domain: domainObj.name,
+              topic: topic || undefined
+            }).then((response: any) => {
+              if (response.questions) {
+                return response.questions.map((q: any) => ({
+                  ...q,
+                  exam_id: examId,
+                  q_id: `${examId}_Q${String(startFrom + j).padStart(3, '0')}`
+                }));
+              }
+              return [];
+            })
+          );
         }
+        
+        setStatusMessage(`Manufacturing Q${String(startFrom + i).padStart(3, '0')} - Q${String(startFrom + batchEnd - 1).padStart(3, '0')}...`);
+        const results = await Promise.allSettled(promises);
+        
+        const newDrafts = results
+          .filter((res): res is PromiseFulfilledResult<any[]> => res.status === 'fulfilled')
+          .flatMap(res => res.value);
+          
+        setDrafts(prev => [...prev, ...newDrafts]);
+        
+        completed += (batchEnd - i);
+        setProgress(Math.round((completed / iterations) * 100));
       }
 
       setProgress(100);
-      setStatusMessage(`Manufacturing Complete — ${totalToGenerate} questions ready.`);
+      const msg = `Manufacturing Complete — ${totalToGenerate} questions ready.`;
+      setStatusMessage(msg);
+      toast.success(msg);
     } catch (err: any) {
       console.error("Generation failed:", err);
-      setStatusMessage(`Error: ${err.message}`);
+      const msg = `Error: ${err.message}`;
+      setStatusMessage(msg);
+      toast.error(msg);
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!window.confirm(`Are you sure you want to publish ${drafts.length} questions to the live catalog?`)) return;
+    if (drafts.length === 0) return;
     
-    setIsGenerating(true);
+    setIsPublishing(true);
     setStatusMessage("Injecting into DynamoDB...");
     
     try {
@@ -161,14 +183,15 @@ const AdminAIFactory: React.FC = () => {
           exam_id: examId // Ensure consistent exam_id
         });
       }
-      alert("Exam Set Successfully Deployed!");
+      setStatusMessage(`Success: ${drafts.length} questions published.`);
+      toast.success(`${drafts.length} questions published live!`);
       setDrafts([]);
       setProgress(0);
-      setStatusMessage("");
     } catch (err: any) {
-      alert("Publishing failed: " + err.message);
+      toast.error(`Publishing failed: ${err.message}`);
+      setStatusMessage(`Error: ${err.message}`);
     } finally {
-      setIsGenerating(false);
+      setIsPublishing(false);
     }
   };
 
@@ -250,9 +273,7 @@ const AdminAIFactory: React.FC = () => {
   };
 
   const handlePublishEnrichFix = async () => {
-    if (!window.confirm(`Publish ${enrichFixResults.length} updated questions?`)) return;
-    setIsGenerating(true);
-    setEnrichFixStatus('Publishing to DynamoDB...');
+    setIsPublishing(true);
     let count = 0;
     for (const q of enrichFixResults.filter(r => !r._error)) {
       const fields: any = {};
@@ -261,10 +282,10 @@ const AdminAIFactory: React.FC = () => {
       await adminService.partialUpdateQuestion(q.q_id, q.cert_id, q.exam_id, fields, q.SK || q.sk);
       count++;
     }
-    alert(`${count} questions updated successfully!`);
+    toast.success(`${count} questions updated successfully!`);
     setEnrichFixResults([]);
     setEnrichFixStatus('');
-    setIsGenerating(false);
+    setIsPublishing(false);
   };
 
   return (
@@ -506,8 +527,17 @@ const AdminAIFactory: React.FC = () => {
               </div>
               {drafts.length > 0 && !isGenerating && (
                 <div className="pt-4 border-t border-slate-800 flex justify-end">
-                  <button onClick={handlePublish} className="flex items-center gap-3 px-10 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all">
-                    <Rocket className="w-4 h-4" /> Deploy to Catalog
+                  <button 
+                    onClick={handlePublish} 
+                    disabled={isPublishing}
+                    className="flex items-center gap-3 px-10 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isPublishing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Rocket className="w-4 h-4" />
+                    )}
+                    {isPublishing ? 'Publishing...' : 'Deploy to Catalog'}
                   </button>
                 </div>
               )}
@@ -547,8 +577,17 @@ const AdminAIFactory: React.FC = () => {
               </div>
               {enrichFixResults.length > 0 && !isGenerating && (
                 <div className="pt-4 border-t border-slate-800 flex justify-end">
-                  <button onClick={handlePublishEnrichFix} className="flex items-center gap-3 px-10 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all">
-                    <Rocket className="w-4 h-4" /> Publish Updates
+                  <button 
+                    onClick={handlePublishEnrichFix} 
+                    disabled={isPublishing}
+                    className="flex items-center gap-3 px-10 py-4 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isPublishing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Rocket className="w-4 h-4" />
+                    )}
+                    {isPublishing ? 'Publishing...' : 'Publish Updates'}
                   </button>
                 </div>
               )}

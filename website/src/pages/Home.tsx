@@ -60,8 +60,8 @@ const Home: React.FC = () => {
   const [catalog, setCatalog] = React.useState<CertCatalog>({});
 
   React.useEffect(() => {
-    if (user) fetchCatalog().then(setCatalog);
-  }, [user]);
+    fetchCatalog().then(setCatalog);
+  }, []);
 
   const getCertStats = (certCode: string) => {
     const key = Object.keys(catalog).find(k => k.toUpperCase() === certCode.toUpperCase());

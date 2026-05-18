@@ -22,6 +22,8 @@ import KnowledgeBase from './pages/KnowledgeBase';
 import SampleQuestions from './pages/SampleQuestions';
 import CommunityForum from './pages/CommunityForum';
 import ContactSupport from './pages/ContactSupport';
+import History from './pages/History';
+import ResultReview from './pages/ResultReview';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -61,6 +63,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/history" 
+                element={
+                  <ProtectedRoute>
+                    <History />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/results/:attemptId" 
+                element={
+                  <ProtectedRoute>
+                    <ResultReview />
                   </ProtectedRoute>
                 } 
               />

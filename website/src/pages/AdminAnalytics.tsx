@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
   AreaChart, 
@@ -13,22 +14,10 @@ import { adminService } from '../services/adminService';
 import { Loader2, TrendingUp, Target, Users } from 'lucide-react';
 
 const AdminAnalytics: React.FC = () => {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const stats = await adminService.getStats();
-        setData(stats);
-      } catch (err) {
-        console.error("Failed to load analytics:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: () => adminService.getStats(),
+  });
 
   if (loading) {
     return (
