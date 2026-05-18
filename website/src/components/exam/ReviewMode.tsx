@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Eye, EyeOff, ExternalLink, ArrowLeft } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
+import { FormattedText } from '../FormattedText';
 
 interface ReviewModeProps {
   onClose: () => void;
@@ -89,7 +90,7 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
           </div>
 
           {/* Question text — always visible */}
-          <p className="text-lg leading-relaxed text-slate-200 font-normal">{q.text}</p>
+          <FormattedText text={q.text} className="text-lg leading-relaxed text-slate-200 font-normal" />
 
           {/* Options — always visible, reveal correct/wrong on demand */}
           <div className="space-y-3">
@@ -134,7 +135,7 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
                 {q.explanation ? (
                   <div className="p-5 bg-blue-500/5 border border-blue-500/15 rounded-2xl space-y-2">
                     <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Explanation</p>
-                    <p className="text-sm text-slate-300 leading-relaxed">{q.explanation}</p>
+                    <FormattedText text={q.explanation} className="text-sm text-slate-300 leading-relaxed" />
                   </div>
                 ) : (
                   <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl">

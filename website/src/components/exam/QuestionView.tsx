@@ -2,6 +2,7 @@
 import { Flag, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FormattedText } from '../FormattedText';
 
 const QuestionView: React.FC = () => {
   const { 
@@ -70,9 +71,7 @@ const QuestionView: React.FC = () => {
           </button>
         </div>
 
-        <p className="text-lg leading-relaxed text-slate-300 font-normal mb-10">
-          {q.text}
-        </p>
+        <FormattedText text={q.text} />
 
         {isMultiple && (
           <div className="mb-6 flex items-center gap-2 px-4 py-2 bg-blue-500/5 border border-blue-500/10 rounded-xl text-blue-400 text-xs">
@@ -141,9 +140,7 @@ const QuestionView: React.FC = () => {
                 )}
                 <div className="text-xs uppercase tracking-widest font-extrabold text-slate-500">Explanation</div>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed italic">
-                {q.explanation || "No detailed explanation available for this beta question."}
-              </p>
+              <FormattedText text={q.explanation || "No detailed explanation available for this beta question."} className="text-sm text-slate-300 leading-relaxed italic" />
             </motion.div>
           )}
         </AnimatePresence>
