@@ -17,9 +17,9 @@ rm -f "$BUILD_DIR"/*.zip
 
 # Iterate through each lambda directory
 for dir in "$SOURCE_DIR"/*/; do
-    # Skip the common and dist directories
+    # Skip the common, node_modules, and dist directories
     DIR_NAME=$(basename "$dir")
-    if [ "$DIR_NAME" == "$COMMON_DIR" ]; then
+    if [ "$DIR_NAME" == "$COMMON_DIR" ] || [ "$DIR_NAME" == "node_modules" ] || [ "$DIR_NAME" == "dist" ]; then
         continue
     fi
 
@@ -47,10 +47,14 @@ for dir in "$SOURCE_DIR"/*/; do
     
     # Install dependencies
     echo "  📦 Installing dependencies for $DIR_NAME..."
-    (cd "$STAGING_DIR" && npm install --production --no-package-lock --no-audit)
+    (cd "$STAGING_DIR" && npm install --production --no-package-lock --no-audit --legacy-peer-deps)
 
     # Zip the contents
     (cd "$STAGING_DIR" && zip -r "../../$BUILD_DIR/$DIR_NAME.zip" .)
+
+    # Copy to prod build dir as well
+    mkdir -p "infrastructure/terraform/environments/prod/build"
+    cp "$BUILD_DIR/$DIR_NAME.zip" "infrastructure/terraform/environments/prod/build/$DIR_NAME.zip"
 
     # Clean up staging
     rm -rf "$STAGING_DIR"

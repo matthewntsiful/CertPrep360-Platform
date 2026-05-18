@@ -12,51 +12,6 @@ export const handler = async (event) => {
   const action = event.queryStringParameters?.action || 'summary';
 
   try {
-    if (action === 'catalog') {
-      // Scan all QUESTION items and aggregate by cert_id and exam_id
-      const items = [];
-      let lastKey = undefined;
-      do {
-        const cmd = new ScanCommand({
-          TableName: TABLE_NAME,
-          FilterExpression: "#type = :t",
-          ExpressionAttributeNames: { "#type": "type" },
-          ExpressionAttributeValues: { ":t": "QUESTION" },
-          ProjectionExpression: "cert_id, exam_id",
-          ExclusiveStartKey: lastKey
-        });
-        const resp = await docClient.send(cmd);
-        items.push(...(resp.Items || []));
-        lastKey = resp.LastEvaluatedKey;
-      } while (lastKey);
-
-      // Build catalog: { certId: { totalQuestions, exams: Set } }
-      const catalog = {};
-      items.forEach(item => {
-        const cert = item.cert_id;
-        const exam = item.exam_id;
-        if (!cert || !exam) return;
-        if (!catalog[cert]) catalog[cert] = { totalQuestions: 0, exams: new Set() };
-        catalog[cert].totalQuestions++;
-        catalog[cert].exams.add(exam);
-      });
-
-      // Serialize Sets to arrays
-      const result = {};
-      Object.entries(catalog).forEach(([cert, data]) => {
-        result[cert] = {
-          totalQuestions: data.totalQuestions,
-          examCount: data.exams.size,
-          exams: [...data.exams].sort()
-        };
-      });
-
-      return {
-        statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
-        body: JSON.stringify(result),
-      };
-    }
 
     if (action === 'listUsers') {
       let allUsers = [];
@@ -97,13 +52,36 @@ export const handler = async (event) => {
     // Cognito doesn't give a total count easily without pagination, so we approximate or scan.
     // For small/medium pools, we can list with Pagination.
     let totalUsersCount = 0;
+    let usersByMonth = {};
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     let nextToken = undefined;
+
     do {
       const cmd = new ListUsersCommand({ UserPoolId: USER_POOL_ID, PaginationToken: nextToken, Limit: 60 });
       const resp = await cognitoClient.send(cmd);
-      totalUsersCount += (resp.Users?.length || 0);
+      const users = resp.Users || [];
+      totalUsersCount += users.length;
+      
+      users.forEach(u => {
+        if (u.UserCreateDate) {
+          const date = new Date(u.UserCreateDate);
+          const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
+          usersByMonth[monthKey] = (usersByMonth[monthKey] || 0) + 1;
+        }
+      });
+      
       nextToken = resp.PaginationToken;
     } while (nextToken);
+
+    // Format growth data (sort by date)
+    const growth = Object.entries(usersByMonth)
+      .map(([month, count]) => ({ 
+        month, 
+        users: count, 
+        _sort: new Date(month.split(' ')[1], months.indexOf(month.split(' ')[0])).getTime() 
+      }))
+      .sort((a, b) => a._sort - b._sort)
+      .map(({ month, users }) => ({ month, users }));
 
     // 2. Aggregate EXAM_ATTEMPT records from DynamoDB
     const scanAttemptsCmd = new ScanCommand({
@@ -150,9 +128,7 @@ export const handler = async (event) => {
         { label: "Overall Pass Rate", value: `${attempts.length > 0 ? Math.round((attempts.filter(a => a.score >= 70).length / attempts.length) * 100) : 0}%`, trend: "Dynamic", type: "health" },
       ],
       details: {
-        growth: [
-          { month: "Apr", users: totalUsersCount } // Simplified for now
-        ],
+        growth: growth,
         performance: Object.values(performanceMap).slice(0, 5) // Top 5 exams
       },
       timestamp: new Date().toISOString()
