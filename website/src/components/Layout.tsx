@@ -4,6 +4,7 @@ import { Shield, Menu, X, Twitter, Linkedin, Github, Zap, LogOut } from 'lucide-
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { CommandPalette } from './CommandPalette';
+import { NetworkBackground } from './NetworkBackground';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -46,6 +47,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       <CommandPalette />
+      <NetworkBackground />
 
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
