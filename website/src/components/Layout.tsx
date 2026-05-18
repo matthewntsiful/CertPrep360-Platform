@@ -46,12 +46,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group cursor-pointer">
-            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center group-hover:rotate-6 transition-transform shadow-lg shadow-orange-500/20">
-              <Shield className="text-white w-6 h-6" />
+          <Link to="/" className="flex items-center gap-3 group cursor-pointer">
+            <div className="w-10 h-10 bg-gradient-to-tr from-orange-600 via-orange-500 to-yellow-500 rounded-xl flex items-center justify-center group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(249,115,22,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)] group-hover:shadow-[0_8px_25px_rgba(249,115,22,0.5),inset_0_1px_1px_rgba(255,255,255,0.4)]">
+              <Shield className="text-white w-5 h-5 drop-shadow-md" strokeWidth={2.5} />
             </div>
-            <span className="font-bold text-xl tracking-tight">
-              CertPrep<span className="text-orange-500">360</span>
+            <span className="font-bold text-xl tracking-tight text-white group-hover:text-slate-50 transition-colors duration-300">
+              CertPrep<span className="text-orange-500 group-hover:text-orange-400 group-hover:drop-shadow-[0_0_8px_rgba(249,115,22,0.5)] transition-all duration-300">360</span>
             </span>
           </Link>
 
@@ -113,9 +113,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
             {/* Brand Column */}
             <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <Shield className="w-8 h-8 text-orange-500" />
-                <span className="font-bold text-2xl tracking-tight">CertPrep360</span>
+              <div className="flex items-center gap-3 group">
+                <div className="w-8 h-8 bg-gradient-to-tr from-orange-600 via-orange-500 to-yellow-500 rounded-lg flex items-center justify-center shadow-[0_2px_10px_rgba(249,115,22,0.3),inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                  <Shield className="text-white w-4 h-4" strokeWidth={2.5} />
+                </div>
+                <span className="font-bold text-2xl tracking-tight text-white">CertPrep<span className="text-orange-500">360</span></span>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
                 Elite-tier AWS certification preparation. Industrial-grade practice exams and deep architectural roadmaps for the serious cloud engineer.

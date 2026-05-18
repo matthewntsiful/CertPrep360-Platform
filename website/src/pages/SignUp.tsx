@@ -87,9 +87,9 @@ const SignUp: React.FC = () => {
               exit={{ opacity: 0, x: 20 }}
               className="space-y-8"
             >
-              <div className="text-center">
-                <div className="mx-auto h-16 w-16 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 mb-6">
-                  <UserPlus className="h-10 w-10 text-white" />
+              <div className="text-center group">
+                <div className="mx-auto h-16 w-16 bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-6 group-hover:scale-110 transition-all duration-500 shadow-[0_8px_30px_rgba(59,130,246,0.3),inset_0_2px_2px_rgba(255,255,255,0.4)] group-hover:shadow-[0_15px_40px_rgba(59,130,246,0.5),inset_0_2px_2px_rgba(255,255,255,0.4)] cursor-pointer">
+                  <UserPlus className="h-8 w-8 text-white drop-shadow-lg" strokeWidth={2.5} />
                 </div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">Create Account</h2>
                 <p className="text-slate-400 text-sm">Join the next generation of AWS Architects</p>
