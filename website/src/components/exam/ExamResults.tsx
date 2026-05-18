@@ -82,7 +82,7 @@ const ExamResults: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { icon: Target, value: `${score}%`, label: 'Score', color: passed ? 'text-emerald-500' : 'text-red-500', bg: passed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500' },
           { icon: CheckCircle2, value: `${correctCount}/${questions.length}`, label: 'Correct', color: 'text-white', bg: 'bg-blue-500/10 text-blue-500' },

@@ -26,7 +26,7 @@ const ExamHeader: React.FC = () => {
   return (
     <>
       <div className="space-y-4">
-        <div className="flex justify-between items-start gap-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
           {/* Left — cert + exam info */}
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -39,8 +39,8 @@ const ExamHeader: React.FC = () => {
           </div>
 
           {/* Right — timer + controls */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right">
+          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+            <div className="text-right flex-1 sm:flex-none">
               <div className={`text-2xl font-mono font-bold flex items-center gap-1.5 ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
                 <Clock className="w-5 h-5 text-slate-400" />
                 {formatTime(timeLeft)}

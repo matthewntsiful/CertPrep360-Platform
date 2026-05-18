@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] animate-pulse h-36" />
+            <div key={i} className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] animate-pulse h-36" />
           ))
         ) : stats.map((stat, i) => (
           <motion.div
@@ -97,7 +97,7 @@ const Dashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4 hover:border-slate-700 transition-all"
+            className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4 hover:border-slate-700 transition-all"
           >
             <div className={`w-12 h-12 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-center ${stat.color}`}>
               <stat.icon className="w-6 h-6" />
@@ -120,8 +120,8 @@ const Dashboard: React.FC = () => {
             <Link to="/#certifications" className="text-xs font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">Change Roadmap</Link>
           </div>
           
-          <div className="p-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+          <div className="p-6 md:p-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity hidden sm:block">
               <LayoutIcon className="w-48 h-48" />
             </div>
             

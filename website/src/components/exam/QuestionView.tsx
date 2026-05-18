@@ -46,7 +46,7 @@ const QuestionView: React.FC = () => {
         key={q.q_id}
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden"
+        className="p-5 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl relative overflow-hidden"
       >
         <div className="flex justify-between items-start mb-8">
           <div className="space-y-1">
