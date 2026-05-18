@@ -125,7 +125,7 @@ export const useExamStore = create<ExamStore>()(
           questions,
           answers: {},
           flaggedQuestions: new Set(),
-          timeLeft: INITIAL_TIME,
+          timeLeft: questions.length * 2 * 60, // 2 minutes per question (e.g. 20 mins for 10 questions)
           currentQuestionIndex: 0,
           certId: 'SAA-C03',
           examId: `Dynamic-${domain}`,
