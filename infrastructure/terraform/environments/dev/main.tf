@@ -139,6 +139,7 @@ module "lambda_get_questions" {
   zip_path                  = "${path.module}/build/get-questions.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  memory_size               = 512 # More memory = more CPU = faster cold starts & execution
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -165,6 +166,7 @@ module "lambda_get_user_analytics" {
   zip_path                  = "${path.module}/build/get-user-analytics.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -178,6 +180,7 @@ module "lambda_get_dynamic_quiz" {
   zip_path                  = "${path.module}/build/get-dynamic-quiz.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -193,6 +196,7 @@ module "lambda_admin_manage_content" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   cognito_user_pool_arn     = module.cognito.user_pool_arn
   enable_cognito_access     = true
+  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -208,6 +212,7 @@ module "lambda_admin_analytics" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   cognito_user_pool_arn     = module.cognito.user_pool_arn
   enable_cognito_access     = true
+  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
     USER_POOL_ID = module.cognito.user_pool_id
@@ -266,6 +271,7 @@ module "lambda_get_catalog" {
   zip_path                  = "${path.module}/build/get-catalog.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  memory_size               = 512
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
     ALLOWED_ORIGIN = "https://${local.subdomain}"

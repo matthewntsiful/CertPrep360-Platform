@@ -28,7 +28,16 @@ import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLayout from './components/AdminLayout';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,      // Data stays fresh for 5 minutes — no refetch on tab switch
+      gcTime: 10 * 60 * 1000,        // Keep unused data in cache for 10 minutes
+      retry: 1,                       // Only retry once on failure (Lambda cold start)
+      refetchOnWindowFocus: false,    // Don't hammer the API when user switches tabs
+    },
+  },
+});
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
