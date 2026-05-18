@@ -25,7 +25,7 @@ async function authFetch(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': token,
+      'Authorization': `Bearer ${token}`,
       ...options.headers,
     },
   });

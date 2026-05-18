@@ -15,7 +15,7 @@ async function authFetch(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': token,
+      'Authorization': `Bearer ${token}`,
       ...options.headers,
     },
   });
@@ -29,6 +29,7 @@ async function authFetch(path: string, options: RequestInit = {}) {
 
 interface ExamStore extends ExamSession {
   startExam: (certId: string, examId: string) => Promise<void>;
+  startDynamicQuiz: (domain: string, questions: Question[]) => void;
   setAnswer: (questionIndex: number, answer: string | string[]) => void;
   toggleFlag: (questionIndex: number) => void;
   nextQuestion: () => void;
@@ -75,6 +76,20 @@ export const useExamStore = create<ExamStore>()(
         }
       },
 
+      startDynamicQuiz: (domain, questions) => {
+        set({
+          status: 'running',
+          questions,
+          answers: {},
+          flaggedQuestions: new Set(),
+          timeLeft: INITIAL_TIME,
+          currentQuestionIndex: 0,
+          certId: 'SAA-C03',
+          examId: `Dynamic-${domain}`,
+          startTime: Date.now(),
+        });
+      },
+
       setAnswer: (index, answer) => set((state) => ({
         answers: { ...state.answers, [index]: answer }
       })),
@@ -114,13 +129,19 @@ export const useExamStore = create<ExamStore>()(
 
         // Calculate score
         let correct = 0;
+        const detailedAnswers: Record<string, any> = {};
         questions.forEach((q, i) => {
           const answer = answers[i];
-          if (!answer) return;
-          const isCorrect = Array.isArray(answer)
+          const isCorrect = !!answer && (Array.isArray(answer)
             ? [...answer].sort().join('') === [...q.correct].sort().join('')
-            : answer === q.correct;
+            : answer === q.correct);
           if (isCorrect) correct++;
+          detailedAnswers[i] = {
+            q_id: q.q_id,
+            domain: q.domain || "Unassigned",
+            selected: answer || null,
+            isCorrect
+          };
         });
         const score = Math.round((correct / Math.max(questions.length, 1)) * 100);
         const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
@@ -128,7 +149,7 @@ export const useExamStore = create<ExamStore>()(
         try {
           await authFetch('/results', {
             method: 'POST',
-            body: JSON.stringify({ examId, certId, score, timeTaken, answers }),
+            body: JSON.stringify({ examId, certId, score, timeTaken, answers: detailedAnswers }),
           });
         } catch (err) {
           console.error('Failed to submit exam results:', err);

@@ -53,19 +53,27 @@ export const handler = async (event) => {
 
       return {
         statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
         body: JSON.stringify(result),
       };
     }
 
     if (action === 'listUsers') {
-      const listUsersCmd = new ListUsersCommand({
-        UserPoolId: USER_POOL_ID,
-        Limit: 60
-      });
-      const usersResponse = await cognitoClient.send(listUsersCmd);
+      let allUsers = [];
+      let paginationToken = undefined;
       
-      const formattedUsers = usersResponse.Users.map(u => ({
+      do {
+        const listUsersCmd = new ListUsersCommand({
+          UserPoolId: USER_POOL_ID,
+          Limit: 60,
+          PaginationToken: paginationToken
+        });
+        const usersResponse = await cognitoClient.send(listUsersCmd);
+        allUsers.push(...(usersResponse.Users || []));
+        paginationToken = usersResponse.PaginationToken;
+      } while (paginationToken);
+      
+      const formattedUsers = allUsers.map(u => ({
         id: u.Attributes.find(a => a.Name === 'sub')?.Value,
         email: u.Attributes.find(a => a.Name === 'email')?.Value,
         status: u.UserStatus,
@@ -75,7 +83,7 @@ export const handler = async (event) => {
 
       return {
         statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
         body: JSON.stringify(formattedUsers),
       };
     }
@@ -152,14 +160,14 @@ export const handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+      headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
       body: JSON.stringify(stats),
     };
   } catch (err) {
     console.error("Admin Analytics Error:", err);
     return {
       statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
       body: JSON.stringify({ message: "Internal Server Error", error: err.message }),
     };
   }

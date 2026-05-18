@@ -14,7 +14,7 @@ export const handler = async (event) => {
     if (!groups.includes("Admins")) {
         return {
             statusCode: 403,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Forbidden: Admin privileges required." }),
         };
     }
@@ -77,7 +77,7 @@ export const handler = async (event) => {
             return {
                 statusCode: 200,
                 headers: { 
-                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(items),
@@ -92,7 +92,7 @@ export const handler = async (event) => {
             if (!q_id || !cert_id || !exam_id || !fields) {
                 return {
                     statusCode: 400,
-                    headers: { "Access-Control-Allow-Origin": "*" },
+                    headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                     body: JSON.stringify({ message: "Missing q_id, cert_id, exam_id, or fields." }),
                 };
             }
@@ -108,7 +108,7 @@ export const handler = async (event) => {
             if (updates.length === 0) {
                 return {
                     statusCode: 400,
-                    headers: { "Access-Control-Allow-Origin": "*" },
+                    headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                     body: JSON.stringify({ message: "No valid fields to update." }),
                 };
             }
@@ -130,7 +130,7 @@ export const handler = async (event) => {
 
             return {
                 statusCode: 200,
-                headers: { "Access-Control-Allow-Origin": "*" },
+                headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                 body: JSON.stringify({ message: `Partially updated question: ${q_id}` }),
             };
         }
@@ -142,7 +142,7 @@ export const handler = async (event) => {
             if (!q_id || !cert_id || !exam_id) {
                 return {
                     statusCode: 400,
-                    headers: { "Access-Control-Allow-Origin": "*" },
+                    headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                     body: JSON.stringify({ message: "Missing required core identifiers (q_id, cert_id, exam_id)." }),
                 };
             }
@@ -171,20 +171,20 @@ export const handler = async (event) => {
 
             return {
                 statusCode: 200,
-                headers: { "Access-Control-Allow-Origin": "*" },
+                headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                 body: JSON.stringify({ message: `Successfully upserted question: ${q_id}` }),
             };
         } 
         
         else if (httpMethod === "DELETE") {
             const body = JSON.parse(event.body || "{}");
-            const { q_id, exam_id } = body;
+            const { q_id, exam_id, cert_id } = body;
 
-            if (!q_id || !exam_id) {
+            if (!q_id || !exam_id || !cert_id) {
                 return {
                     statusCode: 400,
-                    headers: { "Access-Control-Allow-Origin": "*" },
-                    body: JSON.stringify({ message: "Missing required core identifiers for deletion (q_id, exam_id)." }),
+                    headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
+                    body: JSON.stringify({ message: "Missing required core identifiers for deletion (q_id, exam_id, cert_id)." }),
                 };
             }
 
@@ -200,14 +200,14 @@ export const handler = async (event) => {
 
             return {
                 statusCode: 200,
-                headers: { "Access-Control-Allow-Origin": "*" },
+                headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                 body: JSON.stringify({ message: `Successfully deleted question: ${q_id}` }),
             };
         }
 
         return {
             statusCode: 405,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Method Not Allowed" }),
         };
 
@@ -215,7 +215,7 @@ export const handler = async (event) => {
         console.error("Error managing content:", error);
         return {
             statusCode: 500,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
         };
     }

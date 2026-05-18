@@ -11,7 +11,7 @@ export const handler = async (event) => {
     if (!certId || !examId) {
         return {
             statusCode: 400,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Missing certId or examId" }),
         };
     }
@@ -46,7 +46,7 @@ export const handler = async (event) => {
         return {
             statusCode: 200,
             headers: { 
-                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(questions),
@@ -55,7 +55,7 @@ export const handler = async (event) => {
         console.error("Error fetching questions:", error);
         return {
             statusCode: 500,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
         };
     }

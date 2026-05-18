@@ -13,7 +13,7 @@ export const handler = async (event) => {
     if (!domainName) {
         return {
             statusCode: 400,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Missing required query string parameter: domain" }),
         };
     }
@@ -41,12 +41,15 @@ export const handler = async (event) => {
         let questions = response.Items || [];
 
         // Shuffle questions to ensure randomization for deep practice
-        questions = questions.sort(() => Math.random() - 0.5);
+        for (let i = questions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [questions[i], questions[j]] = [questions[j], questions[i]];
+        }
 
         return {
             statusCode: 200,
             headers: { 
-                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -59,7 +62,7 @@ export const handler = async (event) => {
         console.error("Error fetching dynamic quiz:", error);
         return {
             statusCode: 500,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
         };
     }

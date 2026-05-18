@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Search, 
   Plus, 
@@ -19,9 +20,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { adminService } from '../services/adminService';
 import { RESOURCES_DATA } from '../data/resourcesData';
 
+const normalizeOptions = (options: any): string[] => {
+  if (Array.isArray(options)) return options;
+  if (options && typeof options === 'object') {
+    // Handle legacy object format { A: "text", B: "text", ... }
+    return [options.A, options.B, options.C, options.D].filter(v => v !== undefined);
+  }
+  return ["", "", "", ""];
+};
+
 const AdminContentManager: React.FC = () => {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCert, setSelectedCert] = useState("all");
   const [expandedCerts, setExpandedCerts] = useState<Record<string, boolean>>({});
@@ -33,29 +41,25 @@ const AdminContentManager: React.FC = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const { data: rawQuestions, isLoading: loading, refetch } = useQuery<any[]>({
+    queryKey: ['adminQuestions'],
+    queryFn: () => adminService.getQuestions(),
+  });
+
+  const questions: any[] = useMemo(() => {
+    if (!rawQuestions) return [];
+    return rawQuestions.map((q: any) => ({
+      ...q,
+      options: normalizeOptions(q.options)
+    }));
+  }, [rawQuestions]);
+
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        setLoading(true);
-        const data = await adminService.getQuestions();
-        const normalizedData = data.map((q: any) => ({
-          ...q,
-          options: normalizeOptions(q.options)
-        }));
-        setQuestions(normalizedData);
-        // Expand first cert by default if exists
-        if (normalizedData.length > 0) {
-          const firstCert = normalizedData[0].cert_id;
-          if (firstCert) setExpandedCerts({ [firstCert]: true });
-        }
-      } catch (err) {
-        console.error("Failed to fetch questions:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestions();
-  }, []);
+    if (questions.length > 0 && Object.keys(expandedCerts).length === 0 && selectedCert === "all") {
+      const firstCert = questions[0].cert_id;
+      if (firstCert) setExpandedCerts({ [firstCert]: true });
+    }
+  }, [questions, expandedCerts, selectedCert]);
 
   // UX Fix: Auto-expand the selected certification so users see the questions immediately
   useEffect(() => {
@@ -64,7 +68,7 @@ const AdminContentManager: React.FC = () => {
     }
   }, [selectedCert]);
 
-  const filteredQuestions = questions.filter(q => {
+  const filteredQuestions = questions.filter((q: any) => {
     const matchesSearch = q.text?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           q.q_id?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCert = selectedCert === "all" || q.cert_id === selectedCert;
@@ -74,7 +78,7 @@ const AdminContentManager: React.FC = () => {
   // Grouping logic
   const groupedData = useMemo(() => {
     const groups: Record<string, Record<string, any[]>> = {};
-    filteredQuestions.forEach(q => {
+    filteredQuestions.forEach((q: any) => {
       const cert = q.cert_id || 'UNKNOWN';
       const exam = q.exam_id || 'DEFAULT';
       if (!groups[cert]) groups[cert] = {};
@@ -100,15 +104,6 @@ const AdminContentManager: React.FC = () => {
   const getCertTitle = (certId: string) => {
     const lowerId = certId.toLowerCase();
     return RESOURCES_DATA[lowerId]?.title || certId;
-  };
-
-  const normalizeOptions = (options: any): string[] => {
-    if (Array.isArray(options)) return options;
-    if (options && typeof options === 'object') {
-      // Handle legacy object format { A: "text", B: "text", ... }
-      return [options.A, options.B, options.C, options.D].filter(v => v !== undefined);
-    }
-    return ["", "", "", ""];
   };
 
   const handleEdit = (question: any) => {
@@ -137,13 +132,7 @@ const AdminContentManager: React.FC = () => {
       setIsSaving(true);
       await adminService.upsertQuestion(selectedQuestion);
       
-      // Update local state
-      const exists = questions.find(q => q.q_id === selectedQuestion.q_id);
-      if (exists) {
-        setQuestions(questions.map(q => q.q_id === selectedQuestion.q_id ? selectedQuestion : q));
-      } else {
-        setQuestions([selectedQuestion, ...questions]);
-      }
+      await refetch();
       
       setIsEditorOpen(false);
       setSelectedQuestion(null);
@@ -158,7 +147,7 @@ const AdminContentManager: React.FC = () => {
     if (window.confirm("Are you sure you want to permanently delete this question? This action cannot be undone.")) {
       try {
         await adminService.deleteQuestion(q_id, exam_id);
-        setQuestions(questions.filter(q => q.q_id !== q_id));
+        await refetch();
       } catch (err: any) {
         alert("Deletion failed: " + err.message);
       }

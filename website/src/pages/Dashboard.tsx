@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   Terminal, 
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { fetchUserAnalytics, fetchDynamicQuiz, type UserAnalytics } from '../services/api';
+import { fetchUserAnalytics } from '../services/api';
 
 // Dashboard component
 const formatRelativeDate = (dateStr: string) => {
@@ -28,31 +29,16 @@ const formatRelativeDate = (dateStr: string) => {
 const Dashboard: React.FC = () => {
   const { user, attributes } = useAuth();
   const navigate = useNavigate();
-  const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: analytics, isLoading: loading } = useQuery({
+    queryKey: ['userAnalytics'],
+    queryFn: fetchUserAnalytics,
+  });
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const data = await fetchUserAnalytics();
-      setAnalytics(data);
-      setLoading(false);
-    };
-    load();
-  }, []);
 
   const handleGeneratePracticeSet = async () => {
     if (!analytics?.weakestDomain || generatingQuiz) return;
     setGeneratingQuiz(true);
-    const quiz = await fetchDynamicQuiz(analytics.weakestDomain);
-    if (quiz) {
-      // In prod, this would navigate to a dynamic quiz page
-      console.log('Dynamic quiz loaded:', quiz);
-    } else {
-      // In dev, navigate to the mock exam
-      navigate('/certification/saa-c03');
-    }
+    navigate(`/quiz/dynamic/${encodeURIComponent(analytics.weakestDomain)}`);
     setGeneratingQuiz(false);
   };
 
@@ -64,8 +50,8 @@ const Dashboard: React.FC = () => {
   ] : [];
 
   const activeRoadmap = {
-    title: 'Solutions Architect Associate',
-    code: 'SAA-C03',
+    title: analytics?.certificationsTracked?.[0] ? `AWS ${analytics.certificationsTracked[0]}` : 'Solutions Architect Associate',
+    code: analytics?.certificationsTracked?.[0] || 'SAA-C03',
     progress: analytics ? Math.min(analytics.examsCompleted * 6, 100) : 0,
     nextMilestone: analytics?.weakestDomain ?? 'Loading...'
   };
@@ -175,7 +161,7 @@ const Dashboard: React.FC = () => {
                    </div>
                 </div>
                 <button 
-                  onClick={() => navigate(`/certification/saa-c03`)}
+                  onClick={() => navigate(`/certification/${activeRoadmap.code.toLowerCase()}`)}
                   className="w-full md:w-auto px-8 py-4 bg-white text-slate-950 rounded-2xl font-black flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-xl"
                 >
                   <Play className="w-5 h-5 fill-current" /> Continue Studying
@@ -189,7 +175,7 @@ const Dashboard: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-xl font-bold">Recent Results</h2>
-            <Link to="#" className="text-xs font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">See All</Link>
+            <Link to="/history" className="text-xs font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">See All</Link>
           </div>
           
           <div className="space-y-4">
@@ -205,7 +191,8 @@ const Dashboard: React.FC = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] flex items-center justify-between group hover:bg-slate-900 transition-colors"
+                  onClick={() => navigate(`/results/${attempt.id}`)}
+                  className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] flex items-center justify-between group hover:bg-slate-900/80 hover:border-slate-700 cursor-pointer hover:scale-[1.01] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] active:scale-[0.99] transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-xs ${

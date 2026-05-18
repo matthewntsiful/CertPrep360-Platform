@@ -1,4 +1,4 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
@@ -11,12 +11,41 @@ export const handler = async (event) => {
     if (!userId) {
         return {
             statusCode: 400,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Missing userId or unauthorized" }),
         };
     }
 
+    const attemptId = event.queryStringParameters?.attemptId;
+
     try {
+        if (attemptId) {
+            const command = new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                ExpressionAttributeValues: {
+                    ":pk": `USER#${userId}`,
+                    ":skPrefix": `ATTEMPT#${attemptId}`
+                }
+            });
+            const response = await docClient.send(command);
+            const item = response.Items?.[0];
+            if (!item) {
+                return {
+                    statusCode: 404,
+                    headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
+                    body: JSON.stringify({ message: "Attempt not found" }),
+                };
+            }
+            return {
+                statusCode: 200,
+                headers: { 
+                    "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(item),
+            };
+        }
         const command = new QueryCommand({
             TableName: TABLE_NAME,
             KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
@@ -64,10 +93,10 @@ export const handler = async (event) => {
         Object.keys(domainPerformance).forEach(domain => {
              const stat = domainPerformance[domain];
              const accuracy = (stat.correct / stat.total) * 100;
-             if (accuracy < lowestAccuracy && stat.total > 5) {
-                 lowestAccuracy = accuracy;
-                 weakestDomain = domain;
-             }
+              if (accuracy < lowestAccuracy && stat.total > 0) {
+                  lowestAccuracy = accuracy;
+                  weakestDomain = domain;
+              }
         });
 
         const analytics = {
@@ -76,7 +105,8 @@ export const handler = async (event) => {
             totalStudyHours: Math.round(totalStudyHours * 10) / 10,
             certificationsTracked: Array.from(certifications),
             weakestDomain: weakestDomain,
-            recentAttempts: attempts.slice(0, 5).map(a => ({
+            recentAttempts: attempts.slice(0, 10).map(a => ({
+                id: a.SK.split('#')[1],
                 examId: a.examId,
                 certId: a.certId,
                 score: a.score,
@@ -87,7 +117,7 @@ export const handler = async (event) => {
         return {
             statusCode: 200,
             headers: { 
-                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(analytics),
@@ -96,7 +126,7 @@ export const handler = async (event) => {
         console.error("Error fetching analytics:", error);
         return {
             statusCode: 500,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
         };
     }

@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Exam from './pages/Exam';
+import DynamicQuizPage from './pages/DynamicQuiz';
 import ExamHub from './pages/ExamHub';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -68,6 +69,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Exam />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/quiz/dynamic/:domain" 
+                element={
+                  <ProtectedRoute>
+                    <DynamicQuizPage />
                   </ProtectedRoute>
                 } 
               />

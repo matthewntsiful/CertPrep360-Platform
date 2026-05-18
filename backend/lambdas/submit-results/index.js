@@ -13,7 +13,7 @@ export const handler = async (event) => {
     if (!userId || !examId || score === undefined) {
         return {
             statusCode: 400,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Missing required fields (auth, examId, or score)" }),
         };
     }
@@ -40,14 +40,14 @@ export const handler = async (event) => {
 
         return {
             statusCode: 201,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Result saved successfully", attemptId: timestamp }),
         };
     } catch (error) {
         console.error("Error saving result:", error);
         return {
             statusCode: 500,
-            headers: { "Access-Control-Allow-Origin": "*" },
+            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
             body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
         };
     }

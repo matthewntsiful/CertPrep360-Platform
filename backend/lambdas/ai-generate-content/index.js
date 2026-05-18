@@ -148,7 +148,7 @@ export const handler = async (event) => {
 
     // ── ENRICH MODE ──────────────────────────────────────────────────────────
     if (mode === 'enrich') {
-      if (!question) return { statusCode: 400, headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "question object required" }) };
+      if (!question) return { statusCode: 400, headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" }, body: JSON.stringify({ error: "question object required" }) };
 
       const optionsText = Object.entries(question.options || {})
         .map(([k, v]) => `${k}. ${v}`).join('\n');
@@ -178,14 +178,14 @@ Return ONLY the JSON object. No other text.`;
 
       return {
         statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
         body: JSON.stringify(enriched)
       };
     }
 
     // ── FIX MODE ─────────────────────────────────────────────────────────────
     if (mode === 'fix') {
-      if (!question) return { statusCode: 400, headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify({ error: "question object required" }) };
+      if (!question) return { statusCode: 400, headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" }, body: JSON.stringify({ error: "question object required" }) };
 
       const optionsText = Object.entries(question.options || {})
         .map(([k, v]) => `${k}. ${v}`).join('\n');
@@ -223,7 +223,7 @@ Return ONLY the JSON object. No other text.`;
 
       return {
         statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
         body: JSON.stringify(fixed)
       };
     }
@@ -232,7 +232,7 @@ Return ONLY the JSON object. No other text.`;
     if (!certId || !BLUEPRINTS[certId]) {
       return {
         statusCode: 400,
-        headers: { "Access-Control-Allow-Origin": "*" },
+        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
         body: JSON.stringify({ error: "Valid certId is required" })
       };
     }
@@ -263,7 +263,7 @@ Return ONLY a JSON array of question objects:
 
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" },
+      headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
       body: JSON.stringify({ questions })
     };
 
@@ -271,7 +271,7 @@ Return ONLY a JSON array of question objects:
     console.error("AI Generation Error:", error);
     return {
       statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
+      headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
       body: JSON.stringify({ error: "Failed to generate content", details: error.message })
     };
   }
