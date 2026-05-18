@@ -35,7 +35,7 @@ const ExamHeader: React.FC = () => {
               </span>
               <h1 className="text-xl font-bold tracking-tight">{examId}</h1>
             </div>
-            <p className="text-slate-500 text-xs">{questions.length} Questions • 130 Min • 72% Pass</p>
+            <p className="text-slate-500 text-xs">{questions.length} Questions • {questions.length * 2} Min • 72% Pass</p>
           </div>
 
           {/* Right — timer + controls */}
