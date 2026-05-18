@@ -41,9 +41,9 @@ export const adminService = {
     body: JSON.stringify(question)
   }),
 
-  deleteQuestion: (q_id: string, exam_id: string) => authFetch('/admin/content', {
+  deleteQuestion: (q_id: string, exam_id: string, cert_id: string) => authFetch('/admin/content', {
     method: 'DELETE',
-    body: JSON.stringify({ q_id, exam_id })
+    body: JSON.stringify({ q_id, exam_id, cert_id })
   }),
 
   listUsers: () => authFetch('/admin/stats?action=listUsers'),

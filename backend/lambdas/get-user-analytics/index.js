@@ -53,6 +53,7 @@ export const handler = async (event) => {
                 ":pk": `USER#${userId}`,
                 ":skPrefix": `ATTEMPT#`,
             },
+            ScanIndexForward: false
         });
 
         const response = await docClient.send(command);

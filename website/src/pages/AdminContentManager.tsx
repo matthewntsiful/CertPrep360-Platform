@@ -143,10 +143,10 @@ const AdminContentManager: React.FC = () => {
     }
   };
 
-  const handleDelete = async (q_id: string, exam_id: string) => {
+  const handleDelete = async (q_id: string, exam_id: string, cert_id: string) => {
     if (window.confirm("Are you sure you want to permanently delete this question? This action cannot be undone.")) {
       try {
-        await adminService.deleteQuestion(q_id, exam_id);
+        await adminService.deleteQuestion(q_id, exam_id, cert_id);
         await refetch();
       } catch (err: any) {
         alert("Deletion failed: " + err.message);
@@ -309,7 +309,7 @@ const AdminContentManager: React.FC = () => {
                                                       <Edit2 className="w-3.5 h-3.5" />
                                                     </button>
                                                     <button 
-                                                      onClick={() => handleDelete(q.q_id, q.exam_id)}
+                                                      onClick={() => handleDelete(q.q_id, q.exam_id, q.cert_id)}
                                                       className="p-1.5 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                                     >
                                                       <Trash2 className="w-3.5 h-3.5" />
