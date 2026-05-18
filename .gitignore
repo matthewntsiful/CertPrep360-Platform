@@ -13,6 +13,8 @@ override.tf.json
 # Node
 node_modules/
 npm-debug.log*
+backend/temp_*
+backend/lambdas/*.zip
 
 # OS
 .DS_Store
