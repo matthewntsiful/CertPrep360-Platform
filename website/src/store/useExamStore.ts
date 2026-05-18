@@ -109,7 +109,7 @@ export const useExamStore = create<ExamStore>()(
             status: 'running',
             answers: session?.answers || {},
             flaggedQuestions: session?.flaggedQuestions ? new Set(session.flaggedQuestions) : new Set(),
-            timeLeft: session?.timeLeft || INITIAL_TIME,
+            timeLeft: session?.timeLeft || (questions.length * 2 * 60),
             currentQuestionIndex: session?.currentQuestionIndex || 0,
             startTime: session?.startTime || Date.now(),
           });
