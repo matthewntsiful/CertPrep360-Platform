@@ -47,7 +47,12 @@ const AdminAIFactory: React.FC = () => {
   const [drafts, setDrafts] = useState<AIGeneratedQuestion[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
   const [mode, setMode] = useState<'full' | 'topup' | 'enrich' | 'fix'>('full');
-  const [examStatus, setExamStatus] = useState<{existing: number, missing: number, startFrom: number} | null>(null);
+  const [examStatus, setExamStatus] = useState<{
+    existing: number, 
+    missing: number, 
+    startFrom: number,
+    missingNumbers: number[]
+  } | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [existingExams, setExistingExams] = useState<string[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
@@ -87,11 +92,47 @@ const AdminAIFactory: React.FC = () => {
     setExamStatus(null);
     try {
       const questions = await adminService.getQuestions(selectedCert, examId);
-      const existing = Array.isArray(questions) ? questions.length : 0;
+      const qs = Array.isArray(questions) ? questions : [];
+      const existing = qs.length;
       const missing = Math.max(0, 65 - existing);
-      setExamStatus({ existing, missing, startFrom: existing + 1 });
+
+      // Extract existing question numbers (e.g. from SAA-C03-EXAM-04_Q005, get 5)
+      const existingQNumbers = qs.map((q: any) => {
+        const match = q.q_id.match(/_Q(\d+)$/);
+        return match ? parseInt(match[1], 10) : null;
+      }).filter((n): n is number => n !== null);
+
+      // Find missing numbers in the 1-65 sequence
+      const missingNumbers: number[] = [];
+      for (let num = 1; num <= 65; num++) {
+        if (!existingQNumbers.includes(num)) {
+          missingNumbers.push(num);
+        }
+      }
+      
+      // If we somehow need to generate more than 65 (or if sequence is already full but missing is positive),
+      // append sequential numbers beyond 65
+      let nextNum = 66;
+      while (missingNumbers.length < missing) {
+        if (!existingQNumbers.includes(nextNum)) {
+          missingNumbers.push(nextNum);
+        }
+        nextNum++;
+      }
+
+      setExamStatus({ 
+        existing, 
+        missing, 
+        startFrom: existing + 1,
+        missingNumbers 
+      });
     } catch (err: any) {
-      setExamStatus({ existing: 0, missing: 65, startFrom: 1 });
+      setExamStatus({ 
+        existing: 0, 
+        missing: 65, 
+        startFrom: 1,
+        missingNumbers: Array.from({ length: 65 }, (_, idx) => idx + 1)
+      });
     } finally {
       setIsChecking(false);
     }
@@ -100,6 +141,7 @@ const AdminAIFactory: React.FC = () => {
   const handleGenerate = async () => {
     const startFrom = mode === 'topup' && examStatus ? examStatus.startFrom : 1;
     const totalToGenerate = mode === 'topup' && examStatus ? examStatus.missing : 65;
+    const missingNumbers = mode === 'topup' && examStatus ? examStatus.missingNumbers : [];
 
     if (totalToGenerate === 0) {
       setStatusMessage("Exam already has 65 questions. Nothing to generate.");
@@ -124,6 +166,10 @@ const AdminAIFactory: React.FC = () => {
         
         for (let j = i; j < batchEnd; j++) {
           const domainObj = blueprint.domains[j % blueprint.domains.length];
+          const qNumber = mode === 'topup' && missingNumbers[j] !== undefined
+            ? missingNumbers[j]
+            : (startFrom + j);
+
           promises.push(
             adminService.generateAIContent({
               certId: selectedCert,
@@ -135,7 +181,7 @@ const AdminAIFactory: React.FC = () => {
                 return response.questions.map((q: any) => ({
                   ...q,
                   exam_id: examId,
-                  q_id: `${examId}_Q${String(startFrom + j).padStart(3, '0')}`
+                  q_id: `${examId}_Q${String(qNumber).padStart(3, '0')}`
                 }));
               }
               return [];
@@ -143,7 +189,9 @@ const AdminAIFactory: React.FC = () => {
           );
         }
         
-        setStatusMessage(`Manufacturing Q${String(startFrom + i).padStart(3, '0')} - Q${String(startFrom + batchEnd - 1).padStart(3, '0')}...`);
+        const qStartStr = String(mode === 'topup' && missingNumbers[i] !== undefined ? missingNumbers[i] : (startFrom + i)).padStart(3, '0');
+        const qEndStr = String(mode === 'topup' && missingNumbers[batchEnd - 1] !== undefined ? missingNumbers[batchEnd - 1] : (startFrom + batchEnd - 1)).padStart(3, '0');
+        setStatusMessage(`Manufacturing Q${qStartStr} - Q${qEndStr}...`);
         const results = await Promise.allSettled(promises);
         
         const newDrafts = results
@@ -180,7 +228,8 @@ const AdminAIFactory: React.FC = () => {
       for (const q of drafts) {
         await adminService.upsertQuestion({
           ...q,
-          exam_id: examId // Ensure consistent exam_id
+          exam_id: examId, // Ensure consistent exam_id
+          cert_id: selectedCert // Ensure consistent cert_id
         });
       }
       setStatusMessage(`Success: ${drafts.length} questions published.`);
