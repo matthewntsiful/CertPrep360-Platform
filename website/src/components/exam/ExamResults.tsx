@@ -142,11 +142,11 @@ const ExamResults: React.FC = () => {
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <button onClick={() => { resetExam(); navigate('/'); }}
+        <button onClick={() => { resetExam(); navigate(`/certification/${certId.toLowerCase()}`); }}
           className="w-full sm:w-auto px-10 py-4 bg-white text-slate-950 rounded-2xl font-black flex items-center justify-center gap-3 hover:scale-105 transition-all">
           <RotateCcw className="w-5 h-5" /> Retake
         </button>
-        <button onClick={() => navigate('/')}
+        <button onClick={() => navigate('/dashboard')}
           className="w-full sm:w-auto px-10 py-4 bg-slate-900 text-white border border-slate-800 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-slate-800 transition-all">
           <HomeIcon className="w-5 h-5" /> Dashboard
         </button>
