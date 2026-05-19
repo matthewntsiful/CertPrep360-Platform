@@ -16,6 +16,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { StatCardSkeleton, HistoryItemSkeleton } from '../components/Skeleton';
+import { StudyHeatmap } from '../components/StudyHeatmap';
 import { fetchUserAnalytics } from '../services/api';
 
 // Dashboard component
@@ -226,6 +227,10 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Study Heatmap */}
+      <StudyHeatmap attempts={analytics?.recentAttempts ?? []} />
+
     </div>
   );
 };

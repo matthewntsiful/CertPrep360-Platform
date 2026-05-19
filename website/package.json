@@ -20,6 +20,7 @@
     "@tremor/react": "^3.18.7",
     "aws-amplify": "^6.1.1",
     "cmdk": "^1.1.1",
+    "date-fns": "^4.2.1",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.460.0",
     "react": "^19.2.4",
