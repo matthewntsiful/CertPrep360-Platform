@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { StatCardSkeleton, HistoryItemSkeleton } from '../components/Skeleton';
 import { fetchUserAnalytics } from '../services/api';
 
 // Dashboard component
@@ -89,7 +90,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] animate-pulse h-36" />
+            <StatCardSkeleton key={i} />
           ))
         ) : stats.map((stat, i) => (
           <motion.div
@@ -181,7 +182,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-4">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] animate-pulse h-20" />
+                <HistoryItemSkeleton key={i} />
               ))
             ) : (analytics?.recentAttempts ?? []).map((attempt, i) => {
               const passed = attempt.score >= 72;

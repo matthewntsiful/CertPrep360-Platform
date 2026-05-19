@@ -11,11 +11,11 @@ import {
   CheckCircle2,
   Clock,
   Target,
-  CreditCard,
-  Loader2
+  CreditCard
 } from 'lucide-react';
 import { RESOURCES_DATA } from '../data/resourcesData';
 import { fetchCatalog } from '../services/api';
+import { ExamCardSkeleton } from '../components/Skeleton';
 
 const ExamHub: React.FC = () => {
   const { certId } = useParams<{ certId: string }>();
@@ -168,9 +168,10 @@ const ExamHub: React.FC = () => {
             <p className="text-slate-400 text-sm">{exams.length} exam modules available for {cert.code}.</p>
 
             {loadingExams ? (
-              <div className="flex items-center gap-3 text-slate-500 py-10">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-xs font-bold uppercase tracking-widest">Loading exams...</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ExamCardSkeleton key={i} />
+                ))}
               </div>
             ) : exams.length === 0 ? (
               <div className="p-10 bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl text-center">
