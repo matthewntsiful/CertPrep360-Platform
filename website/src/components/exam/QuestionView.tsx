@@ -3,6 +3,7 @@ import { Flag, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FormattedText } from '../FormattedText';
+import SoundEffects from '../../utils/sound';
 
 const QuestionView: React.FC = () => {
   const { 
@@ -22,6 +23,7 @@ const QuestionView: React.FC = () => {
   const isMultiple = q.correct.length > 1;
 
   const handleOptionToggle = (letter: string) => {
+    SoundEffects.playClick();
     if (isMultiple) {
       const existing = (currentAnswer as string[]) || [];
       const next = existing.includes(letter)

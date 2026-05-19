@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, XCircle, RotateCcw, Home as HomeIcon, Clock, Target, CheckCircle2, Share2, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
 import { RESOURCES_DATA } from '../../data/resourcesData';
+import SoundEffects from '../../utils/sound';
 import ReviewMode from './ReviewMode';
 
 const ExamResults: React.FC = () => {
@@ -36,6 +37,14 @@ const ExamResults: React.FC = () => {
   const score = Math.round((correctCount / questions.length) * 100);
   const passed = score >= (parseInt(certMetadata?.passingScore) || 72);
   const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
+
+  useEffect(() => {
+    if (passed) {
+      SoundEffects.playSuccess();
+    } else {
+      SoundEffects.playCompletion();
+    }
+  }, [passed]);
 
   const [copied, setCopied] = useState(false);
   const shareUrl = 'https://aws-exams.matthewntsiful.com';
