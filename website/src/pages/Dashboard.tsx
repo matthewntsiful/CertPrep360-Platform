@@ -11,12 +11,14 @@ import {
   Layout as LayoutIcon,
   Play,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Trophy
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { StatCardSkeleton, HistoryItemSkeleton } from '../components/Skeleton';
 import { StudyHeatmap } from '../components/StudyHeatmap';
+import { EmptyState } from '../components/EmptyState';
 import { fetchUserAnalytics } from '../services/api';
 
 // Dashboard component
@@ -185,6 +187,14 @@ const Dashboard: React.FC = () => {
               Array.from({ length: 3 }).map((_, i) => (
                 <HistoryItemSkeleton key={i} />
               ))
+            ) : (analytics?.recentAttempts ?? []).length === 0 ? (
+              <EmptyState
+                icon={Trophy}
+                title="No exam attempts yet"
+                description="Complete a practice exam to track your progress and see your results here."
+                ctaLabel="Browse Certifications"
+                ctaHref="/"
+              />
             ) : (analytics?.recentAttempts ?? []).map((attempt, i) => {
               const passed = attempt.score >= 72;
               return (

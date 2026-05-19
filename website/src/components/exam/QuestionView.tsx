@@ -107,10 +107,14 @@ const QuestionView: React.FC = () => {
             }
 
             return (
-              <button
+              <motion.button
                 key={letter}
                 onClick={() => handleOptionToggle(letter)}
-                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-4 group ${borderColor} ${bgColor} ${!showFeedback && 'hover:border-slate-700'}`}
+                animate={isSelected ? { scale: [1, 1.02, 1] } : { scale: 1 }}
+                transition={{ duration: 0.15 }}
+                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-4 group ${borderColor} ${bgColor} ${
+                  isSelected ? 'ring-2 ring-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.08)]' : ''
+                } ${!showFeedback && 'hover:border-slate-700'}`}
               >
                 <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 font-bold text-xs transition-colors mt-0.5 ${
                   isSelected ? 'bg-orange-500 text-white' : 'bg-slate-800/80 text-slate-400 group-hover:bg-slate-700'
@@ -118,7 +122,7 @@ const QuestionView: React.FC = () => {
                   {letter}
                 </div>
                 <span className={`text-sm leading-relaxed font-normal ${isSelected ? 'text-slate-100' : 'text-slate-300'}`}>{text}</span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
