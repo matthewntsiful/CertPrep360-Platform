@@ -13,6 +13,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
@@ -28,6 +30,24 @@ const Login: React.FC = () => {
     e.preventDefault();
     setAuthLoading(true);
     setError('');
+    setEmailError('');
+    setPasswordError('');
+
+    let hasError = false;
+    if (!email || !email.includes('@')) {
+      setEmailError('Please enter a valid email address.');
+      hasError = true;
+    }
+    if (!password || password.length < 6) {
+      setPasswordError('Password must be at least 6 characters.');
+      hasError = true;
+    }
+
+    if (hasError) {
+      setAuthLoading(false);
+      return;
+    }
+
     try {
       await login({ username: email, password });
       navigate(from, { replace: true });
@@ -76,13 +96,6 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
-          <div className="relative flex justify-center text-xs uppercase tracking-[0.2em] font-bold">
-            <span className="bg-slate-900 px-4 text-slate-500">Or use email</span>
-          </div>
-        </div>
-
         <form className="space-y-6" onSubmit={handleLogin}>
           {error && (
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
@@ -90,27 +103,48 @@ const Login: React.FC = () => {
             </div>
           )}
           <div className="space-y-4">
-            <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-orange-500 transition-colors" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-12 pr-4 py-4 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all placeholder:text-slate-600"
-                placeholder="Email address"
-              />
+            <div className="space-y-1">
+              <div className="relative group">
+                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${emailError ? 'text-red-500' : 'text-slate-500 group-focus-within:text-orange-500'}`} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                  className={`block w-full pl-12 pr-4 py-4 bg-slate-950 border rounded-xl text-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-600 ${
+                    emailError 
+                      ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' 
+                      : 'border-slate-800 focus:ring-orange-500/20 focus:border-orange-500'
+                  }`}
+                  placeholder="Email address"
+                />
+              </div>
+              {emailError && (
+                <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-xs font-medium pl-1">
+                  {emailError}
+                </motion.p>
+              )}
             </div>
-            <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-orange-500 transition-colors" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-12 pr-4 py-4 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all placeholder:text-slate-600"
-                placeholder="Password"
-              />
+
+            <div className="space-y-1">
+              <div className="relative group">
+                <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${passwordError ? 'text-red-500' : 'text-slate-500 group-focus-within:text-orange-500'}`} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
+                  className={`block w-full pl-12 pr-4 py-4 bg-slate-950 border rounded-xl text-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-600 ${
+                    passwordError 
+                      ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' 
+                      : 'border-slate-800 focus:ring-orange-500/20 focus:border-orange-500'
+                  }`}
+                  placeholder="Password"
+                />
+              </div>
+              {passwordError && (
+                <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-xs font-medium pl-1">
+                  {passwordError}
+                </motion.p>
+              )}
             </div>
           </div>
 

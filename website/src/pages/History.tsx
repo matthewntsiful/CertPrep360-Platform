@@ -130,18 +130,18 @@ const History: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                       <Link 
                         to={`/certification/${attempt.certId.toLowerCase()}`}
-                        className="px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest"
+                        className="flex-1 sm:flex-none text-center px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest"
                       >
                         Retake Exam
                       </Link>
                       <Link 
                         to={`/results/${attempt.id}`}
-                        className="p-3 bg-white text-slate-950 rounded-xl hover:scale-110 transition-transform"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-950 text-xs font-bold rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform uppercase tracking-widest shadow-xl shadow-white/5"
                       >
-                        <Target className="w-5 h-5" />
+                        <Target className="w-4 h-4" /> Review Results
                       </Link>
                     </div>
                   </div>
