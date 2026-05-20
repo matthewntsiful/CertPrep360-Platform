@@ -198,7 +198,7 @@ const Dashboard: React.FC = () => {
                 ctaLabel="Browse Certifications"
                 ctaHref="/"
               />
-            ) : (analytics?.recentAttempts ?? []).slice(0, 3).map((attempt, i) => {
+            ) : (analytics?.recentAttempts ?? []).slice(0, 5).map((attempt, i) => {
               const passed = attempt.score >= 72;
               return (
                 <motion.div
