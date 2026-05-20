@@ -125,8 +125,12 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="p-6 md:p-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity hidden sm:block">
-              <LayoutIcon className="w-48 h-48" />
+            {/* Premium glassmorphic background layer */}
+            <div className="absolute -top-20 -right-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-orange-500/15 transition-all duration-700" />
+            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-slate-500/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity hidden sm:block z-0 pointer-events-none">
+              <LayoutIcon className="w-48 h-48 text-orange-500" />
             </div>
             
             <div className="relative z-10 space-y-8">
@@ -200,6 +204,7 @@ const Dashboard: React.FC = () => {
               />
             ) : (analytics?.recentAttempts ?? []).slice(0, 5).map((attempt, i) => {
               const passed = attempt.score >= 72;
+              const isFirst = i === 0;
               return (
                 <motion.div
                   key={i}
@@ -207,7 +212,15 @@ const Dashboard: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
                   onClick={() => navigate(`/results/${attempt.id}`)}
-                  className="p-6 bg-slate-900/50 border border-slate-800 rounded-[2rem] flex items-center justify-between group hover:bg-slate-900/80 hover:border-slate-700 cursor-pointer hover:scale-[1.01] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] active:scale-[0.99] transition-all"
+                  className={`p-6 rounded-[2rem] flex items-center justify-between group cursor-pointer active:scale-[0.99] transition-all duration-300 ${
+                    isFirst 
+                      ? passed 
+                        ? 'bg-slate-900/90 border-2 border-emerald-500/30 hover:border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.05)] hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]'
+                        : 'bg-slate-900/90 border-2 border-red-500/30 hover:border-red-500/60 shadow-[0_0_30px_rgba(239,68,68,0.05)] hover:shadow-[0_0_30px_rgba(239,68,68,0.1)]'
+                      : passed
+                        ? 'bg-slate-900/40 border border-slate-800 hover:bg-slate-900/70 hover:border-emerald-500/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.06)]'
+                        : 'bg-slate-900/40 border border-slate-800 hover:bg-slate-900/70 hover:border-red-500/30 hover:shadow-[0_0_20px_rgba(239,68,68,0.06)]'
+                  } hover:scale-[1.02]`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-xs ${
@@ -231,11 +244,17 @@ const Dashboard: React.FC = () => {
           <button 
             onClick={handleGeneratePracticeSet}
             disabled={generatingQuiz}
-            className="w-full p-6 bg-slate-900/20 border border-slate-800 border-dashed rounded-[2rem] text-slate-500 hover:text-white hover:border-slate-600 transition-all flex flex-col items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full p-6 bg-purple-500/5 border border-purple-500/20 hover:border-purple-500/50 hover:bg-purple-500/10 transition-all duration-300 rounded-[2rem] text-purple-300 hover:text-white flex flex-col items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.02)] hover:shadow-[0_0_30px_rgba(168,85,247,0.08)]"
           >
-            <Zap className={`w-6 h-6 group-hover:scale-125 transition-transform ${generatingQuiz ? 'animate-pulse' : ''}`} />
-            <span className="text-xs font-bold uppercase tracking-widest">
-              {generatingQuiz ? 'Generating...' : `Practice ${analytics?.weakestDomain?.split(' ').slice(-1)[0] ?? 'Domain'}`}
+            {/* Absolute decorative gradient glow inside button */}
+            <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-purple-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-purple-500/20 transition-all duration-500" />
+            
+            <Zap className={`w-6 h-6 text-purple-400 group-hover:text-purple-300 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 ${generatingQuiz ? 'animate-pulse' : ''}`} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 group-hover:text-white transition-colors duration-300">
+              {generatingQuiz ? 'Generating Custom Quiz...' : `AI Weakness Practice`}
+            </span>
+            <span className="text-[9px] font-bold text-purple-300/40 group-hover:text-purple-300/60 uppercase tracking-widest leading-none">
+              {analytics?.weakestDomain?.split(' ').slice(0, 3).join(' ') ?? 'AWS Domain'}
             </span>
           </button>
         </div>
