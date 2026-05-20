@@ -7,8 +7,7 @@ import {
   Calendar,
   Clock,
   Target,
-  Award,
-  Filter
+  Award
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchUserAnalytics } from '../services/api';
@@ -54,10 +53,22 @@ const History: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="px-6 py-3 bg-slate-900 border border-slate-800 rounded-2xl flex items-center gap-3">
-            <Filter className="w-4 h-4 text-slate-500" />
-            <span className="text-xs font-bold text-white uppercase tracking-widest">Filter Results</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="px-5 py-3 bg-slate-900 border border-slate-800 rounded-2xl text-center">
+            <div className="text-lg font-black text-white">{attempts.length}</div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Attempts</div>
+          </div>
+          <div className="px-5 py-3 bg-slate-900 border border-slate-800 rounded-2xl text-center">
+            <div className="text-lg font-black text-emerald-500">
+              {attempts.length > 0 ? `${Math.round((attempts.filter((a: any) => a.score >= 72).length / attempts.length) * 100)}%` : '—'}
+            </div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pass Rate</div>
+          </div>
+          <div className="px-5 py-3 bg-slate-900 border border-slate-800 rounded-2xl text-center">
+            <div className="text-lg font-black text-orange-500">
+              {attempts.length > 0 ? `${Math.round(attempts.reduce((sum: number, a: any) => sum + a.score, 0) / attempts.length)}%` : '—'}
+            </div>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Avg Score</div>
           </div>
         </div>
       </div>

@@ -138,8 +138,12 @@ const ResultReview: React.FC = () => {
         </div>
         <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-2">
            <BookOpen className="w-5 h-5 text-emerald-500 mb-2" />
-           <div className="text-2xl font-black text-white">Review</div>
-           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Detailed Analysis</div>
+           <div className="text-2xl font-black text-white">
+             {domainStats.length > 0
+               ? `${Math.round(domainStats.reduce((sum, d) => sum + d.correct, 0) / domainStats.reduce((sum, d) => sum + d.total, 0) * 100)}%`
+               : `${attempt.score}%`}
+           </div>
+           <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Accuracy</div>
         </div>
       </div>
 

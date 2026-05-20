@@ -124,144 +124,145 @@ const ExamHub: React.FC = () => {
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Resource List */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* Practice Exams — full left column */}
+        <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center gap-3">
-            <ExternalLink className="w-6 h-6 text-orange-500" />
-            <h2 className="text-2xl font-bold tracking-tight">Official AWS Resources</h2>
+            <Target className="w-6 h-6 text-orange-500" />
+            <h2 className="text-2xl font-bold tracking-tight">Practice Exams</h2>
           </div>
-          
-          <div className="grid grid-cols-1 gap-4">
-            {cert.officialLinks.map((link, idx) => (
-              <motion.a 
-                key={idx}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.1 * idx }}
-                className="flex items-center justify-between p-6 bg-slate-900 border border-slate-800 rounded-[2rem] group hover:border-orange-500/50 hover:bg-slate-800/40 transition-all"
-              >
-                <div className="flex items-center gap-5">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                    link.type === 'guide' ? 'bg-red-500/10 text-red-500' :
-                    link.type === 'course' ? 'bg-blue-500/10 text-blue-500' :
-                    'bg-orange-500/10 text-orange-500'
-                  }`}>
-                    {link.type === 'guide' ? <Download className="w-6 h-6" /> :
-                     link.type === 'course' ? <PlayCircle className="w-6 h-6" /> :
-                     <ExternalLink className="w-6 h-6" />}
-                  </div>
-                  <div>
-                    <div className="font-bold group-hover:text-white transition-colors">{link.title}</div>
-                    <div className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">
-                      {link.type === 'guide' ? 'PDF Exam Guide' : 
-                       link.type === 'course' ? 'AWS Skill Builder' : 'Official Portal'}
+          <p className="text-slate-400 text-sm">{exams.length} exam modules available for {cert.code}.</p>
+
+          {loadingExams ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <ExamCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : exams.length === 0 ? (
+            <div className="p-10 bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl text-center">
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">No exams available yet for this certification</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {exams.map((examId, idx) => {
+                const examNum = idx + 1;
+                const tier = examNum <= 4 ? "Foundational" : examNum <= 10 ? "Intermediate" : examNum <= 14 ? "Advanced" : "Expert";
+                const tierColor = examNum <= 4 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
+                                  examNum <= 10 ? "text-blue-500 bg-blue-500/10 border-blue-500/20" :
+                                  examNum <= 14 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" :
+                                  "text-red-500 bg-red-500/10 border-red-500/20";
+                const padNum = String(examNum).padStart(2, '0');
+                
+                // Find if the user has attempted this exam
+                const attempt = analytics?.recentAttempts?.find(
+                  a => a.certId === cert.certId && a.examId === examId
+                );
+                const hasAttempted = !!attempt;
+
+                return (
+                  <motion.button
+                    key={examId}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.02 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate(`/exam/${cert.certId}/${examId}`)}
+                    className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/80 transition-all text-left flex flex-col justify-between min-h-[140px] group relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                      <Target className="w-16 h-16" />
                     </div>
-                  </div>
-                </div>
-                <ArrowLeft className="w-5 h-5 text-slate-700 rotate-180 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
-              </motion.a>
-            ))}
-          </div>
-
-          {/* Practice Exams Grid */}
-          <div className="space-y-6 mt-12 pt-8 border-t border-slate-800/50">
-            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-              <Target className="w-6 h-6 text-orange-500" />
-              Practice Exams
-            </h2>
-            <p className="text-slate-400 text-sm">{exams.length} exam modules available for {cert.code}.</p>
-
-            {loadingExams ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <ExamCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : exams.length === 0 ? (
-              <div className="p-10 bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl text-center">
-                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">No exams available yet for this certification</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {exams.map((examId, idx) => {
-                  const examNum = idx + 1;
-                  const tier = examNum <= 4 ? "Foundational" : examNum <= 10 ? "Intermediate" : examNum <= 14 ? "Advanced" : "Expert";
-                  const tierColor = examNum <= 4 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
-                                    examNum <= 10 ? "text-blue-500 bg-blue-500/10 border-blue-500/20" :
-                                    examNum <= 14 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" :
-                                    "text-red-500 bg-red-500/10 border-red-500/20";
-                  const padNum = String(examNum).padStart(2, '0');
-                  
-                  // Find if the user has attempted this exam
-                  const attempt = analytics?.recentAttempts?.find(
-                    a => a.certId === cert.certId && a.examId === examId
-                  );
-                  const hasAttempted = !!attempt;
-
-                  return (
-                    <motion.button
-                      key={examId}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.02 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate(`/exam/${cert.certId}/${examId}`)}
-                      className="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:bg-slate-800/80 transition-all text-left flex flex-col justify-between min-h-[140px] group relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                        <Target className="w-16 h-16" />
+                    
+                    {hasAttempted && (
+                      <div className="absolute top-4 right-4 px-2 py-1 bg-slate-950/80 backdrop-blur-sm border border-slate-700 rounded text-[9px] font-black uppercase tracking-widest text-slate-300">
+                        Last Score: <span className={attempt.score >= 72 ? 'text-emerald-500' : 'text-red-500'}>{attempt.score}%</span>
                       </div>
-                      
-                      {hasAttempted && (
-                        <div className="absolute top-4 right-4 px-2 py-1 bg-slate-950/80 backdrop-blur-sm border border-slate-700 rounded text-[9px] font-black uppercase tracking-widest text-slate-300">
-                          Last Score: <span className={attempt.score >= 72 ? 'text-emerald-500' : 'text-red-500'}>{attempt.score}%</span>
-                        </div>
-                      )}
+                    )}
 
-                      <div className="relative z-10 w-full mt-4">
-                        <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded inline-block border ${tierColor} mb-4`}>
-                          {tier}
-                        </div>
-                        <div className="mt-auto">
-                          <div className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Exam Module</div>
-                          <div className="text-3xl font-black text-white group-hover:text-orange-500 transition-colors">{padNum}</div>
-                        </div>
+                    <div className="relative z-10 w-full mt-4">
+                      <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded inline-block border ${tierColor} mb-4`}>
+                        {tier}
                       </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                      <div className="mt-auto">
+                        <div className="text-slate-500 font-bold text-[10px] uppercase tracking-widest">Exam Module</div>
+                        <div className="text-3xl font-black text-white group-hover:text-orange-500 transition-colors">{padNum}</div>
+                      </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Domain Weights */}
-        <div className="space-y-8">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-            <h2 className="text-2xl font-bold tracking-tight">Exam Domains</h2>
+        {/* Right Sidebar: Domains + Resources */}
+        <div className="space-y-10">
+          {/* Exam Domains */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+              <h2 className="text-xl font-bold tracking-tight">Exam Domains</h2>
+            </div>
+            <div className="p-6 rounded-[2rem] bg-slate-900 border border-slate-800 space-y-6">
+              {cert.domains.map((domain, idx) => (
+                <div key={idx} className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                    <span className="text-slate-400 max-w-[80%] leading-relaxed">{domain.name}</span>
+                    <span className="text-emerald-500">{domain.percent}%</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${domain.percent}%` }}
+                      className="h-full bg-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          
-          <div className="p-8 rounded-[2.5rem] bg-slate-900 border border-slate-800 space-y-8">
-            {cert.domains.map((domain, idx) => (
-              <div key={idx} className="space-y-3">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                  <span className="text-slate-400 max-w-[80%] leading-relaxed">{domain.name}</span>
-                  <span className="text-emerald-500">{domain.percent}%</span>
-                </div>
-                <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${domain.percent}%` }}
-                    className="h-full bg-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                  />
-                </div>
-              </div>
-            ))}
+
+          {/* Official AWS Resources */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <ExternalLink className="w-5 h-5 text-orange-500" />
+              <h2 className="text-xl font-bold tracking-tight">Official Resources</h2>
+            </div>
+            <div className="space-y-3">
+              {cert.officialLinks.map((link, idx) => (
+                <motion.a 
+                  key={idx}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 * idx }}
+                  className="flex items-center justify-between p-4 bg-slate-900 border border-slate-800 rounded-2xl group hover:border-orange-500/50 hover:bg-slate-800/40 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                      link.type === 'guide' ? 'bg-red-500/10 text-red-500' :
+                      link.type === 'course' ? 'bg-blue-500/10 text-blue-500' :
+                      'bg-orange-500/10 text-orange-500'
+                    }`}>
+                      {link.type === 'guide' ? <Download className="w-4 h-4" /> :
+                       link.type === 'course' ? <PlayCircle className="w-4 h-4" /> :
+                       <ExternalLink className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm group-hover:text-white transition-colors leading-tight">{link.title}</div>
+                      <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">
+                        {link.type === 'guide' ? 'PDF Guide' : 
+                         link.type === 'course' ? 'Skill Builder' : 'Portal'}
+                      </div>
+                    </div>
+                  </div>
+                  <ArrowLeft className="w-4 h-4 text-slate-700 rotate-180 group-hover:text-orange-500 group-hover:translate-x-1 transition-all shrink-0" />
+                </motion.a>
+              ))}
+            </div>
           </div>
         </div>
       </div>

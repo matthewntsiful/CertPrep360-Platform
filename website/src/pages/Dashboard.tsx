@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Active Path Spotlight */}
+        {/* Active Path Spotlight + Heatmap */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -173,6 +173,9 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Study Heatmap — placed here to fill the left column */}
+          <StudyHeatmap attempts={analytics?.recentAttempts ?? []} />
         </div>
 
         {/* Recent Performance */}
@@ -238,8 +241,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Study Heatmap */}
-      <StudyHeatmap attempts={analytics?.recentAttempts ?? []} />
 
     </div>
   );
