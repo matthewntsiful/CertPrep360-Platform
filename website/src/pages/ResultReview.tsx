@@ -15,6 +15,37 @@ import {
 import { fetchAttempt } from '../services/api';
 import { useExamStore } from '../store/useExamStore';
 
+const AnimatedScoreRing = ({ score, passed }: { score: number, passed: boolean }) => {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const colorClass = passed ? 'text-emerald-500' : 'text-red-500';
+
+  return (
+    <div className="relative w-32 h-32 flex items-center justify-center">
+      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+        <circle 
+          cx="50" cy="50" r={radius} 
+          className="stroke-slate-800" strokeWidth="8" fill="none" 
+        />
+        <motion.circle 
+          cx="50" cy="50" r={radius} 
+          className={colorClass} strokeWidth="8" fill="none" strokeLinecap="round"
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          style={{ strokeDasharray: circumference }}
+          stroke="currentColor"
+        />
+      </svg>
+      <div className="relative flex flex-col items-center">
+        <span className={`text-3xl font-black ${colorClass}`}>{score}%</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{passed ? 'Passed' : 'Failed'}</span>
+      </div>
+    </div>
+  );
+};
+
 const ResultReview: React.FC = () => {
   const { attemptId } = useParams<{ attemptId: string }>();
   const navigate = useNavigate();
@@ -43,6 +74,30 @@ const ResultReview: React.FC = () => {
 
   const passed = attempt.score >= 72;
 
+  // Calculate domain stats
+  const domainStats = React.useMemo(() => {
+    if (!attempt?.answers) return [];
+    
+    const stats: Record<string, { correct: number; total: number }> = {};
+    
+    Object.values(attempt.answers).forEach((ans: any) => {
+      const isRich = typeof ans === 'object' && ans !== null && 'selected' in ans;
+      const domain = isRich ? (ans.domain || 'Unassigned') : 'Legacy Domain';
+      const isCorrect = isRich ? !!ans.isCorrect : false;
+      
+      if (!stats[domain]) stats[domain] = { correct: 0, total: 0 };
+      stats[domain].total += 1;
+      if (isCorrect) stats[domain].correct += 1;
+    });
+    
+    return Object.entries(stats).map(([domain, data]) => ({
+      domain,
+      correct: data.correct,
+      total: data.total,
+      percentage: Math.round((data.correct / data.total) * 100)
+    })).sort((a, b) => b.total - a.total);
+  }, [attempt?.answers]);
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 pb-20">
       {/* Header */}
@@ -65,12 +120,7 @@ const ResultReview: React.FC = () => {
             <p className="text-slate-500">Deep dive into your performance metrics and answer accuracy.</p>
           </div>
 
-          <div className={`px-8 py-4 rounded-3xl border-2 flex flex-col items-center justify-center transition-all ${
-            passed ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-red-500/20 bg-red-500/5 text-red-500'
-          }`}>
-            <span className="text-3xl font-black">{attempt.score}%</span>
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{passed ? 'Passed' : 'Failed'}</span>
-          </div>
+          <AnimatedScoreRing score={attempt.score} passed={passed} />
         </div>
       </div>
 
@@ -92,6 +142,33 @@ const ResultReview: React.FC = () => {
            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Detailed Analysis</div>
         </div>
       </div>
+
+      {/* Domain Breakdown */}
+      {domainStats.length > 0 && (
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Target className="text-orange-500 w-5 h-5" /> Domain Breakdown
+          </h2>
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-6">
+            {domainStats.map((stat, i) => (
+              <div key={i} className="space-y-3">
+                <div className="flex items-end justify-between text-xs">
+                  <span className="font-bold text-slate-300 tracking-wide max-w-[70%] leading-relaxed">{stat.domain}</span>
+                  <span className="font-mono text-slate-500 font-bold">{stat.correct} / {stat.total} (<span className={stat.percentage >= 72 ? 'text-emerald-500' : 'text-orange-500'}>{stat.percentage}%</span>)</span>
+                </div>
+                <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${stat.percentage}%` }}
+                    transition={{ duration: 1, delay: i * 0.1 }}
+                    className={`h-full rounded-full ${stat.percentage >= 72 ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Answer List */}
       <div className="space-y-6">

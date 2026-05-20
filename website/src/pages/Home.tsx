@@ -147,20 +147,30 @@ const Home: React.FC = () => {
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${
-                  activeCategory === category 
-                  ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-500/20 scale-105' 
-                  : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white hover:border-slate-700'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center justify-center gap-2 bg-slate-900/50 p-2 rounded-2xl border border-slate-800 w-fit mx-auto">
+            {categories.map((category) => {
+              const isActive = activeCategory === category;
+              return (
+                <button
+                  key={category}
+                  onClick={() => setActiveCategory(category)}
+                  className={`relative px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${
+                    isActive
+                    ? 'text-white' 
+                    : 'text-slate-500 hover:text-white hover:bg-slate-800/50'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategoryTab"
+                      className="absolute inset-0 bg-orange-500 border border-orange-400 rounded-xl shadow-lg shadow-orange-500/20 z-0"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10">{category}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

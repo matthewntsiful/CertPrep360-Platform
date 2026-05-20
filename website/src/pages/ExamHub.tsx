@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -14,7 +15,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { RESOURCES_DATA } from '../data/resourcesData';
-import { fetchCatalog } from '../services/api';
+import { fetchCatalog, fetchUserAnalytics } from '../services/api';
 import { ExamCardSkeleton } from '../components/Skeleton';
 
 const ExamHub: React.FC = () => {
@@ -23,6 +24,12 @@ const ExamHub: React.FC = () => {
   const cert = certId ? RESOURCES_DATA[certId] : null;
   const [exams, setExams] = React.useState<string[]>([]);
   const [loadingExams, setLoadingExams] = React.useState(true);
+
+  const { data: analytics } = useQuery({
+    queryKey: ['userAnalytics'],
+    queryFn: fetchUserAnalytics,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   React.useEffect(() => {
     if (!cert) return;
@@ -187,6 +194,12 @@ const ExamHub: React.FC = () => {
                                     examNum <= 14 ? "text-orange-500 bg-orange-500/10 border-orange-500/20" :
                                     "text-red-500 bg-red-500/10 border-red-500/20";
                   const padNum = String(examNum).padStart(2, '0');
+                  
+                  // Find if the user has attempted this exam
+                  const attempt = analytics?.recentAttempts?.find(
+                    a => a.certId === cert.certId && a.examId === examId
+                  );
+                  const hasAttempted = !!attempt;
 
                   return (
                     <motion.button
@@ -202,7 +215,14 @@ const ExamHub: React.FC = () => {
                       <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-10 transition-opacity">
                         <Target className="w-16 h-16" />
                       </div>
-                      <div className="relative z-10 w-full">
+                      
+                      {hasAttempted && (
+                        <div className="absolute top-4 right-4 px-2 py-1 bg-slate-950/80 backdrop-blur-sm border border-slate-700 rounded text-[9px] font-black uppercase tracking-widest text-slate-300">
+                          Last Score: <span className={attempt.score >= 72 ? 'text-emerald-500' : 'text-red-500'}>{attempt.score}%</span>
+                        </div>
+                      )}
+
+                      <div className="relative z-10 w-full mt-4">
                         <div className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded inline-block border ${tierColor} mb-4`}>
                           {tier}
                         </div>
