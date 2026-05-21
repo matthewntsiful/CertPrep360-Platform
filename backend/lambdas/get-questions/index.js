@@ -37,7 +37,10 @@ export const handler = async (event) => {
             q_id: item.q_id,
             text: item.text,
             options: item.options,
-            correct: item.correct,
+            // Normalize correct field: strip commas/spaces so "A,B" and "A, B" both become "AB"
+            correct: typeof item.correct === 'string'
+                ? item.correct.toUpperCase().split(/[,\s]+/).filter(c => /^[A-Z]$/.test(c)).join('')
+                : item.correct,
             explanation: item.explanation,
             resources: item.resources || [],
             domain: item.domain

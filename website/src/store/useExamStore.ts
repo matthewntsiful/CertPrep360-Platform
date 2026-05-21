@@ -198,8 +198,10 @@ export const useExamStore = create<ExamStore>()(
         const detailedAnswers: Record<string, any> = {};
         questions.forEach((q, i) => {
           const answer = answers[i];
+          // Normalize correct field: handles both "AB" and "A,B" formats
+          const correctLetters = q.correct.toUpperCase().split(/[,\s]+/).filter((c: string) => /^[A-Z]$/.test(c));
           const isCorrect = !!answer && (Array.isArray(answer)
-            ? [...answer].sort().join('') === [...q.correct].sort().join('')
+            ? [...answer].sort().join('') === [...correctLetters].sort().join('')
             : answer === q.correct);
           if (isCorrect) correct++;
           detailedAnswers[i] = {
