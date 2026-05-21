@@ -36,6 +36,12 @@ variable "enable_bedrock_access" {
   default     = false
 }
 
+variable "s3_read_bucket_arns" {
+  description = "List of S3 bucket ARNs the Lambda needs s3:GetObject access to"
+  type        = list(string)
+  default     = []
+}
+
 variable "cognito_user_pool_arn" {
   description = "Optional ARN of the Cognito User Pool to grant read access to"
   type        = string
@@ -70,4 +76,10 @@ variable "tags" {
   description = "A map of tags to add to all resources"
   type        = map(string)
   default     = {}
+}
+
+variable "enable_self_invoke" {
+  description = "Whether to allow the Lambda to invoke itself asynchronously"
+  type        = bool
+  default     = false
 }

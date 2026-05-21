@@ -127,6 +127,34 @@ resource "aws_iam_role_policy_attachment" "bedrock" {
   policy_arn = aws_iam_policy.bedrock_access[0].arn
 }
 
+resource "aws_iam_policy" "s3_read_access" {
+  count       = length(var.s3_read_bucket_arns) > 0 ? 1 : 0
+  name        = "${var.function_name}-s3-read-access"
+  description = "Allow Lambda to read objects from specified S3 buckets"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Effect   = "Allow"
+        Resource = flatten([
+          for arn in var.s3_read_bucket_arns : [arn, "${arn}/*"]
+        ])
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "s3_read" {
+  count      = length(var.s3_read_bucket_arns) > 0 ? 1 : 0
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.s3_read_access[0].arn
+}
+
 resource "aws_lambda_function" "main" {
   filename         = var.zip_path
   source_code_hash = filesha256(var.zip_path)
@@ -144,6 +172,29 @@ resource "aws_lambda_function" "main" {
   tags = var.tags
 }
 
+
+resource "aws_iam_policy" "self_invoke" {
+  count       = var.enable_self_invoke ? 1 : 0
+  name        = "${var.function_name}-self-invoke"
+  description = "Allow Lambda to invoke itself asynchronously"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "lambda:InvokeFunction"
+        Effect   = "Allow"
+        Resource = aws_lambda_function.main.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "self_invoke" {
+  count      = var.enable_self_invoke ? 1 : 0
+  role       = aws_iam_role.lambda_exec.name
+  policy_arn = aws_iam_policy.self_invoke[0].arn
+}
 
 resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"

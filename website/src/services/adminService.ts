@@ -70,5 +70,47 @@ export const adminService = {
     authFetch('/admin/content', {
       method: 'PATCH',
       body: JSON.stringify({ q_id, cert_id, exam_id, sk, fields })
-    })
+    }),
+
+  startBatchGeneration: (certId: string, examId: string, force?: boolean) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'batch', certId, examId, force: force ?? false })
+    }),
+
+  startRegeneration: (certId: string, examId: string) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'regenerate', certId, examId })
+    }),
+
+  getJobStatus: (jobId: string) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'job-status', jobId })
+    }),
+
+  cancelJob: (jobId: string) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'cancel-job', jobId })
+    }),
+
+  getQualityReport: (examId: string) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'quality-report', examId })
+    }),
+
+  parseExamGuide: (certId: string) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'parse-guide', certId })
+    }),
+
+  scanQuestion: (certId: string, question: any) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'scan', certId, question })
+    }),
 };

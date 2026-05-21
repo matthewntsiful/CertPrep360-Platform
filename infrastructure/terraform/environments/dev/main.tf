@@ -228,10 +228,13 @@ module "lambda_ai_generate_content" {
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   enable_bedrock_access     = true
-  timeout                   = 60 # AI generation takes longer
-  memory_size               = 512
+  enable_self_invoke        = true
+  timeout                   = 900  # 15 minutes for batch generation
+  memory_size               = 1024 # Required for PDF parsing + TF-IDF in memory
+  s3_read_bucket_arns       = ["arn:aws:s3:::certprep360-dev-assets"]
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME          = module.dynamodb.table_name
+    EXAM_GUIDES_BUCKET  = "certprep360-dev-assets"
   }
   tags = local.tags
 }
