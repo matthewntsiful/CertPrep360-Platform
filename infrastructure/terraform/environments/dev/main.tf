@@ -93,7 +93,7 @@ module "monitoring" {
 module "github_oidc" {
   source = "../../modules/github-oidc"
   
-  project_name               = "saa-exams"
+  project_name               = var.project_name
   environment                = "dev"
   github_org                 = var.github_org
   github_repo                = var.github_repo
