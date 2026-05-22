@@ -442,6 +442,8 @@ const generateOneQuestion = async (slot, examGuide, deduplicationEngine, coverag
       Item: {
         PK: `CERT#${certId.toUpperCase()}`,
         SK: `EXAM#${examId}#QUESTION#${qId}`,
+        'GSI1-PK': `DOMAIN#${domainName}`,
+        'GSI1-SK': `CERT#${certId.toUpperCase()}#${qId}`,
         q_id: qId,
         cert_id: certId,
         exam_id: examId,
