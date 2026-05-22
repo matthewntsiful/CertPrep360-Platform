@@ -1,5 +1,5 @@
 import { ScanCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { docClient } from "../common/db.js";
+import { docClient } from "./common/db.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
