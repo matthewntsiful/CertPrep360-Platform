@@ -119,11 +119,10 @@ export const handler = async (event) => {
 
             const command = new UpdateCommand({
                 TableName: TABLE_NAME,
-                Key: { PK: `CERT#${cert_id}`, SK: itemSK },
+                Key: { PK: `CERT#${cert_id.toUpperCase()}`, SK: itemSK },
                 UpdateExpression,
                 ExpressionAttributeNames,
                 ExpressionAttributeValues,
-                ConditionExpression: 'attribute_exists(PK)'
             });
 
             await docClient.send(command);
