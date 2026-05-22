@@ -15,15 +15,36 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  build:
-    name: Build Website
+  # ── Detect what changed ──────────────────────────────────────────────────────
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'website/**'
+            backend:
+              - 'backend/lambdas/**'
+            infrastructure:
+              - 'infrastructure/terraform/**'
+
+  # ── Build Frontend ───────────────────────────────────────────────────────────
+  build-frontend:
+    name: Build Frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -31,80 +52,192 @@ jobs:
         working-directory: ./website
         run: npm install --legacy-peer-deps
 
-      - name: Build Vite app
+      - name: Build
         working-directory: ./website
         run: npm run build
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: website-build
           path: website/dist/
 
-  deploy-dev:
-    name: Deploy to Dev
-    needs: build
+  # ── Package Lambdas ──────────────────────────────────────────────────────────
+  build-lambdas:
+    name: Package Lambdas
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Lambda dependencies
+        working-directory: ./backend/lambdas
+        run: npm ci
+
+      - name: Package all Lambdas
+        working-directory: ./backend/lambdas
+        run: |
+          LAMBDAS=("admin-analytics" "admin-manage-content" "ai-generate-content" "get-dynamic-quiz" "get-questions" "get-user-analytics" "submit-results" "manage-session" "process-payment" "get-catalog")
+          mkdir -p /tmp/lambda-zips
+          for DIR in "${LAMBDAS[@]}"; do
+            if [ -d "$DIR" ]; then
+              echo "📦 Packaging $DIR..."
+              STAGING="/tmp/staging_${DIR}"
+              rm -rf "$STAGING"
+              mkdir -p "$STAGING"
+              cp "$DIR/index.js" "$STAGING/"
+              cp -r common "$STAGING/"
+              cp -r node_modules "$STAGING/"
+              cp package.json "$STAGING/"
+              cd "$STAGING"
+              zip -r "/tmp/lambda-zips/${DIR}.zip" . > /dev/null 2>&1
+              cd -
+            fi
+          done
+          ls -la /tmp/lambda-zips/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lambda-zips
+          path: /tmp/lambda-zips/
+
+  # ── Deploy Dev ───────────────────────────────────────────────────────────────
+  deploy-dev-frontend:
+    name: Deploy Frontend (Dev)
+    needs: build-frontend
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment: dev
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: website-build
-          path: website/dist/
+          path: dist/
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: |
-          aws s3 sync website/dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
-            --delete \
-            --cache-control "public, max-age=300"
+        run: aws s3 sync dist/ s3://aws-exams-dev.matthewntsiful.com/ --delete --cache-control "public, max-age=300"
 
       - name: Invalidate CloudFront
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id E3BJ1TGWKI1MXR --paths "/*"
 
-  deploy-prod:
-    name: Deploy to Production
-    needs: build
+  deploy-dev-lambdas:
+    name: Deploy Lambdas (Dev)
+    needs: build-lambdas
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lambda-zips
+          path: lambda-zips/
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          aws-region: us-east-1
+
+      - name: Deploy all Lambdas
+        run: |
+          declare -A FUNCTION_MAP
+          FUNCTION_MAP["admin-analytics"]="CertPrep360-Dev-AdminAnalytics"
+          FUNCTION_MAP["admin-manage-content"]="CertPrep360-Dev-AdminManageContent"
+          FUNCTION_MAP["ai-generate-content"]="CertPrep360-Dev-AIGenerateContent"
+          FUNCTION_MAP["get-dynamic-quiz"]="CertPrep360-Dev-GetDynamicQuiz"
+          FUNCTION_MAP["get-questions"]="CertPrep360-Dev-GetQuestions"
+          FUNCTION_MAP["get-user-analytics"]="CertPrep360-Dev-GetUserAnalytics"
+          FUNCTION_MAP["submit-results"]="CertPrep360-Dev-SubmitResults"
+          FUNCTION_MAP["manage-session"]="CertPrep360-Dev-ManageSession"
+          FUNCTION_MAP["process-payment"]="CertPrep360-Dev-ProcessPayment"
+          FUNCTION_MAP["get-catalog"]="CertPrep360-Dev-GetCatalog"
+
+          for zip in lambda-zips/*.zip; do
+            DIR=$(basename "$zip" .zip)
+            FUNC="${FUNCTION_MAP[$DIR]}"
+            if [ -n "$FUNC" ]; then
+              echo "🚀 Deploying $FUNC..."
+              aws lambda update-function-code \
+                --function-name "$FUNC" \
+                --zip-file "fileb://$zip" \
+                --query "{LastModified: LastModified, CodeSize: CodeSize}"
+              echo ""
+            fi
+          done
+          echo "✅ All Lambdas deployed"
+
+  # ── Deploy Prod ──────────────────────────────────────────────────────────────
+  deploy-prod-frontend:
+    name: Deploy Frontend (Prod)
+    needs: build-frontend
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: website-build
-          path: website/dist/
+          path: dist/
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: |
-          aws s3 sync website/dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
-            --delete \
-            --cache-control "public, max-age=300"
+        run: aws s3 sync dist/ s3://aws-exams.matthewntsiful.com/ --delete --cache-control "public, max-age=300"
 
       - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID_PROD }} --paths "/*"
+
+  deploy-prod-lambdas:
+    name: Deploy Lambdas (Prod)
+    needs: build-lambdas
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lambda-zips
+          path: lambda-zips/
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
+          aws-region: us-east-1
+
+      - name: Deploy all Lambdas
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          declare -A FUNCTION_MAP
+          FUNCTION_MAP["admin-analytics"]="CertPrep360-Prod-AdminAnalytics"
+          FUNCTION_MAP["admin-manage-content"]="CertPrep360-Prod-AdminManageContent"
+          FUNCTION_MAP["ai-generate-content"]="CertPrep360-Prod-AIGenerateContent"
+          FUNCTION_MAP["get-dynamic-quiz"]="CertPrep360-Prod-GetDynamicQuiz"
+          FUNCTION_MAP["get-questions"]="CertPrep360-Prod-GetQuestions"
+          FUNCTION_MAP["get-user-analytics"]="CertPrep360-Prod-GetUserAnalytics"
+          FUNCTION_MAP["submit-results"]="CertPrep360-Prod-SubmitResults"
+          FUNCTION_MAP["manage-session"]="CertPrep360-Prod-ManageSession"
+          FUNCTION_MAP["process-payment"]="CertPrep360-Prod-ProcessPayment"
+          FUNCTION_MAP["get-catalog"]="CertPrep360-Prod-GetCatalog"
+
+          for zip in lambda-zips/*.zip; do
+            DIR=$(basename "$zip" .zip)
+            FUNC="${FUNCTION_MAP[$DIR]}"
+            if [ -n "$FUNC" ]; then
+              echo "🚀 Deploying $FUNC..."
+              aws lambda update-function-code \
+                --function-name "$FUNC" \
+                --zip-file "fileb://$zip" \
+                --query "{LastModified: LastModified, CodeSize: CodeSize}"
+              echo ""
+            fi
+          done
+          echo "✅ All Lambdas deployed"

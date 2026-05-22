@@ -102,7 +102,7 @@ export const handler = async (event) => {
             const itemSK = sk || `EXAM#${exam_id}#QUESTION#${q_id}`;
 
             // Build dynamic update expression from allowed fields only
-            const ALLOWED = ['explanation', 'resources', 'text', 'options', 'domain'];
+            const ALLOWED = ['explanation', 'resources', 'text', 'options', 'domain', 'correct', 'primary_service', 'scenario_type'];
             const updates = Object.entries(fields).filter(([k]) => ALLOWED.includes(k));
 
             if (updates.length === 0) {

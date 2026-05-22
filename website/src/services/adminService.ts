@@ -113,4 +113,10 @@ export const adminService = {
       method: 'POST',
       body: JSON.stringify({ mode: 'scan', certId, question })
     }),
+
+  trimExam: (certId: string, examId: string) =>
+    authFetch('/admin/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'trim', certId, examId })
+    }),
 };

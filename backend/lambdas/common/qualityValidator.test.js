@@ -233,7 +233,7 @@ describe('validateExam — PASS result', () => {
 });
 
 describe('validateExam — FAIL result', () => {
-  it('fails when domain balance score exceeds 0.05', () => {
+  it('fails when domain balance score exceeds 0.10', () => {
     // All questions in one domain → massive imbalance
     const questions = makeQuestions('Design Secure Architectures', 65, 'IAM');
     const serviceCounts = Object.fromEntries(EXAM_GUIDE.in_scope_services.map(s => [s, 1]));
@@ -245,14 +245,14 @@ describe('validateExam — FAIL result', () => {
     assert.ok(report.failures.some(f => f.includes('Domain balance')), 'Expected domain balance failure');
   });
 
-  it('fails when service diversity score is below 0.40', () => {
+  it('fails when service diversity score is below 0.25', () => {
     const questions = [
       ...makeQuestions('Design Secure Architectures', 30, 'IAM'),
       ...makeQuestions('Design Resilient Architectures', 26, 'SQS'),
       ...makeQuestions('Design High-Performing Architectures', 24, 'S3'),
       ...makeQuestions('Design Cost-Optimized Architectures', 20, 'Glacier'),
     ];
-    // Only 2 of 10 in-scope services covered → diversity = 0.2 < 0.40
+    // Only 2 of 10 in-scope services covered → diversity = 0.2 < 0.25
     const coverageState = makeCoverageState({ serviceCounts: { IAM: 30, SQS: 26 } });
 
     const report = validateExam(questions, EXAM_GUIDE, coverageState, null);

@@ -71,3 +71,22 @@ resource "aws_iam_role_policy" "github_actions_cloudfront" {
     ]
   })
 }
+
+resource "aws_iam_role_policy" "github_actions_lambda" {
+  name = "lambda-deploy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:GetFunction"
+        ]
+        Resource = "arn:aws:lambda:us-east-1:*:function:CertPrep360-*"
+      }
+    ]
+  })
+}

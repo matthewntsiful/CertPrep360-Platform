@@ -16,8 +16,8 @@ const TABLE_NAME = process.env.TABLE_NAME || 'CertPrep360-Dev-Main';
 
 // ── Thresholds ────────────────────────────────────────────────────────────────
 
-const FAIL_DOMAIN_BALANCE_THRESHOLD = 0.05;   // > 5% deviation → FAIL
-const FAIL_DIVERSITY_THRESHOLD = 0.40;         // < 40% services covered → FAIL
+const FAIL_DOMAIN_BALANCE_THRESHOLD = 0.10;   // > 10% deviation → FAIL (was 5%, too strict for 60-question exams)
+const FAIL_DIVERSITY_THRESHOLD = 0.25;         // < 25% services covered → FAIL (was 40%, unrealistic for 119 services in 60 questions)
 const FAIL_DUPLICATE_RATE_THRESHOLD = 0.02;    // > 2% duplicate pairs → FAIL
 const WARN_SERVICE_CONCENTRATION = 0.10;       // > 10% questions for one service → WARN
 const MAX_SAMPLE_PAIRS = 500;                  // max pairs to sample for duplicate rate

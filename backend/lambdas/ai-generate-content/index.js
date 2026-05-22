@@ -16,7 +16,7 @@ const FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || 'CertPrep360-Dev-A
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com";
 const TOTAL_SLOTS = 65;
 const BATCH_CONCURRENCY = 5;
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 const DEDUP_THRESHOLD = 0.70;
 
 // ── Bedrock client ────────────────────────────────────────────────────────────
@@ -149,7 +149,10 @@ const BLUEPRINTS = {
 
 // ── Core Bedrock helper (temperature param added, default 0.7 preserves existing behavior) ──
 
-const invokeModel = async (prompt, maxTokens = 4000, temperature = 0.7) => {
+const MODEL_SONNET = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";  // For generation + fix (quality-critical)
+const MODEL_HAIKU = "us.anthropic.claude-3-5-haiku-20241022-v1:0";    // For parsing + enrich + scan (cost-efficient)
+
+const invokeModel = async (prompt, maxTokens = 4000, temperature = 0.7, model = MODEL_SONNET) => {
   const payload = {
     anthropic_version: "bedrock-2023-05-31",
     max_tokens: maxTokens,
@@ -157,7 +160,7 @@ const invokeModel = async (prompt, maxTokens = 4000, temperature = 0.7) => {
     temperature,
   };
   const command = new InvokeModelCommand({
-    modelId: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    modelId: model,
     contentType: "application/json",
     accept: "application/json",
     body: JSON.stringify(payload)
@@ -474,13 +477,21 @@ const runBatchGeneration = async (certId, examId, jobId, examGuide) => {
   // 1. Query existing questions for dedup initialization
   const existingQuestions = await queryExamQuestions(certId, examId);
 
-  // 2. Build CoverageState from existing questions
+  // 2. Calculate how many slots to fill (cap at 65 total)
+  const slotsNeeded = Math.max(0, TOTAL_SLOTS - existingQuestions.length);
+  if (slotsNeeded === 0) {
+    console.log(`Exam ${examId} already has ${existingQuestions.length} questions — nothing to generate`);
+    await updateJobProgress(jobId, { status: 'completed', completed_at: new Date().toISOString(), questions_generated: 0, questions_skipped: 0 });
+    return;
+  }
+
+  // 3. Build CoverageState from existing questions
   const coverageState = buildCoverageState(existingQuestions, examGuide);
 
-  // 3. Compute slot distribution
-  const slotDistribution = computeSlotDistribution(examGuide, TOTAL_SLOTS);
+  // 4. Compute slot distribution based on slots needed (not always 65)
+  const slotDistribution = computeSlotDistribution(examGuide, slotsNeeded);
 
-  // 4. Initialize DeduplicationEngine with existing question texts
+  // 5. Initialize DeduplicationEngine with existing question texts
   const existingTexts = existingQuestions.map(q => q.text ?? '').filter(Boolean);
   const deduplicationEngine = new DeduplicationEngine(existingTexts);
 
@@ -554,6 +565,52 @@ const runBatchGeneration = async (certId, examId, jobId, examGuide) => {
     }
   }
 
+  // 6b. Retry skipped slots — re-attempt with fresh selections up to 2 retry rounds
+  let retryRound = 0;
+  const MAX_RETRY_ROUNDS = 2;
+  while (skipped > 0 && retryRound < MAX_RETRY_ROUNDS && count < slotsNeeded) {
+    retryRound++;
+    const slotsToRetry = Math.min(skipped, slotsNeeded - count);
+    console.log(`Retry round ${retryRound}: attempting ${slotsToRetry} skipped slots`);
+
+    // Pick domains for retry slots using the same distribution logic
+    const retryDistribution = computeSlotDistribution(examGuide, slotsToRetry);
+    const retrySlots = [];
+    for (const [domainName, slotCount] of retryDistribution) {
+      for (let i = 0; i < slotCount; i++) retrySlots.push({ domainName });
+    }
+
+    let retriedCount = 0;
+    for (let batchStart = 0; batchStart < retrySlots.length; batchStart += BATCH_CONCURRENCY) {
+      const batchSlots = retrySlots.slice(batchStart, batchStart + BATCH_CONCURRENCY);
+      const resolvedSlots = batchSlots.map(rawSlot => {
+        const selected = selectSlot(rawSlot.domainName, examGuide, coverageState);
+        return { ...rawSlot, ...selected };
+      });
+
+      const results = await Promise.all(
+        resolvedSlots.map((slot, idx) =>
+          generateOneQuestion(slot, examGuide, deduplicationEngine, coverageState, certId, certName, examId, count + batchStart + idx + 1)
+        )
+      );
+
+      for (const result of results) {
+        if (result.accepted) {
+          const q = result.question;
+          allAcceptedQuestions.push(q);
+          deduplicationEngine.addAccepted(q.text);
+          updateCoverageState(coverageState, { task_statement_id: q.task_statement_id, primary_service: q.primary_service, scenario_type: q.scenario_type }, TOTAL_SLOTS);
+          count++;
+          skipped--;
+          retriedCount++;
+          updateJobProgress(jobId, { questions_generated: count, questions_skipped: skipped });
+        }
+      }
+    }
+    console.log(`Retry round ${retryRound} recovered ${retriedCount} questions`);
+    if (retriedCount === 0) break; // No progress, stop retrying
+  }
+
   // 7. Run quality validation
   const report = validateExam(allAcceptedQuestions, examGuide, coverageState, deduplicationEngine, { exam_id: examId, cert_id: certId });
 
@@ -615,7 +672,7 @@ Return ONLY a JSON object:
 
 Return ONLY the JSON object. No other text.`;
 
-      const aiText = await invokeModel(prompt, 2000);
+      const aiText = await invokeModel(prompt, 2000, 0.7, MODEL_HAIKU);
       const jsonStr = aiText.substring(aiText.indexOf('{'), aiText.lastIndexOf('}') + 1);
       const enriched = JSON.parse(jsonStr);
 
@@ -731,7 +788,7 @@ Return ONLY a JSON object:
 
 Return ONLY the JSON object. No other text.`;
 
-      const aiText = await invokeModel(prompt, 500);
+      const aiText = await invokeModel(prompt, 500, 0.3, MODEL_HAIKU);
       const jsonStr = aiText.substring(aiText.indexOf('{'), aiText.lastIndexOf('}') + 1);
       const scanResult = JSON.parse(jsonStr);
 
@@ -834,6 +891,41 @@ Return ONLY the JSON object. No other text.`;
 
       await cancelJobRecord(jobId);
       return jsonResponse(200, { message: 'Job cancelled' });
+    }
+
+    // ── TRIM MODE — reduce exam to exactly 65 questions ───────────────────────
+    if (mode === 'trim') {
+      const { examId } = body;
+      if (!certId) return jsonResponse(400, { error: 'certId is required' });
+      if (!examId) return jsonResponse(400, { error: 'examId is required' });
+
+      const questions = await queryExamQuestions(certId, examId);
+      if (questions.length <= TOTAL_SLOTS) {
+        return jsonResponse(200, { message: `Exam has ${questions.length} questions — no trimming needed`, count: questions.length });
+      }
+
+      // Sort by generated_at (newest first) and keep the first 65, delete the rest
+      const sorted = questions.sort((a, b) => (a.generated_at ?? '').localeCompare(b.generated_at ?? ''));
+      const toKeep = sorted.slice(0, TOTAL_SLOTS);
+      const toDelete = sorted.slice(TOTAL_SLOTS);
+
+      // Batch-delete excess questions
+      for (let i = 0; i < toDelete.length; i += 25) {
+        const chunk = toDelete.slice(i, i + 25);
+        await docClient.send(new BatchWriteCommand({
+          RequestItems: {
+            [TABLE_NAME]: chunk.map(item => ({
+              DeleteRequest: { Key: { PK: item.PK, SK: item.SK } },
+            })),
+          },
+        }));
+      }
+
+      return jsonResponse(200, {
+        message: `Trimmed exam from ${questions.length} to ${TOTAL_SLOTS} questions`,
+        deleted: toDelete.length,
+        remaining: TOTAL_SLOTS,
+      });
     }
 
     // ── QUALITY-REPORT MODE ───────────────────────────────────────────────────

@@ -286,6 +286,17 @@ const AdminAIFactory: React.FC = () => {
     finally { setEnrichFixLoading(false); }
   };
 
+  const handleTrimExam = async () => {
+    try {
+      const result = await adminService.trimExam(selectedCert, examId);
+      toast.success(result.message);
+      // Reload questions after trim
+      loadQuestionsForExam();
+    } catch (err: any) {
+      toast.error(`Trim failed: ${err.message}`);
+    }
+  };
+
   // AI-powered scan: sends each question to Claude to detect typos, grammar, factual errors
   const handleAiScan = async () => {
     if (enrichFixQuestions.length === 0) return;
@@ -682,6 +693,14 @@ const AdminAIFactory: React.FC = () => {
                     </div>
                   )}
                 </div>
+              )}
+              {/* Trim button — shown when exam has >65 questions */}
+              {enrichFixQuestions.length > 65 && (
+                <button onClick={handleTrimExam}
+                  className="w-full py-3 bg-rose-600/20 border border-rose-500/30 text-rose-400 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-600/30 transition-all">
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Trim to 65 Questions (currently {enrichFixQuestions.length})
+                </button>
               )}
               <button onClick={() => handleFix(scanIssues)} disabled={isGenerating || scanIssues.length === 0}
                 className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">

@@ -7,35 +7,57 @@ on:
       - develop
 
 jobs:
-  lint:
-    name: Lint Code
+  frontend-check:
+    name: Frontend TypeScript Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install dependencies
         working-directory: ./website
+        run: npm install --legacy-peer-deps
+
+      - name: TypeScript check
+        working-directory: ./website
+        run: npx tsc --noEmit
+
+  backend-check:
+    name: Backend Syntax & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./backend/lambdas
         run: npm ci
 
-      - name: Check for syntax errors
-        working-directory: ./website
-        run: node -c server.js
+      - name: Syntax check all Lambda handlers
+        working-directory: ./backend/lambdas
+        run: |
+          for dir in admin-analytics admin-manage-content ai-generate-content get-dynamic-quiz get-questions get-user-analytics submit-results manage-session process-payment get-catalog; do
+            if [ -f "$dir/index.js" ]; then
+              echo "Checking $dir/index.js..."
+              node --check "$dir/index.js"
+            fi
+          done
+
+      - name: Run unit tests
+        working-directory: ./backend/lambdas
+        run: node --test --test-timeout=10000 common/*.test.js
+        timeout-minutes: 5
 
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 'latest'
 
