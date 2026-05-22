@@ -316,7 +316,13 @@ const AdminAIFactory: React.FC = () => {
       );
       for (const res of results) {
         if (res.status === 'fulfilled' && res.value.r.hasIssues) {
-          aiIssues.push({ ...res.value.q, _issues: res.value.r.issues, _aiScan: true, _severity: res.value.r.severity });
+          const scanData = res.value.r;
+          const issues = [...(scanData.issues || [])];
+          // Add answer mismatch as a specific issue
+          if (scanData.answerMismatch && scanData.correctAnswer) {
+            issues.unshift(`WRONG ANSWER: designated "${res.value.q.correct}" but should be "${scanData.correctAnswer}"`);
+          }
+          aiIssues.push({ ...res.value.q, _issues: issues, _aiScan: true, _severity: scanData.severity, _correctAnswer: scanData.correctAnswer });
         }
       }
       setAiScanProgress(Math.round(((i + batch.length) / toScan.length) * 100));
@@ -687,7 +693,12 @@ const AdminAIFactory: React.FC = () => {
                       })}
                       {scanIssues.filter((q: any) => q._aiScan).length > 0 && (
                         <p className="text-[9px] text-purple-400/70">
-                          • {scanIssues.filter((q: any) => q._aiScan).length}× typos/grammar/factual (AI detected)
+                          • {scanIssues.filter((q: any) => q._aiScan).length}× AI-detected issues
+                        </p>
+                      )}
+                      {scanIssues.filter((q: any) => q._correctAnswer).length > 0 && (
+                        <p className="text-[9px] text-red-400/70 font-bold">
+                          ⚠ {scanIssues.filter((q: any) => q._correctAnswer).length}× WRONG ANSWER (explanation contradicts correct field)
                         </p>
                       )}
                     </div>

@@ -754,41 +754,54 @@ Return ONLY the JSON object. No other text.`;
       };
     }
 
-    // ── SCAN MODE (AI quality scan for typos and general issues) ─────────────
+    // ── SCAN MODE (AI quality scan for typos, grammar, and answer verification) ─
     if (mode === 'scan') {
       if (!question) return jsonResponse(400, { error: 'question object required' });
 
       const optionsText = Object.entries(question.options || {})
         .map(([k, v]) => `${k}. ${v}`).join('\n');
 
-      const prompt = `You are an AWS certification expert. Review this exam question for quality issues.
+      const prompt = `You are a strict AWS certification exam quality auditor. Your job is to find ALL issues with this question. Be thorough and critical — flag anything that could confuse a test-taker or be factually wrong.
 
 Question: ${question.text}
 Options:\n${optionsText}
-Correct Answer: ${question.correct}
+Designated Correct Answer: ${question.correct}
+Explanation: ${question.explanation || 'None provided'}
 Domain: ${question.domain}
 Certification: ${certId}
 
-Check for ALL of the following:
-1. Typos or spelling mistakes
-2. Grammar errors or awkward phrasing
-3. Factually incorrect statements about AWS services
-4. Ambiguous wording with multiple valid interpretations
-5. Options that are not plausible distractors (obviously wrong or nonsensical)
-6. Inconsistent tense or voice
-7. Question text that doesn't end with a clear question
-8. Correct answer that may not actually be correct per current AWS documentation
+CRITICALLY CHECK ALL OF THE FOLLOWING:
+
+1. **ANSWER VERIFICATION** (MOST IMPORTANT): Read the question carefully. Determine which option is actually correct based on current AWS documentation and best practices. If the designated correct answer "${question.correct}" is WRONG, flag it as a major issue and state which answer should be correct and why.
+
+2. **EXPLANATION CONSISTENCY**: If the explanation mentions a different answer than "${question.correct}" as being correct, flag it. For example, if correct is "A" but explanation says "Option B is the best approach", that's a major issue.
+
+3. **Typos and spelling mistakes** in question text or any option.
+
+4. **Grammar errors** or awkward phrasing that makes the question hard to understand.
+
+5. **Factual errors** about AWS services (wrong service capabilities, incorrect limits, outdated information).
+
+6. **Ambiguous wording** where multiple options could reasonably be correct.
+
+7. **Implausible distractors** — options that are obviously wrong and wouldn't fool anyone.
+
+8. **Incomplete question** — doesn't end with a clear question or scenario is too vague.
+
+Be STRICT. If you find ANY issue, report it. Do not give the benefit of the doubt.
 
 Return ONLY a JSON object:
 {
   "hasIssues": true or false,
-  "issues": ["list of specific issues found, empty array if none"],
-  "severity": "none" | "minor" | "major"
+  "issues": ["specific issue 1", "specific issue 2"],
+  "severity": "none" | "minor" | "major",
+  "correctAnswer": "The letter (A/B/C/D) that is actually correct based on AWS docs, or null if designated answer is correct",
+  "answerMismatch": true or false
 }
 
 Return ONLY the JSON object. No other text.`;
 
-      const aiText = await invokeModel(prompt, 500, 0.3, MODEL_HAIKU);
+      const aiText = await invokeModel(prompt, 800, 0.2, MODEL_SONNET);
       const jsonStr = aiText.substring(aiText.indexOf('{'), aiText.lastIndexOf('}') + 1);
       const scanResult = JSON.parse(jsonStr);
 
