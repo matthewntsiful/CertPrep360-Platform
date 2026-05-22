@@ -1,10 +1,7 @@
 resource "aws_s3_bucket" "exam_bucket" {
-  bucket = var.bucket_name
-  tags   = var.tags
-
-  lifecycle {
-    prevent_destroy = true
-  }
+  bucket        = var.bucket_name
+  force_destroy = true
+  tags          = var.tags
 }
 
 resource "aws_s3_bucket_versioning" "exam_bucket" {
@@ -36,8 +33,9 @@ resource "aws_s3_bucket_public_access_block" "exam_bucket" {
 }
 
 resource "aws_s3_bucket" "logs" {
-  bucket = "${var.bucket_name}-logs"
-  tags   = var.tags
+  bucket        = "${var.bucket_name}-logs"
+  force_destroy = true
+  tags          = var.tags
 }
 
 resource "aws_s3_bucket_ownership_controls" "logs" {
@@ -122,7 +120,7 @@ resource "aws_s3_bucket_website_configuration" "exam_website" {
 
 resource "aws_cloudfront_origin_access_control" "exam_oac" {
   name                              = "${var.bucket_name}-oac"
-  description                       = "OAC for SAA-C03 Exams"
+  description                       = "OAC for CertPrep360"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"

@@ -39,7 +39,7 @@ locals {
 module "s3" {
   source = "../../modules/s3"
   
-  bucket_name                   = local.subdomain
+  bucket_name                   = "certprep360-dev-website"
   cloudfront_distribution_arn   = module.cloudfront.distribution_arn
   tags                         = local.tags
 }

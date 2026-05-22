@@ -58,6 +58,10 @@ resource "aws_cloudfront_function" "url_rewrite" {
   comment = "Rewrite URLs to append index.html for directory paths"
   publish = true
   code    = file("${path.module}/url-rewrite-function.js")
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_cloudfront_distribution" "exam_distribution" {

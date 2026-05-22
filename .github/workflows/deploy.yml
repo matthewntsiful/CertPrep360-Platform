@@ -123,7 +123,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync dist/ s3://aws-exams-dev.matthewntsiful.com/ --delete --cache-control "public, max-age=300"
+        run: aws s3 sync dist/ s3://certprep360-dev-website/ --delete --cache-control "public, max-age=300"
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id E3BJ1TGWKI1MXR --paths "/*"
