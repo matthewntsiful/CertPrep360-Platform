@@ -2,12 +2,12 @@ import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedroc
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { QueryCommand, BatchWriteCommand, UpdateCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
-import { docClient } from "../common/db.js";
-import { getExamGuide } from "../common/examGuideParser.js";
-import { buildCoverageState, selectSlot, updateCoverageState, computeSlotDistribution, SCENARIO_TYPES } from "../common/diversityEnforcer.js";
-import { DeduplicationEngine } from "../common/deduplicationEngine.js";
-import { buildCoverageReport, persistCoverageReport } from "../common/coverageTracker.js";
-import { validateExam, persistQualityReport } from "../common/qualityValidator.js";
+import { docClient } from "./common/db.js";
+import { getExamGuide } from "./common/examGuideParser.js";
+import { buildCoverageState, selectSlot, updateCoverageState, computeSlotDistribution, SCENARIO_TYPES } from "./common/diversityEnforcer.js";
+import { DeduplicationEngine } from "./common/deduplicationEngine.js";
+import { buildCoverageReport, persistCoverageReport } from "./common/coverageTracker.js";
+import { validateExam, persistQualityReport } from "./common/qualityValidator.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

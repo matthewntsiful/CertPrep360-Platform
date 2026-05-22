@@ -33,7 +33,8 @@ resource "aws_iam_policy" "dynamodb_access" {
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
           "dynamodb:Query",
-          "dynamodb:Scan"
+          "dynamodb:Scan",
+          "dynamodb:BatchWriteItem"
         ]
         Effect   = "Allow"
         Resource = [var.dynamodb_table_arn, "${var.dynamodb_table_arn}/index/*"]

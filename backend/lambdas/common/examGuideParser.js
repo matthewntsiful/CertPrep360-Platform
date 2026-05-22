@@ -1,12 +1,13 @@
 /**
  * ExamGuideParser — downloads AWS exam guide PDFs from S3, extracts structured
- * domain/task/service data, and caches results in DynamoDB with a 30-day TTL.
+ * domain/task/service data using Claude AI, and caches results in DynamoDB with a 30-day TTL.
  *
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 8.1, 8.3
  */
 
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import { readFile } from 'fs/promises';
@@ -39,6 +40,7 @@ const BUCKET_NAME = process.env.EXAM_GUIDES_BUCKET || 'certprep360-dev-assets';
 const TTL_DAYS = 30;
 
 const s3Client = new S3Client({});
+const bedrockClient = new BedrockRuntimeClient({ region: 'us-east-1' });
 
 // ── S3 Download ───────────────────────────────────────────────────────────────
 
@@ -106,266 +108,186 @@ export async function extractText(pdfPath) {
   }
 }
 
-// ── Domain Parsing ────────────────────────────────────────────────────────────
+// ── AI-Powered Extraction ─────────────────────────────────────────────────────
 
 /**
- * Parses domain names, percentage weights, and task statements from raw PDF text.
- *
- * AWS exam guides follow a consistent structure:
- *   "Domain 1: Design Secure Architectures"  (standalone section header line)
- *   "30%"  (weight on next line, or inline as "(30% of scored content)")
- *   "Task Statement 1.1: Design secure access to AWS resources."
- *
- * The content outline at the top of the guide also lists domains as bullet points
- * like "• Domain 1: Design Secure Architectures (30% of scored content)" — these
- * are deduplicated by keeping only the LAST occurrence of each domain number,
- * which is the actual section header.
+ * Uses Claude to extract structured exam guide data from raw PDF text.
+ * This approach handles any PDF layout variation across different cert guides.
  *
  * @param {string} text - Raw text extracted from the exam guide PDF
- * @returns {Array<{name: string, weight: number, task_statements: Array<{id: string, text: string, services: string[]}>}>}
+ * @param {string} certId - The certification ID for context
+ * @returns {Promise<{ domains: Array, inScopeServices: string[], outOfScopeServices: string[] }>}
  */
+async function extractWithClaude(text, certId) {
+  // Truncate text to fit within Claude's context (keep first ~40000 chars which covers all domains + services for a 26-page guide)
+  const truncatedText = text.length > 40000 ? text.substring(0, 40000) : text;
+
+  const prompt = `You are analyzing an AWS certification exam guide PDF. Extract the structured data from this document.
+
+EXAM GUIDE TEXT:
+${truncatedText}
+
+Extract and return a JSON object with this exact structure:
+{
+  "domains": [
+    {
+      "name": "exact domain name from the document (e.g. 'Design Secure Architectures')",
+      "weight": 0.30,
+      "task_statements": [
+        {
+          "id": "1.1",
+          "text": "exact task statement text",
+          "services": ["Amazon IAM", "AWS STS"]
+        }
+      ]
+    }
+  ],
+  "inScopeServices": ["Amazon S3", "Amazon EC2", "AWS Lambda"],
+  "outOfScopeServices": ["Amazon SimpleDB", "AWS IoT Core"]
+}
+
+RULES:
+1. Extract ALL domains with their exact percentage weights as decimals (30% = 0.30)
+2. Extract ALL task statements under each domain with their IDs (e.g. 1.1, 1.2, 2.1)
+3. For each task statement, list AWS services mentioned in its knowledge/skills section
+4. Extract ALL in-scope AWS services listed in the "In-Scope AWS Services" section
+5. Extract ALL out-of-scope AWS services listed in the "Out-of-Scope AWS Services" section
+6. If a section is not present, return an empty array for that field
+7. Service names must start with "Amazon" or "AWS"
+
+Return ONLY the JSON object. No other text.`;
+
+  const payload = {
+    anthropic_version: 'bedrock-2023-05-31',
+    max_tokens: 8000,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.1,
+  };
+
+  const command = new InvokeModelCommand({
+    modelId: 'us.anthropic.claude-sonnet-4-5-20250929-v1:0',
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: JSON.stringify(payload),
+  });
+
+  const response = await bedrockClient.send(command);
+  const result = JSON.parse(new TextDecoder().decode(response.body));
+  const aiText = result.content[0].text;
+
+  // Extract JSON from response
+  const jsonStr = aiText.substring(aiText.indexOf('{'), aiText.lastIndexOf('}') + 1);
+  const extracted = JSON.parse(jsonStr);
+
+  return {
+    domains: extracted.domains || [],
+    inScopeServices: extracted.inScopeServices || [],
+    outOfScopeServices: extracted.outOfScopeServices || [],
+  };
+}
+
+// ── Legacy regex helpers (kept for unit tests, not used in production) ────────
+
 export function parseDomains(text) {
+  // Kept for backward compatibility with unit tests
+  // Production code uses extractWithClaude instead
   const lines = text.split(/\r?\n/);
-
-  // Match any line containing "Domain N: Name" (with optional leading bullets/spaces)
-  // Capture: domain number, name, optional inline weight
-  const domainLineRegex =
-    /^[\s\u2022\u2023\u25E6\u2043\u2219\u00B7\u25AA\u25AB\u25CF\u25CB\u25A0\u25A1\u2013\u2014\-*]*Domain\s+(\d+)\s*:\s*(.+?)(?:\s*\(?([\d.]+)\s*%[^)]*\)?)?\s*$/i;
-
+  const domainLineRegex = /^[•\s\u2022\-]*(?:Content\s+)?Domain\s+(\d+)\s*:\s*(.+?)(?:\s*\(([\d.]+)\s*%[^)]*\))?\s*$/i;
+  const weightMap = new Map();
   const domainEntries = [];
+
   for (let i = 0; i < lines.length; i++) {
-    const m = domainLineRegex.exec(lines[i]);
+    const m = domainLineRegex.exec(lines[i].trim());
     if (!m) continue;
-
     const number = parseInt(m[1], 10);
-    // Strip trailing parenthetical weight like "(30% of scored content)"
-    let name = m[2].trim().replace(/\s*\([\d.]+\s*%[^)]*\)\s*$/, '').trim();
+    let name = m[2].trim().replace(/\s*\([\d.]+\s*%[^)]*\)\s*$/, '').replace(/\s*\d+$/, '').trim();
     const inlineWeight = m[3] ? parseFloat(m[3]) / 100 : null;
-
+    if (inlineWeight) weightMap.set(number, inlineWeight);
     domainEntries.push({ lineIndex: i, number, name, inlineWeight });
   }
 
   if (domainEntries.length === 0) return [];
 
-  // Deduplicate: keep only the LAST occurrence of each domain number.
-  // Content outline entries appear earlier; actual section headers appear later.
   const byNumber = new Map();
-  for (const entry of domainEntries) {
-    byNumber.set(entry.number, entry);
-  }
-
-  // Sort by line index to maintain document order
-  const uniqueDomains = Array.from(byNumber.values()).sort(
-    (a, b) => a.lineIndex - b.lineIndex
-  );
-
+  for (const entry of domainEntries) byNumber.set(entry.number, entry);
+  const uniqueDomains = Array.from(byNumber.values()).sort((a, b) => a.lineIndex - b.lineIndex);
   const domains = [];
 
   for (let i = 0; i < uniqueDomains.length; i++) {
     const entry = uniqueDomains[i];
-    const nextLineIndex =
-      i + 1 < uniqueDomains.length ? uniqueDomains[i + 1].lineIndex : lines.length;
-
-    // Lines belonging to this domain section
+    const nextLineIndex = i + 1 < uniqueDomains.length ? uniqueDomains[i + 1].lineIndex : lines.length;
     const sectionLines = lines.slice(entry.lineIndex + 1, nextLineIndex);
     const sectionText = sectionLines.join('\n');
-
-    // Determine weight: from inline capture or scan the first few lines of the section
-    let weight = entry.inlineWeight || 0;
+    let weight = weightMap.get(entry.number) || 0;
     if (!weight) {
-      for (let j = 0; j < Math.min(5, sectionLines.length); j++) {
-        const wm = /^\s*([\d.]+)\s*%/.exec(sectionLines[j]);
-        if (wm) {
-          weight = parseFloat(wm[1]) / 100;
-          break;
-        }
+      for (let j = 0; j < Math.min(10, sectionLines.length); j++) {
+        const wm = /\(([\d.]+)\s*%/.exec(sectionLines[j]);
+        if (wm) { weight = parseFloat(wm[1]) / 100; break; }
       }
     }
-
-    // Extract task statements
     const taskStatements = parseTaskStatements(sectionText, entry.number);
-
     domains.push({ name: entry.name, weight, task_statements: taskStatements });
   }
-
   return domains;
 }
 
-/**
- * Extracts task statements from a domain section of text.
- *
- * @param {string} sectionText - Text belonging to a single domain
- * @param {number} domainNumber - The domain number (for context)
- * @returns {Array<{id: string, text: string, services: string[]}>}
- */
 function parseTaskStatements(sectionText, domainNumber) {
-  const taskStatements = [];
   const lines = sectionText.split(/\r?\n/);
-
-  // Match lines like "Task Statement 1.1: Design secure access to AWS resources."
-  // Also handles "Task Statement 1.1 Design ..." (no colon)
-  const taskLineRegex =
-    /^[\s]*Task\s+Statement\s+(\d+\.\d+)\s*[:\-\u2013\u2014]?\s*(.+)$/i;
-
+  const taskLineRegex = /^[•\s\u2022\-]*Task\s+(\d+\.\d+)\s*[:\-\u2013\u2014]\s*(.+)$/i;
   const taskMatches = [];
   for (let i = 0; i < lines.length; i++) {
-    const m = taskLineRegex.exec(lines[i]);
+    const m = taskLineRegex.exec(lines[i].trim());
     if (!m) continue;
-    taskMatches.push({
-      lineIndex: i,
-      id: m[1].trim(),
-      text: m[2].trim(),
-    });
+    taskMatches.push({ lineIndex: i, id: m[1].trim(), text: m[2].trim() });
   }
-
+  const result = [];
   for (let i = 0; i < taskMatches.length; i++) {
     const task = taskMatches[i];
-    const nextLineIndex =
-      i + 1 < taskMatches.length ? taskMatches[i + 1].lineIndex : lines.length;
-
-    // Body lines for this task statement
-    const bodyLines = lines.slice(task.lineIndex + 1, nextLineIndex);
-    const bodyText = bodyLines.join('\n');
-
-    // Extract any AWS service names mentioned in the task body
-    const services = extractServicesFromText(bodyText);
-
-    taskStatements.push({
-      id: task.id,
-      text: task.text.replace(/\.$/, ''), // strip trailing period
-      services,
-    });
+    const nextLineIndex = i + 1 < taskMatches.length ? taskMatches[i + 1].lineIndex : lines.length;
+    const bodyText = lines.slice(task.lineIndex + 1, nextLineIndex).join('\n');
+    const serviceRegex = /(?:Amazon|AWS)\s+[A-Z][A-Za-z0-9\s\-]+(?=[\s,.()\n])/g;
+    const services = new Set();
+    let sm;
+    while ((sm = serviceRegex.exec(bodyText)) !== null) {
+      const name = sm[0].trim().replace(/\s+/g, ' ');
+      if (name.length < 60) services.add(name);
+    }
+    result.push({ id: task.id, text: task.text.replace(/\.$/, ''), services: Array.from(services) });
   }
-
-  return taskStatements;
+  return result;
 }
 
-/**
- * Extracts AWS service names mentioned inline in a block of text.
- * Uses a heuristic: "Amazon X" or "AWS X" patterns.
- *
- * @param {string} text
- * @returns {string[]}
- */
-function extractServicesFromText(text) {
-  const serviceRegex = /(?:Amazon|AWS)\s+[A-Z][A-Za-z0-9\s\-]+(?=[\s,.()\n])/g;
-  const found = new Set();
-  let sm;
-  while ((sm = serviceRegex.exec(text)) !== null) {
-    const name = sm[0].trim().replace(/\s+/g, ' ');
-    if (name.length < 60) found.add(name);
-  }
-  return Array.from(found);
-}
-
-// ── Service Parsing ───────────────────────────────────────────────────────────
-
-/**
- * Parses in-scope and out-of-scope service lists from raw PDF text.
- *
- * AWS exam guides include appendix sections like:
- *   "In-scope AWS services and features"
- *   "Out-of-scope AWS services and features"
- *
- * Each section contains a list of service names, often grouped by category.
- *
- * @param {string} text - Raw text extracted from the exam guide PDF
- * @returns {{ inScope: string[], outOfScope: string[] }}
- */
 export function parseServices(text) {
-  const inScope = extractServiceSection(text, /in[\s\-]*scope/i);
-  const outOfScope = extractServiceSection(text, /out[\s\-]*of[\s\-]*scope/i);
+  // Kept for backward compatibility with unit tests
+  const inScope = extractServiceSectionRegex(text, /in[\s\-]*scope\s+aws\s+services/i);
+  const outOfScope = extractServiceSectionRegex(text, /out[\s\-]*of[\s\-]*scope\s+aws\s+services/i);
   return { inScope, outOfScope };
 }
 
-/**
- * Finds a service list section by its header keyword and extracts service names.
- *
- * @param {string} text - Full PDF text
- * @param {RegExp} sectionKeyword - Regex to identify the section header
- * @returns {string[]}
- */
-function extractServiceSection(text, sectionKeyword) {
+function extractServiceSectionRegex(text, sectionKeyword) {
   const lines = text.split(/\r?\n/);
-
-  // Find the line index of the section header.
-  // The header line contains the keyword AND typically "AWS services" or "services and features".
   let sectionStartLine = -1;
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (
-      sectionKeyword.test(line) &&
-      /(?:AWS\s+services?|services?\s+and\s+features?)/i.test(line)
-    ) {
-      sectionStartLine = i + 1; // content starts on the next line
-      break;
-    }
+    const trimmed = lines[i].trim();
+    if (/\.{5,}/.test(trimmed)) continue;
+    if (sectionKeyword.test(trimmed)) { sectionStartLine = i + 1; break; }
   }
-
   if (sectionStartLine === -1) return [];
-
-  // The section ends when we hit another SECTION HEADER (not just any line containing
-  // the keyword). A section header must contain "AWS services" or "services and features"
-  // in addition to the keyword, OR be a domain header, OR be "Appendix".
-  const sectionHeaderRegex =
-    /^(?:(?:in[\s\-]*scope|out[\s\-]*of[\s\-]*scope).*(?:AWS\s+services?|services?\s+and\s+features?)|appendix|domain\s+\d+)/i;
-
+  const nextSectionRegex = /^(?:out[\s\-]*of[\s\-]*scope\s+aws|in[\s\-]*scope\s+aws|content\s+domain|appendix|technologies|mentions\s+of\s+aws|survey)/i;
   let sectionEndLine = lines.length;
   for (let i = sectionStartLine; i < lines.length; i++) {
-    if (sectionHeaderRegex.test(lines[i].trim())) {
-      sectionEndLine = i;
-      break;
-    }
+    const trimmed = lines[i].trim();
+    if (/\.{5,}/.test(trimmed)) continue;
+    if (nextSectionRegex.test(trimmed)) { sectionEndLine = i; break; }
   }
-
-  const sectionLines = lines.slice(sectionStartLine, sectionEndLine);
-  return parseServiceLines(sectionLines);
-}
-
-/**
- * Parses individual service names from an array of lines.
- * Handles bullet-point lists, category headers, and plain line-separated lists.
- *
- * @param {string[]} lines
- * @returns {string[]}
- */
-function parseServiceLines(lines) {
   const services = new Set();
-
-  for (const rawLine of lines) {
-    // Strip leading bullets and whitespace
-    const line = rawLine
-      .replace(/^[\s\u2022\u2023\u25E6\u2043\u2219\u00B7\u25AA\u25AB\u25CF\u25CB\u25A0\u25A1\u2013\u2014\-*]+/, '')
-      .trim();
-
-    if (!line) continue;
-
-    // Skip category headers: all-caps lines (e.g. "Analytics:", "Compute:")
-    if (/^[A-Z][A-Z\s&\/\-]+:?\s*$/.test(line)) continue;
-
-    // Skip lines that are just page numbers
-    if (/^\d+$/.test(line)) continue;
-
-    // Skip lines that are too long to be a service name
-    if (line.length > 120) continue;
-
-    // Skip lines that look like descriptive sentences (contain lowercase words mid-sentence)
-    if (/[a-z]{4,}\s+[a-z]{4,}/.test(line) && !/^(?:Amazon|AWS)\s/.test(line)) continue;
-
-    // Accept lines that look like service names:
-    // - Start with "Amazon" or "AWS"
-    // - Or are short capitalized phrases (e.g. "EC2", "S3", "Lambda")
-    if (
-      /^(?:Amazon|AWS)\s+\S/.test(line) ||
-      /^[A-Z][A-Za-z0-9\s\-\/().]+$/.test(line)
-    ) {
-      const cleaned = line.replace(/\s+/g, ' ').trim();
-      if (cleaned.length >= 2 && cleaned.length <= 100) {
-        services.add(cleaned);
-      }
+  for (const rawLine of lines.slice(sectionStartLine, sectionEndLine)) {
+    const line = rawLine.replace(/^[\s•\u2022\-]+/, '').trim();
+    if (!line || line.length > 120 || /^\d+$/.test(line)) continue;
+    if (/^(?:Amazon|AWS)\s+\S/.test(line)) {
+      services.add(line.replace(/\s*\d+$/, '').trim());
     }
   }
-
   return Array.from(services);
 }
 
@@ -472,18 +394,18 @@ export async function getExamGuide(certId) {
     throw { certId, reason: err.reason || String(err) };
   }
 
-  // 4. Parse domains and services
+  // 4. Parse domains and services using Claude AI
   let domains, inScopeServices, outOfScopeServices;
   try {
-    domains = parseDomains(text);
-    const services = parseServices(text);
-    inScopeServices = services.inScope;
+    const extracted = await extractWithClaude(text, certId);
+    domains = extracted.domains;
+    inScopeServices = extracted.inScopeServices;
     // Req 8.3: treat out-of-scope list as empty if not found — do not block generation
-    outOfScopeServices = services.outOfScope;
+    outOfScopeServices = extracted.outOfScopeServices;
   } catch (err) {
     throw {
       certId,
-      reason: `Failed to parse exam guide content: ${err.message || String(err)}`,
+      reason: `Failed to extract exam guide content with Claude: ${err.message || String(err)}`,
     };
   }
 

@@ -42,7 +42,6 @@ const BLUEPRINTS = Object.keys(RESOURCES_DATA).reduce((acc: any, key) => {
 const AdminAIFactory: React.FC = () => {
   const [selectedCert, setSelectedCert] = useState("SAA-C03");
   const [examId, setExamId] = useState("SAA-C03-EXAM-04");
-  const [topic, setTopic] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -156,82 +155,37 @@ const AdminAIFactory: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    const startFrom = mode === 'topup' && examStatus ? examStatus.startFrom : 1;
-    const totalToGenerate = mode === 'topup' && examStatus ? examStatus.missing : 65;
-    const missingNumbers = mode === 'topup' && examStatus ? examStatus.missingNumbers : [];
+    if (mode !== 'full') return;
 
-    if (totalToGenerate === 0) {
-      setStatusMessage("Exam already has 65 questions. Nothing to generate.");
-      return;
-    }
-
-    setIsGenerating(true);
-    setProgress(0);
-    setDrafts([]);
-    setStatusMessage("Initializing Blueprint Engine...");
-
-    const blueprint = BLUEPRINTS[selectedCert];
-    const iterations = totalToGenerate;
+    setJobId(null);
+    setJobStatus(null);
+    setQualityReport(null);
+    setWarnAcknowledged(false);
 
     try {
-      const concurrency = 5;
-      let completed = 0;
-      
-      for (let i = 0; i < iterations; i += concurrency) {
-        const batchEnd = Math.min(i + concurrency, iterations);
-        const promises = [];
-        
-        for (let j = i; j < batchEnd; j++) {
-          const domainObj = blueprint.domains[j % blueprint.domains.length];
-          const qNumber = mode === 'topup' && missingNumbers[j] !== undefined
-            ? missingNumbers[j]
-            : (startFrom + j);
-
-          promises.push(
-            adminService.generateAIContent({
-              certId: selectedCert,
-              count: 1,
-              domain: domainObj.name,
-              topic: topic || undefined
-            }).then((response: any) => {
-              if (response.questions) {
-                return response.questions.map((q: any) => ({
-                  ...q,
-                  exam_id: examId,
-                  q_id: `${examId}_Q${String(qNumber).padStart(3, '0')}`
-                }));
-              }
-              return [];
-            })
-          );
-        }
-        
-        const qStartStr = String(mode === 'topup' && missingNumbers[i] !== undefined ? missingNumbers[i] : (startFrom + i)).padStart(3, '0');
-        const qEndStr = String(mode === 'topup' && missingNumbers[batchEnd - 1] !== undefined ? missingNumbers[batchEnd - 1] : (startFrom + batchEnd - 1)).padStart(3, '0');
-        setStatusMessage(`Manufacturing Q${qStartStr} - Q${qEndStr}...`);
-        const results = await Promise.allSettled(promises);
-        
-        const newDrafts = results
-          .filter((res): res is PromiseFulfilledResult<any[]> => res.status === 'fulfilled')
-          .flatMap(res => res.value);
-          
-        setDrafts(prev => [...prev, ...newDrafts]);
-        
-        completed += (batchEnd - i);
-        setProgress(Math.round((completed / iterations) * 100));
-      }
-
-      setProgress(100);
-      const msg = `Manufacturing Complete — ${totalToGenerate} questions ready.`;
-      setStatusMessage(msg);
-      toast.success(msg);
+      // Use the exam-guide batch pipeline for full generation
+      const result = await adminService.startBatchGeneration(selectedCert, examId, false);
+      setJobId(result.jobId);
+      setJobStatus({
+        job_id: result.jobId,
+        cert_id: selectedCert,
+        exam_id: examId,
+        status: 'in_progress',
+        questions_generated: 0,
+        questions_skipped: 0,
+        current_domain: '',
+        started_at: new Date().toISOString(),
+        completed_at: null,
+        error: null,
+      });
+      toast.success('Generation started — exam-guide pipeline active');
     } catch (err: any) {
-      console.error("Generation failed:", err);
-      const msg = `Error: ${err.message}`;
-      setStatusMessage(msg);
-      toast.error(msg);
-    } finally {
-      setIsGenerating(false);
+      // If exam already exists (409), offer to use regenerate mode
+      if (err.message?.includes('409') || err.message?.includes('already has questions')) {
+        toast.error('Exam already has questions. Use Regenerate mode to rebuild from scratch, or Top Up to fill missing slots.');
+      } else {
+        toast.error(`Failed to start generation: ${err.message}`);
+      }
     }
   };
 
@@ -369,8 +323,8 @@ const AdminAIFactory: React.FC = () => {
         const status = await adminService.getJobStatus(jobId);
         setJobStatus(status);
         if (status.status === 'completed') {
-          // Only fetch quality report for regenerate mode
-          if (mode === 'regenerate') {
+          // Fetch quality report for regenerate and full modes
+          if (mode === 'regenerate' || mode === 'full') {
             const report = await adminService.getQualityReport(examId);
             setQualityReport(report);
           }
@@ -600,16 +554,25 @@ const AdminAIFactory: React.FC = () => {
           {/* Generate controls */}
           {mode === 'full' && (
             <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Focus Topic (Optional)</p>
-              <textarea
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-4 text-sm text-white min-h-[100px]"
-                placeholder="e.g. Focus on S3 Lifecycle and DynamoDB replication..."
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Exam ID</p>
+              <input
+                type="text"
+                value={examId}
+                onChange={(e) => setExamId(e.target.value.toUpperCase())}
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-sm font-medium text-white"
+                placeholder={`e.g. ${selectedCert}-EXAM-01`}
               />
-              <button onClick={handleGenerate} disabled={isGenerating}
+              <p className="text-[9px] text-slate-600 uppercase tracking-widest">Uses exam-guide pipeline: diversity enforcement, deduplication, quality validation</p>
+              {/* Cancel button while running */}
+              {jobId && jobStatus?.status === 'in_progress' && (
+                <button onClick={handleCancelJob}
+                  className="w-full py-3 bg-slate-800 border border-slate-700 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:border-purple-500/40 hover:text-purple-400 transition-all">
+                  Cancel Job
+                </button>
+              )}
+              <button onClick={handleGenerate} disabled={!examId || jobStatus?.status === 'in_progress'}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50">
-                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {jobStatus?.status === 'in_progress' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 Generate 65 Questions
               </button>
             </div>
@@ -923,6 +886,102 @@ const AdminAIFactory: React.FC = () => {
             </div>
           )}
 
+          {/* Generate pipeline output (uses batch job) */}
+          {mode === 'full' && jobStatus && (
+            <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Wand2 className={`w-5 h-5 text-purple-500 ${jobStatus.status === 'in_progress' ? 'animate-pulse' : ''}`} />
+                  <h2 className="text-sm font-black uppercase tracking-widest text-white">Generation Pipeline</h2>
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                  jobStatus.status === 'completed' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                  jobStatus.status === 'failed' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                  jobStatus.status === 'cancelled' ? 'bg-slate-500/10 border-slate-500/20 text-slate-400' :
+                  'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                }`}>{jobStatus.status}</span>
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.round((jobStatus.questions_generated / 65) * 100)}%` }}
+                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <span>{jobStatus.questions_generated} / 65 generated</span>
+                  <span>{jobStatus.questions_skipped} skipped</span>
+                </div>
+                {jobStatus.current_domain && jobStatus.status === 'in_progress' && (
+                  <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest animate-pulse">
+                    Processing: {jobStatus.current_domain}
+                  </p>
+                )}
+                {jobStatus.error && (
+                  <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Error: {jobStatus.error}</p>
+                )}
+              </div>
+              {/* Quality Report on completion */}
+              {qualityReport && (
+                <div className="space-y-4 pt-4 border-t border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Quality Report</h3>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                      qualityReport.result === 'PASS' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                      qualityReport.result === 'WARN' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                      'bg-red-500/10 border-red-500/20 text-red-400'
+                    }`}>{qualityReport.result}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Domain Balance</p>
+                      <p className={`text-lg font-black mt-1 ${qualityReport.domain_balance_score > 0.05 ? 'text-red-400' : 'text-green-400'}`}>
+                        {(qualityReport.domain_balance_score * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Service Diversity</p>
+                      <p className={`text-lg font-black mt-1 ${qualityReport.service_diversity_score < 0.40 ? 'text-red-400' : 'text-green-400'}`}>
+                        {(qualityReport.service_diversity_score * 100).toFixed(0)}%
+                      </p>
+                    </div>
+                    <div className="p-3 bg-slate-950 border border-slate-800 rounded-2xl text-center">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Duplicate Rate</p>
+                      <p className={`text-lg font-black mt-1 ${qualityReport.duplicate_rate > 0.02 ? 'text-red-400' : 'text-green-400'}`}>
+                        {(qualityReport.duplicate_rate * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                  {qualityReport.failures.length > 0 && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl space-y-1">
+                      <p className="text-[9px] font-black text-red-400 uppercase tracking-widest">Failures</p>
+                      {qualityReport.failures.map((f, i) => <p key={i} className="text-[10px] text-red-300">{f}</p>)}
+                    </div>
+                  )}
+                  {qualityReport.warnings.length > 0 && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-1">
+                      <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Warnings</p>
+                      {qualityReport.warnings.map((w, i) => <p key={i} className="text-[10px] text-amber-300">{w}</p>)}
+                    </div>
+                  )}
+                  {qualityReport.result === 'WARN' && (
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={warnAcknowledged} onChange={e => setWarnAcknowledged(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-600 bg-slate-950 text-purple-500" />
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                        I acknowledge the warnings and want to publish anyway
+                      </span>
+                    </label>
+                  )}
+                  <p className="text-[9px] text-slate-600 uppercase tracking-widest">
+                    Questions are already stored in DynamoDB — no publish step needed.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Top Up pipeline output (reuses job status panel) */}
           {mode === 'topup' && jobStatus && (
             <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-[2.5rem] space-y-6">
@@ -1132,7 +1191,7 @@ const AdminAIFactory: React.FC = () => {
           )}
 
           {/* Empty state */}
-          {!isGenerating && drafts.length === 0 && enrichFixResults.length === 0 && mode !== 'regenerate' && (
+          {!jobStatus && drafts.length === 0 && enrichFixResults.length === 0 && mode !== 'regenerate' && (
             <div className="h-[500px] bg-slate-950/20 border-2 border-dashed border-slate-800 rounded-[3rem] flex flex-col items-center justify-center gap-4 text-center">
               <div className="w-16 h-16 rounded-3xl bg-slate-900 flex items-center justify-center border border-slate-800 text-slate-700">
                 <LayoutGrid className="w-8 h-8" />
