@@ -1,4 +1,11 @@
 import { fetchAuthSession } from '@aws-amplify/auth';
+import type {
+  AnalyticsResponse,
+  PaginatedHistoryResponse,
+  AttemptDetailResponse,
+  HistoryParams,
+  DynamicQuizResponse,
+} from '../types/analytics';
 
 export interface UserAnalytics {
   examsCompleted: number;
@@ -115,4 +122,70 @@ export async function verifyPayment(reference: string) {
     method: 'POST',
     body: JSON.stringify({ reference })
   });
+}
+
+// ─── Study Mode Enhancement APIs ────────────────────────────────────────────
+
+/**
+ * Fetches enhanced analytics including trend data and weak pool count.
+ */
+export async function fetchAnalytics(): Promise<AnalyticsResponse> {
+  return await authFetch('/analytics') as AnalyticsResponse;
+}
+
+/**
+ * Fetches paginated attempt history with optional filtering and sorting.
+ * Designed for use with TanStack Query's `useInfiniteQuery`:
+ *
+ * ```ts
+ * useInfiniteQuery({
+ *   queryKey: ['history', filters],
+ *   queryFn: ({ pageParam }) => fetchHistory({ ...filters, cursor: pageParam }),
+ *   getNextPageParam: (lastPage) => lastPage.nextCursor,
+ * })
+ * ```
+ */
+export async function fetchHistory(params: HistoryParams = {}): Promise<PaginatedHistoryResponse> {
+  const searchParams = new URLSearchParams();
+  searchParams.set('history', 'true');
+
+  if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+  if (params.cursor) searchParams.set('cursor', params.cursor);
+  if (params.certId) searchParams.set('certId', params.certId);
+  if (params.status) searchParams.set('status', params.status);
+  if (params.sort) searchParams.set('sort', params.sort);
+
+  return await authFetch(`/analytics?${searchParams.toString()}`) as PaginatedHistoryResponse;
+}
+
+/**
+ * Fetches detailed attempt data including question snapshots for the ResultReview page.
+ */
+export async function fetchAttemptDetail(attemptId: string): Promise<AttemptDetailResponse> {
+  return await authFetch(`/analytics?attemptId=${encodeURIComponent(attemptId)}`) as AttemptDetailResponse;
+}
+
+/**
+ * Starts an adaptive quiz that auto-selects the user's 2-3 weakest domains
+ * and distributes questions using inverse performance weighting.
+ */
+export async function startAdaptiveQuiz(certId: string, limit = 20): Promise<DynamicQuizResponse> {
+  return await authFetch(
+    `/dynamic-quiz?mode=adaptive&certId=${encodeURIComponent(certId)}&limit=${limit}`
+  ) as DynamicQuizResponse;
+}
+
+/**
+ * Starts a multi-domain quiz with explicitly specified domains.
+ * Domains are passed as a comma-separated list.
+ */
+export async function startMultiDomainQuiz(
+  domains: string[],
+  certId: string,
+  limit = 20
+): Promise<DynamicQuizResponse> {
+  const domainParam = domains.map(d => encodeURIComponent(d)).join(',');
+  return await authFetch(
+    `/dynamic-quiz?domain=${domainParam}&certId=${encodeURIComponent(certId)}&limit=${limit}`
+  ) as DynamicQuizResponse;
 }

@@ -9,7 +9,7 @@ import ReviewMode from './ReviewMode';
 
 const ExamResults: React.FC = () => {
   const navigate = useNavigate();
-  const { questions, answers, resetExam, startTime, certId, examId } = useExamStore();
+  const { questions, answers, resetExam, startTime, certId, examId, quizMeta } = useExamStore();
   const [showShare, setShowShare] = useState(false);
   const [inReview, setInReview] = useState(false);
 
@@ -104,6 +104,23 @@ const ExamResults: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Weak Pool / Adaptive Quiz Info */}
+      {quizMeta && quizMeta.weakPoolIncluded > 0 && (
+        <div className="flex items-center gap-3 px-6 py-4 bg-amber-500/5 border border-amber-500/20 rounded-[2rem]">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+            <Target className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-amber-400">
+              {quizMeta.weakPoolIncluded} Weak Pool {quizMeta.weakPoolIncluded === 1 ? 'question' : 'questions'} included
+            </p>
+            <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+              Spaced repetition questions from your review pool were mixed into this quiz
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Domain Breakdown */}
       <div className="p-8 rounded-[2.5rem] bg-slate-900 border border-slate-800 space-y-8">

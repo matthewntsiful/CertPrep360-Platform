@@ -19,6 +19,8 @@ import { useAuth } from '../context/AuthContext';
 import { StatCardSkeleton, HistoryItemSkeleton } from '../components/Skeleton';
 import { StudyHeatmap } from '../components/StudyHeatmap';
 import { EmptyState } from '../components/EmptyState';
+import { ScoreTrendChart } from '../components/ScoreTrendChart';
+import WeakPoolCounter from '../components/WeakPoolCounter';
 import { fetchUserAnalytics } from '../services/api';
 
 // Dashboard component
@@ -90,7 +92,7 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <StatCardSkeleton key={i} />
@@ -112,6 +114,8 @@ const Dashboard: React.FC = () => {
             </div>
           </motion.div>
         ))}
+        {/* Weak Pool Counter stat card */}
+        {!loading && <WeakPoolCounter />}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -180,6 +184,9 @@ const Dashboard: React.FC = () => {
 
           {/* Study Heatmap — placed here to fill the left column */}
           <StudyHeatmap attempts={analytics?.recentAttempts ?? []} />
+
+          {/* Score Trend Chart — visualizes score progression over time */}
+          <ScoreTrendChart />
         </div>
 
         {/* Recent Performance */}

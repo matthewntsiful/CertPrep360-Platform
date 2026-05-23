@@ -109,7 +109,7 @@ function App() {
                   } 
                 />
                 <Route 
-                  path="/quiz/dynamic/:domain" 
+                  path="/quiz/dynamic/:domain?" 
                   element={
                     <ProtectedRoute>
                       <DynamicQuizPage />

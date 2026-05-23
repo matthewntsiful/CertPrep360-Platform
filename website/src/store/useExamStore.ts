@@ -27,9 +27,16 @@ async function authFetch(path: string, options: RequestInit = {}) {
   return response.json();
 }
 
+export interface QuizMetadata {
+  mode: string;
+  domains: string[];
+  weakPoolIncluded: number;
+}
+
 interface ExamStore extends ExamSession {
+  quizMeta: QuizMetadata | null;
   startExam: (certId: string, examId: string) => Promise<void>;
-  startDynamicQuiz: (domain: string, questions: Question[]) => void;
+  startDynamicQuiz: (domain: string, questions: Question[], meta?: QuizMetadata) => void;
   setAnswer: (questionIndex: number, answer: string | string[]) => void;
   toggleFlag: (questionIndex: number) => void;
   nextQuestion: () => void;
@@ -85,6 +92,7 @@ export const useExamStore = create<ExamStore>()(
       status: 'idle',
       studyMode: false,
       startTime: null,
+      quizMeta: null,
 
       startExam: async (certId, examId) => {
         set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME, currentQuestionIndex: 0, certId, examId });
@@ -119,7 +127,7 @@ export const useExamStore = create<ExamStore>()(
         }
       },
 
-      startDynamicQuiz: (domain, questions) => {
+      startDynamicQuiz: (domain, questions, meta) => {
         set({
           status: 'running',
           questions,
@@ -130,6 +138,7 @@ export const useExamStore = create<ExamStore>()(
           certId: 'SAA-C03',
           examId: `Dynamic-${domain}`,
           startTime: Date.now(),
+          quizMeta: meta || null,
         });
       },
 
@@ -231,7 +240,8 @@ export const useExamStore = create<ExamStore>()(
         answers: {},
         flaggedQuestions: new Set(),
         timeLeft: INITIAL_TIME,
-        currentQuestionIndex: 0
+        currentQuestionIndex: 0,
+        quizMeta: null,
       }),
     }),
     {
