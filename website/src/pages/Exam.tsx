@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useBlocker } from 'react-router-dom';
 import { useExamStore } from '../store/useExamStore';
 import { useTimer } from '../hooks/useTimer';
 
@@ -12,16 +12,43 @@ import PauseOverlay from '../components/exam/PauseOverlay';
 
 const ExamPage: React.FC = () => {
   const { certId, examId } = useParams<{ certId: string; examId: string }>();
-  const { status, startExam, questions, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
+  const { status, startExam, questions, examId: storeExamId, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
   const loadedRef = useRef<string>('');
 
   useTimer();
 
-  // Load exam only when certId/examId changes — never re-run on status change
+  // Warn before navigating away during an active exam
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (status === 'running' || status === 'paused') {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [status]);
+
+  // Block in-app navigation during active exam
+  useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      (status === 'running' || status === 'paused') &&
+      currentLocation.pathname !== nextLocation.pathname &&
+      !window.confirm('You have an active exam in progress. Are you sure you want to leave? Your progress is saved and you can resume later.')
+  );
+
+  // Load exam only when certId/examId changes AND the store doesn't already have it
   useEffect(() => {
     const key = `${certId}/${examId}`;
     if (!certId || !examId) return;
-    if (loadedRef.current === key) return; // already loaded this exam
+    if (loadedRef.current === key) return; // already loaded this exam in this session
+
+    // If the store already has this exam loaded (from localStorage persistence), don't re-fetch
+    if (storeExamId === examId && questions.length > 0 && (status === 'running' || status === 'paused')) {
+      loadedRef.current = key;
+      return;
+    }
+
     loadedRef.current = key;
     startExam(certId, examId);
   }, [certId, examId]);
@@ -29,13 +56,14 @@ const ExamPage: React.FC = () => {
   // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+      if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes((e.target as HTMLElement).tagName)) return;
+      // Allow space bar to toggle pause even when paused
+      if (e.key === ' ') { e.preventDefault(); toggleTimer(); return; }
       if (status !== 'running') return;
       switch (e.key) {
         case 'ArrowRight': e.preventDefault(); nextQuestion(); break;
         case 'ArrowLeft':  e.preventDefault(); prevQuestion(); break;
         case 'f': case 'F': e.preventDefault(); toggleFlag(currentQuestionIndex); break;
-        case ' ':           e.preventDefault(); toggleTimer(); break;
       }
     };
     window.addEventListener('keydown', handleKey);

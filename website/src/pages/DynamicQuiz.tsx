@@ -187,13 +187,14 @@ const DynamicQuizPage: React.FC = () => {
   // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+      if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes((e.target as HTMLElement).tagName)) return;
+      // Allow space bar to toggle pause even when paused
+      if (e.key === ' ') { e.preventDefault(); toggleTimer(); return; }
       if (status !== 'running') return;
       switch (e.key) {
         case 'ArrowRight': e.preventDefault(); nextQuestion(); break;
         case 'ArrowLeft':  e.preventDefault(); prevQuestion(); break;
         case 'f': case 'F': e.preventDefault(); toggleFlag(currentQuestionIndex); break;
-        case ' ':           e.preventDefault(); toggleTimer(); break;
       }
     };
     window.addEventListener('keydown', handleKey);
