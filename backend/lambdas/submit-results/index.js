@@ -15,7 +15,9 @@ export const handler = async (event) => {
 
     // UserId comes from Cognito Authorizer context
     const userId = event.requestContext.authorizer?.claims?.sub;
-    const { examId, certId, score, timeTaken, answers, questionSnapshots } = JSON.parse(event.body || "{}");
+    const body = JSON.parse(event.body || "{}");
+    const { examId, score, timeTaken, answers, questionSnapshots } = body;
+    const certId = (body.certId || "").toUpperCase();
 
     if (!userId || !examId || score === undefined) {
         return {

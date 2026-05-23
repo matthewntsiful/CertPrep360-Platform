@@ -95,14 +95,15 @@ export const useExamStore = create<ExamStore>()(
       quizMeta: null,
 
       startExam: async (certId, examId) => {
-        set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME, currentQuestionIndex: 0, certId, examId });
+        const normalizedCertId = certId.toUpperCase();
+        set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME, currentQuestionIndex: 0, certId: normalizedCertId, examId });
         
         try {
-          const questions = await authFetch(`/questions/${certId}/${examId}`) as Question[];
+          const questions = await authFetch(`/questions/${normalizedCertId}/${examId}`) as Question[];
           
           let session = null;
           try {
-            const res = await authFetch(`/session/${certId}/${examId}`);
+            const res = await authFetch(`/session/${normalizedCertId}/${examId}`);
             if (res.session && res.session.sessionData) {
               session = res.session.sessionData;
             }
@@ -111,7 +112,7 @@ export const useExamStore = create<ExamStore>()(
           }
 
           set({
-            certId,
+            certId: normalizedCertId,
             examId,
             questions,
             status: 'running',
@@ -226,7 +227,7 @@ export const useExamStore = create<ExamStore>()(
         try {
           await authFetch('/results', {
             method: 'POST',
-            body: JSON.stringify({ examId, certId, score, timeTaken, answers: detailedAnswers }),
+            body: JSON.stringify({ examId, certId: certId.toUpperCase(), score, timeTaken, answers: detailedAnswers }),
           });
         } catch (err) {
           console.error('Failed to submit exam results:', err);

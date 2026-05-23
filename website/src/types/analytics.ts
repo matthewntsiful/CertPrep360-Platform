@@ -136,8 +136,12 @@ export interface DynamicQuizResponse {
     q_id: string;
     text: string;
     options: Record<string, string>;
+    correct: string;
+    explanation: string;
+    resources: Array<{ type: string; url: string }>;
     domain: string;
     cert_id: string;
     exam_id: string;
+    primary_service?: string;
   }>;
 }

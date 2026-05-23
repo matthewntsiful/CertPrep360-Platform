@@ -84,7 +84,7 @@ export const handler = async (event) => {
             correct: typeof q.correct === 'string'
                 ? q.correct.toUpperCase().split(/[,\s]+/).filter(c => /^[A-Z]$/.test(c)).join('')
                 : q.correct,
-            explanation: q.explanation,
+            explanation: q.explanation || "",
             resources: q.resources || [],
             domain: q.domain,
             primary_service: q.primary_service,

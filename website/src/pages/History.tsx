@@ -328,7 +328,7 @@ const History: React.FC = () => {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h4 className="text-xl font-black text-white">
-                            {attempt.certId}
+                            {attempt.certId.toUpperCase()}
                           </h4>
                           <span
                             className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${

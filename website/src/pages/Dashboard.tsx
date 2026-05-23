@@ -119,8 +119,13 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Active Path Spotlight + Heatmap */}
+        {/* Active Path Spotlight */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Score Trend Chart — visualizes score progression over time */}
+          <div className="dark">
+            <ScoreTrendChart />
+          </div>
+
           <div className="flex items-center justify-between px-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Terminal className="text-orange-500 w-5 h-5" /> Current Focus
@@ -181,12 +186,6 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Study Heatmap — placed here to fill the left column */}
-          <StudyHeatmap attempts={analytics?.recentAttempts ?? []} />
-
-          {/* Score Trend Chart — visualizes score progression over time */}
-          <ScoreTrendChart />
         </div>
 
         {/* Recent Performance */}
@@ -236,7 +235,7 @@ const Dashboard: React.FC = () => {
                       {attempt.score}%
                     </div>
                     <div>
-                      <h4 className="font-bold text-white leading-tight">{attempt.certId}</h4>
+                      <h4 className="font-bold text-white leading-tight">{attempt.certId.toUpperCase()}</h4>
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{formatRelativeDate(attempt.date)}</span>
                     </div>
                   </div>
@@ -267,6 +266,8 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Study Heatmap — full-width section at the bottom */}
+      <StudyHeatmap attempts={analytics?.recentAttempts ?? []} />
 
     </div>
   );

@@ -186,7 +186,7 @@ async function handleDashboardSummary(userId) {
   attempts.forEach((attempt) => {
     totalScore += attempt.score || 0;
     totalStudyHours += (attempt.timeTaken || 0) / 60;
-    certifications.add(attempt.certId);
+    certifications.add((attempt.certId || "").toUpperCase());
 
     if (attempt.answers && typeof attempt.answers === "object") {
       Object.values(attempt.answers).forEach((ans) => {
@@ -228,7 +228,7 @@ async function handleDashboardSummary(userId) {
   const trendData = sortedAttempts.map((attempt) => ({
     date: attempt.timestamp || extractTimestampFromSK(attempt.SK),
     score: attempt.score || 0,
-    certId: attempt.certId || "",
+    certId: (attempt.certId || "").toUpperCase(),
     examId: attempt.examId || "",
     domainScores: attempt.domainScores || computeDomainScoresFromAnswers(attempt.answers),
   }));
@@ -410,7 +410,7 @@ function mapToAttemptSummary(attempt) {
   return {
     id: extractTimestampFromSK(attempt.SK),
     examId: attempt.examId || "",
-    certId: attempt.certId || "",
+    certId: (attempt.certId || "").toUpperCase(),
     score: attempt.score || 0,
     date: attempt.timestamp || extractTimestampFromSK(attempt.SK),
     timeTaken: attempt.timeTaken || 0,

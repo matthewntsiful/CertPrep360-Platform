@@ -46,9 +46,9 @@ const DynamicQuizPage: React.FC = () => {
   function mapResponseQuestions(questions: DynamicQuizResponse['questions']): Question[] {
     return questions.map(q => ({
       ...q,
-      correct: '',
-      explanation: '',
-      resources: [],
+      correct: q.correct || '',
+      explanation: q.explanation || '',
+      resources: q.resources || [],
     }));
   }
 

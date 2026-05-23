@@ -29,9 +29,11 @@ const PASS_THRESHOLD = 72;
  * plus a constant "Pass Threshold" series at 72%.
  */
 function buildCertSeriesData(trendData: TrendDataPoint[]) {
-  const certIds = [...new Set(trendData.map((d) => d.certId))];
+  // Normalize certId to uppercase to avoid SAA-C03 vs saa-c03 duplicates
+  const normalizedData = trendData.map((d) => ({ ...d, certId: d.certId.toUpperCase() }));
+  const certIds = [...new Set(normalizedData.map((d) => d.certId))];
 
-  const rows = trendData.map((point) => {
+  const rows = normalizedData.map((point) => {
     const row: Record<string, string | number> = {
       date: new Date(point.date).toLocaleDateString('en-US', {
         month: 'short',
@@ -53,7 +55,7 @@ function buildCertSeriesData(trendData: TrendDataPoint[]) {
  * Transforms trend data into per-domain series for a specific certification.
  */
 function buildDomainSeriesData(trendData: TrendDataPoint[], certId: string) {
-  const certAttempts = trendData.filter((d) => d.certId === certId);
+  const certAttempts = trendData.filter((d) => d.certId.toUpperCase() === certId.toUpperCase());
   const allDomains = new Set<string>();
   certAttempts.forEach((a) => {
     Object.keys(a.domainScores).forEach((d) => allDomains.add(d));
@@ -278,7 +280,8 @@ export const ScoreTrendChart: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-6"
+      className="dark p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-6"
+      style={{ '--tremor-content-DEFAULT': '#e2e8f0', '--tremor-content-subtle': '#94a3b8', '--tremor-border-DEFAULT': '#334155' } as React.CSSProperties}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
