@@ -135,7 +135,7 @@ function trendDataWithNDistinctCerts(n: number) {
     fc.record({
       date: isoTimestampArb,
       score: scoreArb,
-      certId: fc.constantFrom(...selectedCerts),
+      certId: fc.constantFrom(...selectedCerts) as fc.Arbitrary<string>,
       examId: examIdArb,
       domainScores: domainScoresArb,
     }),

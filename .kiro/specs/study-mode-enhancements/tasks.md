@@ -240,3 +240,17 @@ This plan implements five interconnected study mode enhancements: score trend vi
   ]
 }
 ```
+
+
+Proposed next steps
+Commit and push — deploy everything via the CI/CD pipeline
+Smoke test — take an exam, verify study mode, check Dashboard chart, try adaptive quiz
+Regenerate remaining exams — use the Regenerate mode to rebuild SAA-C03 exams with the new pipeline
+Production deployment — set up the production environment secrets and push to main
+New features to consider:
+Payment integration (Paystack is already wired but not active)
+Multi-certification support (generate exams for CLF-C02, DVA-C02, etc.)
+Leaderboard / community features
+Mobile-responsive polish
+SEO + landing page optimization
+What would you like to tackle next?

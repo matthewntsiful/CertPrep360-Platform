@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { fetchAttemptDetail } from '../services/api';
 import { FormattedText } from '../components/FormattedText';
-import type { AttemptDetailResponse, QuestionSnapshot } from '../types/analytics';
+import type { QuestionSnapshot } from '../types/analytics';
 import { filterQuestions } from '../utils/resultReviewFilters';
 
 type FilterTab = 'all' | 'correct' | 'incorrect' | 'skipped';
@@ -176,7 +176,6 @@ const ResultReview: React.FC = () => {
   );
 
   const passed = attempt.score >= 72;
-  const hasSnapshots = !!attempt.questionSnapshots && attempt.questionSnapshots.length > 0;
 
   // Calculate domain stats
   const domainStats = (() => {

@@ -37,7 +37,7 @@ const selectedArb = fc.oneof(
  * - If selected is null (skipped), isCorrect must be false
  * - If selected is non-null, isCorrect can be true or false
  */
-const questionArb: fc.Arbitrary<FilterableQuestion> = selectedArb.chain(selected => {
+const questionArb: fc.Arbitrary<FilterableQuestion> = selectedArb.chain((selected): fc.Arbitrary<FilterableQuestion> => {
   if (selected === null) {
     // Skipped questions are never correct
     return fc.constant({ isCorrect: false, selected: null as string | null });

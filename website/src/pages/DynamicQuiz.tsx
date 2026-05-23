@@ -5,6 +5,7 @@ import type { QuizMetadata } from '../store/useExamStore';
 import { useTimer } from '../hooks/useTimer';
 import { fetchDynamicQuiz, startAdaptiveQuiz, startMultiDomainQuiz } from '../services/api';
 import { RESOURCES_DATA } from '../data/resourcesData';
+import type { Question } from '../types/exam';
 import type { DynamicQuizResponse } from '../types/analytics';
 
 import ExamHeader from '../components/exam/ExamHeader';
@@ -40,6 +41,16 @@ const DynamicQuizPage: React.FC = () => {
   } | null>(null);
 
   useTimer();
+
+  // Map API response questions to the full Question type expected by the store
+  function mapResponseQuestions(questions: DynamicQuizResponse['questions']): Question[] {
+    return questions.map(q => ({
+      ...q,
+      correct: '',
+      explanation: '',
+      resources: [],
+    }));
+  }
 
   // Get available domains for the selected certification
   const certKey = certId.toLowerCase();
@@ -92,7 +103,7 @@ const DynamicQuizPage: React.FC = () => {
           weakPoolIncluded: quiz.weakPoolIncluded,
         };
         setQuizMeta(meta);
-        startDynamicQuiz('Adaptive', quiz.questions, meta);
+        startDynamicQuiz('Adaptive', mapResponseQuestions(quiz.questions), meta);
         setPageMode('running');
       } else {
         setError('No questions available for adaptive mode. Try completing more exams first.');
@@ -117,7 +128,7 @@ const DynamicQuizPage: React.FC = () => {
           weakPoolIncluded: quiz.weakPoolIncluded,
         };
         setQuizMeta(meta);
-        startDynamicQuiz(domains.join(', '), quiz.questions, meta);
+        startDynamicQuiz(domains.join(', '), mapResponseQuestions(quiz.questions), meta);
         setPageMode('running');
       } else {
         setError('No questions available for the selected domains.');
@@ -142,7 +153,7 @@ const DynamicQuizPage: React.FC = () => {
           weakPoolIncluded: quiz.weakPoolIncluded || 0,
         } : null;
         setQuizMeta(meta);
-        startDynamicQuiz(domainName, quiz.questions, meta ?? undefined);
+        startDynamicQuiz(domainName, mapResponseQuestions(quiz.questions), meta ?? undefined);
         setPageMode('running');
       } else {
         setError('Failed to generate dynamic quiz or no questions available for this domain.');

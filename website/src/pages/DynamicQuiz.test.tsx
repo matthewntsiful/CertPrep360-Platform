@@ -140,7 +140,7 @@ describe('DynamicQuiz - Adaptive Mode', () => {
     it('calls startAdaptiveQuiz API when starting adaptive quiz', async () => {
       const user = userEvent.setup();
       const mockQuizResponse = {
-        mode: 'adaptive',
+        mode: 'adaptive' as const,
         domains: ['Design Resilient Architectures', 'Design Secure Architectures'],
         count: 20,
         totalAvailable: 100,
@@ -257,7 +257,7 @@ describe('DynamicQuiz - Adaptive Mode', () => {
     it('calls startMultiDomainQuiz API with selected domains', async () => {
       const user = userEvent.setup();
       const mockQuizResponse = {
-        mode: 'multi-domain',
+        mode: 'multi-domain' as const,
         domains: ['Design Resilient Architectures', 'Design Secure Architectures'],
         count: 20,
         totalAvailable: 80,
