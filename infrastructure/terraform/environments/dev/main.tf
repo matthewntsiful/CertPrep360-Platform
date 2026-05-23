@@ -242,7 +242,7 @@ module "lambda_ai_generate_content" {
 module "lambda_manage_session" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-ManageSession"
-  handler                   = "manage-session/index.handler"
+  handler                   = "index.handler"
   zip_path                  = "${path.module}/build/manage-session.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
@@ -255,7 +255,7 @@ module "lambda_manage_session" {
 module "lambda_process_payment" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-ProcessPayment"
-  handler                   = "process-payment/index.handler"
+  handler                   = "index.handler"
   zip_path                  = "${path.module}/build/process-payment.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
