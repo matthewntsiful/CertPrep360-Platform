@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Terraform Validate on Change",
+  "description": "Runs terraform validate when Terraform files are edited to catch configuration errors early.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "infrastructure/terraform/**/*.tf"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cd infrastructure/terraform/environments/dev && terraform validate"
+  }
+}

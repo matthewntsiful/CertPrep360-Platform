@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Review Write Operations",
+  "description": "Before writing files, verifies the content follows project conventions: ES modules, TypeScript strict mode, proper imports, and consistent patterns.",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before writing this file, verify it follows project conventions: ES modules (import/export, not require), TypeScript strict mode for frontend code, consistent naming patterns, and proper use of existing utilities from common/ or utils/. If the write looks good, confirm access is granted. If there are issues, note them but still grant access."
+  }
+}

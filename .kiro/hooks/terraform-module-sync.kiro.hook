@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Terraform Module Sync Check",
+  "description": "When a Terraform module's variables.tf changes, checks that environment configs (dev/prod) still pass all required variables.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "infrastructure/terraform/modules/**/variables.tf"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A Terraform module's variables.tf was edited. Check if any new required variables (those without defaults) were added. If so, verify that infrastructure/terraform/environments/dev/main.tf and infrastructure/terraform/environments/prod/main.tf pass those variables when calling this module. Report any missing variable assignments."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Property-Based Test Reminder",
+  "description": "When new TypeScript files are created in utils/, store/, or services/, reminds to consider adding property-based tests with fast-check.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "website/src/utils/**/*.ts",
+      "website/src/store/**/*.ts",
+      "website/src/services/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new utility, store, or service file was created. Review the exported functions and determine if any have properties that could be tested with fast-check (e.g., idempotency, commutativity, roundtrip encoding/decoding, invariants). If so, suggest specific property-based tests that should be added to website/src/tests/property/. Keep suggestions practical and focused on the most valuable properties."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Lambda Import Check",
+  "description": "When a Lambda handler file is edited, verifies that imports from common/ and other dependencies resolve correctly.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/lambdas/*/index.js",
+      "backend/lambdas/common/**/*.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A Lambda function file was edited. Check that all imports from '../common/' or './common/' reference files that actually exist in backend/lambdas/common/. Also verify any @aws-sdk imports match what's in backend/lambdas/package.json. Report any broken imports or missing dependencies."
+  }
+}
