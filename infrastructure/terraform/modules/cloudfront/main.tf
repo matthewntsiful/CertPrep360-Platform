@@ -78,6 +78,7 @@ resource "aws_cloudfront_distribution" "exam_distribution" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
+  price_class         = var.price_class
 
   aliases = var.domain_name != "" ? [var.domain_name] : []
 

@@ -6,7 +6,7 @@ terraform {
     key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "terraform-state-locks"
+    use_lockfile = true
   }
   
   required_providers {
@@ -71,6 +71,7 @@ module "cloudfront" {
   ssl_certificate_arn   = module.route53.certificate_arn
   oac_id               = module.s3.oac_id
   logging_bucket       = module.s3.logs_bucket_domain_name
+  price_class          = "PriceClass_100"
   tags                 = local.tags
   
   providers = {
@@ -153,6 +154,7 @@ module "lambda_submit_results" {
   zip_path                  = "${path.module}/build/submit-results.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  memory_size               = 128
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -246,6 +248,7 @@ module "lambda_manage_session" {
   zip_path                  = "${path.module}/build/manage-session.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
+  memory_size               = 128
   environment_variables = {
     TABLE_NAME = module.dynamodb.table_name
   }
@@ -260,6 +263,7 @@ module "lambda_process_payment" {
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   ssm_parameter_arns        = module.ssm.payment_parameter_arns
+  memory_size               = 128
   environment_variables = {
     TABLE_NAME            = module.dynamodb.table_name
     PAYSTACK_SECRET_PARAM = "/certprep360/dev/payments/paystack_secret_key"
