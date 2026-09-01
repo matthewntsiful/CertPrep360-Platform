@@ -192,10 +192,10 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync dist/ s3://aws-exams.matthewntsiful.com/ --delete --cache-control "public, max-age=300"
+        run: aws s3 sync dist/ s3://certprep360-prod-website/ --delete --cache-control "public, max-age=300"
 
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID_PROD }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id E1EJQ7714G35XX --paths "/*"
 
   deploy-prod-lambdas:
     name: Deploy Lambdas (Prod)
