@@ -282,6 +282,19 @@ module "lambda_process_payment" {
   tags = local.tags
 }
 
+module "redirect_old_domain" {
+  source = "../../modules/redirect"
+
+  source_domain      = "aws-exams.matthewntsiful.com"
+  target_domain      = var.root_domain
+  hosted_zone_domain = "matthewntsiful.com"
+  tags               = local.tags
+
+  providers = {
+    aws = aws.us_east_1
+  }
+}
+
 module "api_gateway" {
   source                                 = "../../modules/api-gateway"
   api_name                               = "CertPrep360-Prod-API"
