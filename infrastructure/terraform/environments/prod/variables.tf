@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "root_domain" {
   description = "Root domain name"
   type        = string
-  default     = "matthewntsiful.com"
+  default     = "certprep360.com"
 }
 
 variable "github_org" {

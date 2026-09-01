@@ -12,7 +12,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.0"
+      version = ">= 6.0"
     }
   }
 }
@@ -27,8 +27,8 @@ provider "aws" {
 }
 
 locals {
-  subdomain     = "aws-exams.${var.root_domain}"
-  api_subdomain = "api.${local.subdomain}"
+  subdomain     = var.root_domain
+  api_subdomain = "api.${var.root_domain}"
   tags = {
     Environment = "prod"
     Project     = "SAA-C03-Exams"
@@ -230,7 +230,7 @@ module "lambda_get_catalog" {
   memory_size               = 512
   environment_variables = {
     TABLE_NAME     = module.dynamodb.table_name
-    ALLOWED_ORIGIN = "https://aws-exams.matthewntsiful.com"
+    ALLOWED_ORIGIN = "https://${var.root_domain}"
   }
   tags = local.tags
 }

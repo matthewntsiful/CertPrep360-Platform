@@ -12,7 +12,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.0"
+      version = ">= 6.0"
     }
   }
 }
@@ -27,8 +27,8 @@ provider "aws" {
 }
 
 locals {
-  subdomain     = "aws-exams-dev.${var.root_domain}"
-  api_subdomain = "api.${local.subdomain}"
+  subdomain     = "dev.${var.root_domain}"
+  api_subdomain = "api.dev.${var.root_domain}"
   tags = {
     Environment = "dev"
     Project     = "SAA-C03-Exams"

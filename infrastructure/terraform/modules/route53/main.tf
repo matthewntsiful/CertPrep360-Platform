@@ -12,8 +12,9 @@ data "aws_route53_zone" "main" {
 }
 
 resource "aws_acm_certificate" "exam_cert" {
-  domain_name       = var.subdomain
-  validation_method = "DNS"
+  domain_name               = var.subdomain
+  subject_alternative_names = var.subdomain == var.root_domain ? ["www.${var.root_domain}"] : []
+  validation_method         = "DNS"
 
   lifecycle {
     create_before_destroy = true
