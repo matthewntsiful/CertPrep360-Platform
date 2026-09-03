@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, UserPlus, ArrowRight, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -7,10 +7,16 @@ import { useNavigate, Link } from 'react-router-dom';
 type FormStep = 'SIGNUP' | 'VERIFY';
 
 const SignUp: React.FC = () => {
-  const { register, confirmRegister, resendCode } = useAuth();
+  const { register, confirmRegister, resendCode, user, initializing: authCheckLoading } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<FormStep>('SIGNUP');
+
+  useEffect(() => {
+    if (!authCheckLoading && user) navigate('/dashboard', { replace: true });
+  }, [user, authCheckLoading, navigate]);
+
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -58,6 +64,7 @@ const SignUp: React.FC = () => {
         options: {
           userAttributes: {
             email,
+            name: name.trim() || email.split('@')[0],
           }
         }
       });
@@ -132,6 +139,17 @@ const SignUp: React.FC = () => {
                 )}
 
                 <div className="space-y-4">
+                  <div className="relative group">
+                    <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="block w-full pl-12 pr-4 py-4 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-600"
+                      placeholder="Full name"
+                    />
+                  </div>
+
                   <div className="space-y-1">
                     <div className="relative group">
                       <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${emailError ? 'text-red-500' : 'text-slate-500 group-focus-within:text-blue-500'}`} />

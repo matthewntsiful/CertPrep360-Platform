@@ -258,6 +258,59 @@ resource "aws_api_gateway_integration" "payment_verify_lambda" {
   uri                     = var.process_payment_lambda_invoke_arn
 }
 
+# /marketplace
+resource "aws_api_gateway_resource" "marketplace" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
+  path_part   = "marketplace"
+}
+
+# /marketplace/register
+resource "aws_api_gateway_resource" "marketplace_register" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.marketplace.id
+  path_part   = "register"
+}
+
+resource "aws_api_gateway_method" "get_marketplace_register" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.marketplace_register.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "marketplace_register_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.marketplace_register.id
+  http_method             = aws_api_gateway_method.get_marketplace_register.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.marketplace_register_lambda_invoke_arn
+}
+
+# /marketplace/webhook
+resource "aws_api_gateway_resource" "marketplace_webhook" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.marketplace.id
+  path_part   = "webhook"
+}
+
+resource "aws_api_gateway_method" "post_marketplace_webhook" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.marketplace_webhook.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "marketplace_webhook_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.marketplace_webhook.id
+  http_method             = aws_api_gateway_method.post_marketplace_webhook.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.marketplace_webhook_lambda_invoke_arn
+}
+
 # /dynamic-quiz
 resource "aws_api_gateway_resource" "dynamic_quiz" {
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -1025,6 +1078,8 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.session_get_lambda,
     aws_api_gateway_integration.payment_initialize_lambda,
     aws_api_gateway_integration.payment_verify_lambda,
+    aws_api_gateway_integration.marketplace_register_lambda,
+    aws_api_gateway_integration.marketplace_webhook_lambda,
     aws_api_gateway_integration.options_questions,
     aws_api_gateway_integration.options_results,
     aws_api_gateway_integration.options_analytics,
@@ -1084,6 +1139,13 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.options_session_exam.id,
       aws_api_gateway_method.options_payment_initialize.id,
       aws_api_gateway_method.options_payment_verify.id,
+      aws_api_gateway_resource.marketplace.id,
+      aws_api_gateway_resource.marketplace_register.id,
+      aws_api_gateway_resource.marketplace_webhook.id,
+      aws_api_gateway_method.get_marketplace_register.id,
+      aws_api_gateway_method.post_marketplace_webhook.id,
+      aws_api_gateway_integration.marketplace_register_lambda.id,
+      aws_api_gateway_integration.marketplace_webhook_lambda.id,
       aws_api_gateway_gateway_response.default_4xx.id,
       aws_api_gateway_gateway_response.default_5xx.id,
       aws_api_gateway_resource.catalog.id,

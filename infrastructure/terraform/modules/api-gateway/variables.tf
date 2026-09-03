@@ -58,6 +58,16 @@ variable "process_payment_lambda_invoke_arn" {
   type        = string
 }
 
+variable "marketplace_register_lambda_invoke_arn" {
+  description = "Invoke ARN of the Marketplace Register Lambda"
+  type        = string
+}
+
+variable "marketplace_webhook_lambda_invoke_arn" {
+  description = "Invoke ARN of the Marketplace Webhook Lambda"
+  type        = string
+}
+
 variable "custom_domain_name" {
   description = "The custom domain name for the API Gateway (optional)"
   type        = string

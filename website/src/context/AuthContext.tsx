@@ -16,7 +16,7 @@ interface AuthContextType {
   user: AuthUser | null;
   attributes: any;
   isAdmin: boolean;
-  loading: boolean;
+  initializing: boolean;
   login: typeof signIn;
   logout: typeof signOut;
   register: typeof signUp;
@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AuthUser | null>(null);
   const [attributes, setAttributes] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     checkUser();
@@ -40,17 +40,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       switch (payload.event) {
         case 'signedIn':
         case 'tokenRefresh':
-          console.log('Auth Event Detected:', payload.event, '- waiting 500ms to settle...');
-          // Delay briefly to allow tokens to be persisted
-          setTimeout(() => {
-            checkUser();
-          }, 500);
+          setTimeout(() => checkUser(), 500);
           break;
         case 'signedOut':
           setUser(null);
           setAttributes(null);
           setIsAdmin(false);
-          setLoading(false);
+          setInitializing(false);
           break;
       }
     });
@@ -59,28 +55,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkUser = async () => {
+    setInitializing(true);
     try {
-      console.log('Checking Auth status...');
-      const currentUser = await getCurrentUser();
-      console.log('User identity confirmed:', currentUser.username);
-      
-      const attrs = await fetchUserAttributes();
-      console.log('User attributes fetched successfully');
-      
       const session = await fetchAuthSession();
-      const groups = session.tokens?.idToken?.payload['cognito:groups'] || [];
-      const adminStatus = Array.isArray(groups) ? groups.includes('Admins') : false;
-      
+      if (!session.tokens) return;
+      const [currentUser, attrs] = await Promise.all([getCurrentUser(), fetchUserAttributes()]);
+      const groups = session.tokens.idToken?.payload['cognito:groups'] || [];
       setUser(currentUser);
       setAttributes(attrs);
-      setIsAdmin(adminStatus);
-    } catch (err: any) {
-      console.error('Auth check failed:', err.name, err.message);
+      setIsAdmin(Array.isArray(groups) ? groups.includes('Admins') : false);
+    } catch {
       setUser(null);
       setAttributes(null);
       setIsAdmin(false);
     } finally {
-      setLoading(false);
+      setInitializing(false);
     }
   };
 
@@ -101,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       attributes, 
       isAdmin, 
-      loading, 
+      initializing,
       login, 
       logout,
       register: signUp,

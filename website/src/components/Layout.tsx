@@ -13,7 +13,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, loading, logout } = useAuth();
+  const { user, isAdmin, initializing, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, target: string) => {
     if (target === 'certifications') {
@@ -68,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </nav>
 
           <div className="flex items-center gap-3">
-            {loading ? (
+            {initializing ? (
               <div className="w-24 h-9 bg-slate-900 animate-pulse rounded-lg" />
             ) : user ? (
               <>

@@ -33,7 +33,7 @@ const formatRelativeDate = (dateStr: string) => {
 };
 
 const Dashboard: React.FC = () => {
-  const { user, attributes } = useAuth();
+  const { attributes } = useAuth();
   const navigate = useNavigate();
   const { data: analytics, isLoading: loading } = useQuery({
     queryKey: ['userAnalytics'],
@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white">
-            Hello, <span className="text-orange-500">{attributes?.name || user?.username || 'Architect'}</span>.
+            Hello, <span className="text-orange-500">{attributes?.name || (attributes?.email ? attributes.email.split('@')[0] : 'Architect')}</span>.
           </h1>
           <p className="text-slate-500 text-lg">Your AWS certification environment is active and optimized.</p>
         </div>

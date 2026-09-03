@@ -1,3 +1,31 @@
+resource "aws_iam_role" "cognito_ses" {
+  count = var.ses_source_arn != "" ? 1 : 0
+  name  = "CertPrep360-Cognito-SES-Role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "email.cognito-idp.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "cognito_ses" {
+  count  = var.ses_source_arn != "" ? 1 : 0
+  name   = "AllowSESSend"
+  role   = aws_iam_role.cognito_ses[0].id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "ses:SendEmail"
+      Resource = "*"
+    }]
+  })
+}
+
 resource "aws_cognito_user_pool" "main" {
   name = var.user_pool_name
 
@@ -41,6 +69,15 @@ resource "aws_cognito_user_pool" "main" {
   }
 
   tags = var.tags
+
+  dynamic "email_configuration" {
+    for_each = var.ses_source_arn != "" ? [1] : []
+    content {
+      email_sending_account  = "DEVELOPER"
+      from_email_address     = var.ses_from_address
+      source_arn             = var.ses_source_arn
+    }
+  }
 }
 
 resource "aws_cognito_user_pool_client" "client" {

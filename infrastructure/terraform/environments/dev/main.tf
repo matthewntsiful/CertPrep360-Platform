@@ -123,14 +123,15 @@ module "ssm" {
 }
 
 module "cognito" {
-  source         = "../../modules/cognito"
-  user_pool_name = "CertPrep360-Dev-Users"
-  cognito_domain = "certprep360-dev-auth"
-  callback_urls  = ["https://${local.subdomain}", "http://localhost:5173"]
-  logout_urls    = ["https://${local.subdomain}", "http://localhost:5173"]
+  source               = "../../modules/cognito"
+  user_pool_name       = "CertPrep360-Dev-Users"
+  cognito_domain       = "certprep360-dev-auth"
+  callback_urls        = ["https://${local.subdomain}", "http://localhost:5173"]
+  logout_urls          = ["https://${local.subdomain}", "http://localhost:5173"]
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret
-  tags           = local.tags
+  ses_source_arn       = "arn:aws:ses:us-east-1:654654335668:identity/certprep360.com"
+  tags                 = local.tags
 }
 
 module "lambda_get_questions" {
@@ -140,9 +141,10 @@ module "lambda_get_questions" {
   zip_path                  = "${path.module}/build/get-questions.zip"
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
-  memory_size               = 512 # More memory = more CPU = faster cold starts & execution
+  memory_size               = 512
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -156,7 +158,8 @@ module "lambda_submit_results" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   memory_size               = 128
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -170,7 +173,8 @@ module "lambda_get_user_analytics" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   memory_size               = 512
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -184,7 +188,8 @@ module "lambda_get_dynamic_quiz" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   memory_size               = 512
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -200,7 +205,8 @@ module "lambda_admin_manage_content" {
   enable_cognito_access     = true
   memory_size               = 512
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -216,8 +222,9 @@ module "lambda_admin_analytics" {
   enable_cognito_access     = true
   memory_size               = 512
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
-    USER_POOL_ID = module.cognito.user_pool_id
+    TABLE_NAME     = module.dynamodb.table_name
+    USER_POOL_ID   = module.cognito.user_pool_id
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -250,7 +257,8 @@ module "lambda_manage_session" {
   api_gateway_execution_arn = module.api_gateway.execution_arn
   memory_size               = 128
   environment_variables = {
-    TABLE_NAME = module.dynamodb.table_name
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = "https://${local.subdomain}"
   }
   tags = local.tags
 }
@@ -286,6 +294,34 @@ module "lambda_get_catalog" {
   tags = local.tags
 }
 
+module "lambda_marketplace_register" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-MarketplaceRegister"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/build/marketplace-register.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  environment_variables = {
+    TABLE_NAME               = module.dynamodb.table_name
+    APP_URL                  = "https://${local.subdomain}"
+    MARKETPLACE_PRODUCT_CODE = "dlzlo33jcrq5pa950xbpo0yd1"
+  }
+  tags = local.tags
+}
+
+module "lambda_marketplace_webhook" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-MarketplaceWebhook"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/build/marketplace-webhook.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  environment_variables = {
+    TABLE_NAME = module.dynamodb.table_name
+  }
+  tags = local.tags
+}
+
 module "api_gateway" {
   source                               = "../../modules/api-gateway"
   api_name                             = "CertPrep360-Dev-API"
@@ -299,7 +335,9 @@ module "api_gateway" {
   get_catalog_lambda_invoke_arn         = module.lambda_get_catalog.invoke_arn
   ai_generate_content_lambda_invoke_arn  = module.lambda_ai_generate_content.invoke_arn
   manage_session_lambda_invoke_arn       = module.lambda_manage_session.invoke_arn
-  process_payment_lambda_invoke_arn      = module.lambda_process_payment.invoke_arn
+  process_payment_lambda_invoke_arn          = module.lambda_process_payment.invoke_arn
+  marketplace_register_lambda_invoke_arn     = module.lambda_marketplace_register.invoke_arn
+  marketplace_webhook_lambda_invoke_arn      = module.lambda_marketplace_webhook.invoke_arn
   custom_domain_name                   = local.api_subdomain
   certificate_arn                       = module.route53.api_certificate_arn
   tags                                 = local.tags

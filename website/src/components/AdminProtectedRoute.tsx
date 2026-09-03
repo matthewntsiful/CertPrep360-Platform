@@ -3,10 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, initializing } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (initializing) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
         <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />

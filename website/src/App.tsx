@@ -30,6 +30,7 @@ const CommunityForum = lazy(() => import('./pages/CommunityForum'));
 const ContactSupport = lazy(() => import('./pages/ContactSupport'));
 const History = lazy(() => import('./pages/History'));
 const ResultReview = lazy(() => import('./pages/ResultReview'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 
 const queryClient = new QueryClient({
@@ -44,18 +45,16 @@ const queryClient = new QueryClient({
 });
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, initializing } = useAuth();
   const location = useLocation();
 
-  if (loading) return (
+  if (initializing) return (
     <div className="flex items-center justify-center min-h-screen bg-slate-950">
       <div className="w-12 h-12 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
     </div>
   );
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
 
   return <>{children}</>;
 };
@@ -85,6 +84,7 @@ const router = createBrowserRouter([
       { path: "/", element: <Home /> },
       { path: "/login", element: <Login /> },
       { path: "/signup", element: <SignUp /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
       {
         path: "/dashboard",
         element: <ProtectedRoute><Dashboard /></ProtectedRoute>,

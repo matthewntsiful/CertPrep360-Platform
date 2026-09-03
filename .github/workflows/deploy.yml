@@ -6,6 +6,15 @@ on:
       - main
       - develop
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
 
 permissions:
   id-token: write
@@ -23,8 +32,10 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
+      is_prod: ${{ steps.env.outputs.is_prod }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -35,6 +46,15 @@ jobs:
               - 'backend/lambdas/**'
             infrastructure:
               - 'infrastructure/terraform/**'
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.event.inputs.environment }}" == "prod" ]]; then
+            echo "is_prod=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prod=false" >> $GITHUB_OUTPUT
+          fi
 
   # ── Build Frontend ───────────────────────────────────────────────────────────
   build-frontend:
@@ -52,7 +72,13 @@ jobs:
         working-directory: ./website
         run: npm install --legacy-peer-deps
 
-      - name: Build
+      - name: Build (dev)
+        if: needs.changes.outputs.is_prod == 'false'
+        working-directory: ./website
+        run: npm run build:dev
+
+      - name: Build (prod)
+        if: needs.changes.outputs.is_prod == 'true'
         working-directory: ./website
         run: npm run build
 
@@ -80,7 +106,7 @@ jobs:
       - name: Package all Lambdas
         working-directory: ./backend/lambdas
         run: |
-          LAMBDAS=("admin-analytics" "admin-manage-content" "ai-generate-content" "get-dynamic-quiz" "get-questions" "get-user-analytics" "submit-results" "manage-session" "process-payment" "get-catalog")
+          LAMBDAS=("admin-analytics" "admin-manage-content" "ai-generate-content" "get-dynamic-quiz" "get-questions" "get-user-analytics" "submit-results" "manage-session" "process-payment" "get-catalog" "marketplace-register" "marketplace-webhook")
           mkdir -p /tmp/lambda-zips
           for DIR in "${LAMBDAS[@]}"; do
             if [ -d "$DIR" ]; then
@@ -107,8 +133,8 @@ jobs:
   # ── Deploy Dev ───────────────────────────────────────────────────────────────
   deploy-dev-frontend:
     name: Deploy Frontend (Dev)
-    needs: build-frontend
-    if: github.ref == 'refs/heads/develop'
+    needs: [changes, build-frontend]
+    if: needs.changes.outputs.is_prod == 'false'
     runs-on: ubuntu-latest
     environment: dev
     steps:
@@ -123,15 +149,24 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync dist/ s3://certprep360-dev-website/ --delete --cache-control "public, max-age=300"
+        run: |
+          aws s3 sync dist/ s3://certprep360-dev-website/ --delete \
+            --exclude "index.html" --exclude "sw.js" \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 cp dist/index.html s3://certprep360-dev-website/index.html \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "text/html"
+          aws s3 cp dist/sw.js s3://certprep360-dev-website/sw.js \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "application/javascript"
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id E3BJ1TGWKI1MXR --paths "/*"
 
   deploy-dev-lambdas:
     name: Deploy Lambdas (Dev)
-    needs: build-lambdas
-    if: github.ref == 'refs/heads/develop'
+    needs: [changes, build-lambdas]
+    if: needs.changes.outputs.is_prod == 'false'
     runs-on: ubuntu-latest
     environment: dev
     steps:
@@ -158,6 +193,8 @@ jobs:
           FUNCTION_MAP["manage-session"]="CertPrep360-Dev-ManageSession"
           FUNCTION_MAP["process-payment"]="CertPrep360-Dev-ProcessPayment"
           FUNCTION_MAP["get-catalog"]="CertPrep360-Dev-GetCatalog"
+          FUNCTION_MAP["marketplace-register"]="CertPrep360-Dev-MarketplaceRegister"
+          FUNCTION_MAP["marketplace-webhook"]="CertPrep360-Dev-MarketplaceWebhook"
 
           for zip in lambda-zips/*.zip; do
             DIR=$(basename "$zip" .zip)
@@ -168,18 +205,29 @@ jobs:
                 --function-name "$FUNC" \
                 --zip-file "fileb://$zip" \
                 --query "{LastModified: LastModified, CodeSize: CodeSize}"
+              aws lambda wait function-updated --function-name "$FUNC"
               echo ""
             fi
           done
           echo "✅ All Lambdas deployed"
 
+  # ── Prod Approval Gate ───────────────────────────────────────────────────────
+  approve-prod:
+    name: Approve Production Deployment
+    needs: changes
+    if: needs.changes.outputs.is_prod == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Approved
+        run: echo "Production deployment approved ✅"
+
   # ── Deploy Prod ──────────────────────────────────────────────────────────────
   deploy-prod-frontend:
     name: Deploy Frontend (Prod)
-    needs: build-frontend
-    if: github.ref == 'refs/heads/main'
+    needs: [changes, build-frontend, approve-prod]
+    if: needs.changes.outputs.is_prod == 'true'
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -192,17 +240,25 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
-        run: aws s3 sync dist/ s3://certprep360-prod-website/ --delete --cache-control "public, max-age=300"
+        run: |
+          aws s3 sync dist/ s3://certprep360-prod-website/ --delete \
+            --exclude "index.html" --exclude "sw.js" \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 cp dist/index.html s3://certprep360-prod-website/index.html \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "text/html"
+          aws s3 cp dist/sw.js s3://certprep360-prod-website/sw.js \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --content-type "application/javascript"
 
       - name: Invalidate CloudFront
         run: aws cloudfront create-invalidation --distribution-id E1EJQ7714G35XX --paths "/*"
 
   deploy-prod-lambdas:
     name: Deploy Lambdas (Prod)
-    needs: build-lambdas
-    if: github.ref == 'refs/heads/main'
+    needs: [changes, build-lambdas, approve-prod]
+    if: needs.changes.outputs.is_prod == 'true'
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -227,6 +283,8 @@ jobs:
           FUNCTION_MAP["manage-session"]="CertPrep360-Prod-ManageSession"
           FUNCTION_MAP["process-payment"]="CertPrep360-Prod-ProcessPayment"
           FUNCTION_MAP["get-catalog"]="CertPrep360-Prod-GetCatalog"
+          FUNCTION_MAP["marketplace-register"]="CertPrep360-Prod-MarketplaceRegister"
+          FUNCTION_MAP["marketplace-webhook"]="CertPrep360-Prod-MarketplaceWebhook"
 
           for zip in lambda-zips/*.zip; do
             DIR=$(basename "$zip" .zip)
@@ -237,6 +295,7 @@ jobs:
                 --function-name "$FUNC" \
                 --zip-file "fileb://$zip" \
                 --query "{LastModified: LastModified, CodeSize: CodeSize}"
+              aws lambda wait function-updated --function-name "$FUNC"
               echo ""
             fi
           done

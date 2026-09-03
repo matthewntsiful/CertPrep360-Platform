@@ -12,8 +12,8 @@ export const NetworkBackground = () => {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    const maxParticles = window.innerWidth < 768 ? 40 : 100; // Performance optimization for mobile
-    const connectionDistance = 120;
+    const maxParticles = window.innerWidth < 768 ? 20 : 40;
+    const connectionDistance = 100;
 
     class Particle {
       x: number;
@@ -61,7 +61,13 @@ export const NetworkBackground = () => {
       }
     };
 
-    const animate = () => {
+    let lastTime = 0;
+    const animate = (timestamp: number) => {
+      if (timestamp - lastTime < 33) { // ~30fps
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+      lastTime = timestamp;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Update and draw particles
@@ -100,7 +106,7 @@ export const NetworkBackground = () => {
     };
 
     init();
-    animate();
+    animate(0);
 
     window.addEventListener('resize', handleResize);
 

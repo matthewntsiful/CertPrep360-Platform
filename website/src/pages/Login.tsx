@@ -6,7 +6,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { signInWithRedirect } from '@aws-amplify/auth';
 
 const Login: React.FC = () => {
-  const { login, user, loading } = useAuth();
+  const { login, user, initializing } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -20,11 +20,11 @@ const Login: React.FC = () => {
 
   // Safeguard: If the user is already authenticated, don't stay on the login page
   useEffect(() => {
-    if (!loading && user) {
+    if (!initializing && user) {
       console.log('User already authenticated, redirecting to:', from);
       navigate(from, { replace: true });
     }
-  }, [user, loading, navigate, from]);
+  }, [user, initializing, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,8 +58,12 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = () => {
-    signInWithRedirect({ provider: 'Google' });
+  const handleSocialLogin = async () => {
+    try {
+      await signInWithRedirect({ provider: 'Google' });
+    } catch (err: any) {
+      setError(err.message || 'Google sign-in failed');
+    }
   };
 
   return (
@@ -153,7 +157,7 @@ const Login: React.FC = () => {
               <input type="checkbox" className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-orange-500 focus:ring-orange-500/20" />
               <label className="ml-2 block text-sm text-slate-400">Remember me</label>
             </div>
-            <a href="#" className="text-sm font-bold text-orange-500 hover:text-orange-400">Forgot?</a>
+            <Link to="/forgot-password" className="text-sm font-bold text-orange-500 hover:text-orange-400">Forgot?</Link>
           </div>
 
           <button
