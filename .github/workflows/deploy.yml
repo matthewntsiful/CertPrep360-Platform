@@ -39,6 +39,7 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'HEAD~1' || github.event.before }}
           filters: |
             frontend:
               - 'website/**'
@@ -60,7 +61,7 @@ jobs:
   build-frontend:
     name: Build Frontend
     needs: changes
-    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.is_prod == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -91,7 +92,7 @@ jobs:
   build-lambdas:
     name: Package Lambdas
     needs: changes
-    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.is_prod == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
