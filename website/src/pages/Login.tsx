@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, LogIn, Chrome } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Mail, Lock, LogIn, Chrome, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { signInWithRedirect } from '@aws-amplify/auth';
@@ -12,6 +12,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [showSlowWarning, setShowSlowWarning] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -32,6 +33,7 @@ const Login: React.FC = () => {
     setError('');
     setEmailError('');
     setPasswordError('');
+    setShowSlowWarning(false);
 
     let hasError = false;
     if (!email || !email.includes('@')) {
@@ -48,21 +50,41 @@ const Login: React.FC = () => {
       return;
     }
 
+    // Show warning if taking longer than 3 seconds
+    const warningTimer = setTimeout(() => {
+      setShowSlowWarning(true);
+    }, 3000);
+
     try {
       await login({ username: email, password });
+      clearTimeout(warningTimer);
       navigate(from, { replace: true });
     } catch (err: any) {
+      clearTimeout(warningTimer);
       setError(err.message || 'Failed to login');
     } finally {
       setAuthLoading(false);
+      setShowSlowWarning(false);
     }
   };
 
   const handleSocialLogin = async () => {
+    setShowSlowWarning(false);
+    setAuthLoading(true);
+    
+    // Show warning for OAuth as well
+    const warningTimer = setTimeout(() => {
+      setShowSlowWarning(true);
+    }, 3000);
+
     try {
       await signInWithRedirect({ provider: 'Google' });
+      clearTimeout(warningTimer);
     } catch (err: any) {
+      clearTimeout(warningTimer);
       setError(err.message || 'Google sign-in failed');
+      setAuthLoading(false);
+      setShowSlowWarning(false);
     }
   };
 
@@ -84,12 +106,26 @@ const Login: React.FC = () => {
           <p className="text-slate-400 text-sm">Secure access to your AWS training environment</p>
         </div>
 
+        {/* Temporary notice promoting Google sign-in */}
+        <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+          <p className="text-blue-400 text-sm font-medium text-center flex items-center justify-center gap-2">
+            <Chrome className="w-4 h-4" />
+            <span>Recommended: Use Google for instant sign-in</span>
+          </p>
+        </div>
+
         <div className="flex flex-col gap-3">
           <button
             onClick={handleSocialLogin}
-            className="flex items-center justify-center gap-3 w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-bold transition-all"
+            disabled={authLoading}
+            className="flex items-center justify-center gap-3 w-full py-4 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-blue-500/20 disabled:opacity-50"
           >
-            <Chrome className="w-5 h-5" /> Continue with Google
+            {authLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Chrome className="w-5 h-5" />
+            )}
+            Continue with Google
           </button>
         </div>
 
@@ -106,6 +142,24 @@ const Login: React.FC = () => {
               {error}
             </div>
           )}
+          
+          <AnimatePresence>
+            {showSlowWarning && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-sm font-medium flex items-start gap-3"
+              >
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold mb-1">Processing authentication...</p>
+                  <p className="text-xs text-amber-400">This may take up to 30 seconds due to email verification. Please wait.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           <div className="space-y-4">
             <div className="space-y-1">
               <div className="relative group">
@@ -163,12 +217,21 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={authLoading}
-            className="group relative w-full flex justify-center py-4 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-orange-500/20 disabled:opacity-50 disabled:hover:scale-100"
+            className="group relative w-full flex justify-center items-center gap-2 py-4 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-orange-500/20 disabled:opacity-50 disabled:hover:scale-100"
           >
-            <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-              <LogIn className="h-5 w-5 text-orange-300 group-hover:text-white" />
-            </span>
-            {authLoading ? 'Authenticating...' : 'Sign In'}
+            {authLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Authenticating...</span>
+              </>
+            ) : (
+              <>
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <LogIn className="h-5 w-5 text-orange-300 group-hover:text-white" />
+                </span>
+                Sign In
+              </>
+            )}
           </button>
         </form>
 
