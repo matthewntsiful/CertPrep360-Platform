@@ -60,13 +60,28 @@ jobs:
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
         run: terraform init
 
+      - name: Set Terraform variables
+        id: tfvars
+        run: |
+          if [ "${{ steps.env.outputs.name }}" == "prod" ]; then
+            echo "domain_name=certprep360.com" >> $GITHUB_OUTPUT
+          else
+            echo "domain_name=dev.certprep360.com" >> $GITHUB_OUTPUT
+          fi
+
       - name: Terraform Plan
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
         run: |
           terraform plan -out=tfplan \
-            -var-file=terraform.tfvars \
+            -var="domain_name=${{ steps.tfvars.outputs.domain_name }}" \
+            -var="environment=${{ steps.env.outputs.name }}" \
+            -var="project_name=certprep360" \
+            -var="github_org=matthewntsiful" \
+            -var="github_repo=CertPrep360-Platform" \
             -var="google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" \
-            -var="google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}"
+            -var="google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            -var="paystack_public_key=${{ secrets.PAYSTACK_PUBLIC_KEY }}" \
+            -var="paystack_secret_key=${{ secrets.PAYSTACK_SECRET_KEY }}"
 
       - name: Terraform Apply
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
