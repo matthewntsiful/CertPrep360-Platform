@@ -227,7 +227,7 @@ SAA-C03_Exam/
 - **Dev**: `develop` branch → auto-deploy to dev environment
 - **Prod**: `main` branch → auto-deploy to production
 - **Terraform**: v1.9.0 with AWS Provider v6.20
-- **Node.js**: v18+ required for local development
+- **Node.js**: v20+ required for local development (CI uses v24)
 
 ### Active AWS Resources
 - S3 buckets (content + logs)
