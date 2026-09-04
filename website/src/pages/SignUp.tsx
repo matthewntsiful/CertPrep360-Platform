@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, UserPlus, ArrowRight, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { Mail, Lock, UserPlus, ArrowRight, CheckCircle2, ShieldCheck, Loader2, AlertCircle, Clock, Chrome } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { signInWithRedirect } from '@aws-amplify/auth';
 
 type FormStep = 'SIGNUP' | 'VERIFY';
 
@@ -21,10 +22,21 @@ const SignUp: React.FC = () => {
   const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [showSlowWarning, setShowSlowWarning] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  const handleGoogleSignUp = async () => {
+    try {
+      setAuthLoading(true);
+      await signInWithRedirect({ provider: 'Google' });
+    } catch (err: any) {
+      setError(err.message || 'Google sign-up failed');
+      setAuthLoading(false);
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +44,7 @@ const SignUp: React.FC = () => {
     setError('');
     setEmailError('');
     setPasswordError('');
+    setShowSlowWarning(false);
 
     let hasError = false;
     if (!email || !email.includes('@')) {
@@ -57,6 +70,11 @@ const SignUp: React.FC = () => {
       return;
     }
 
+    // Show warning if taking longer than 3 seconds
+    const warningTimer = setTimeout(() => {
+      setShowSlowWarning(true);
+    }, 3000);
+
     try {
       await register({
         username: email,
@@ -68,12 +86,15 @@ const SignUp: React.FC = () => {
           }
         }
       });
+      clearTimeout(warningTimer);
       setStep('VERIFY');
-      setSuccess('Verification code sent to your email.');
+      setSuccess('Verification code sent to your email. Please check your inbox (and spam folder).');
     } catch (err: any) {
+      clearTimeout(warningTimer);
       setError(err.message || 'Failed to sign up');
     } finally {
       setAuthLoading(false);
+      setShowSlowWarning(false);
     }
   };
 
@@ -131,12 +152,60 @@ const SignUp: React.FC = () => {
                 <p className="text-slate-400 text-sm">Join the next generation of AWS Architects</p>
               </div>
 
+              {/* Temporary notice promoting Google sign-in */}
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <p className="text-emerald-400 text-sm font-bold text-center flex items-center justify-center gap-2 mb-2">
+                  <Chrome className="w-5 h-5" />
+                  <span>Recommended: Sign up with Google</span>
+                </p>
+                <p className="text-emerald-300/60 text-xs text-center">Instant access - no email verification needed</p>
+              </div>
+
+              {/* Google Sign Up Button - Prominent placement */}
+              <button
+                onClick={handleGoogleSignUp}
+                disabled={authLoading}
+                type="button"
+                className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-blue-500/20 disabled:opacity-50"
+              >
+                {authLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Chrome className="w-5 h-5" />
+                )}
+                <span>Sign Up with Google</span>
+              </button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
+                <div className="relative flex justify-center text-xs uppercase tracking-[0.2em] font-bold">
+                  <span className="bg-slate-900 px-4 text-slate-500">Or use email</span>
+                </div>
+              </div>
+
               <form className="space-y-6" onSubmit={handleSignUp}>
                 {error && (
                   <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
                     {error}
                   </div>
                 )}
+                
+                <AnimatePresence>
+                  {showSlowWarning && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-sm font-medium flex items-start gap-3"
+                    >
+                      <Clock className="w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse" />
+                      <div>
+                        <p className="font-bold mb-1">Creating your account...</p>
+                        <p className="text-xs text-amber-400">Sending verification email. This may take up to 30 seconds.</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="space-y-4">
                   <div className="relative group">
@@ -229,10 +298,17 @@ const SignUp: React.FC = () => {
             >
               <div className="text-center">
                 <div className="mx-auto h-16 w-16 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-6 font-black text-2xl text-white">
-                  6
+                  <Mail className="w-8 h-8" />
                 </div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">Verify Email</h2>
-                <p className="text-slate-400 text-sm">We've sent a code to <span className="text-white font-bold">{email}</span></p>
+                <p className="text-slate-400 text-sm mb-2">We've sent a 6-digit code to</p>
+                <p className="text-white font-bold mb-4">{email}</p>
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-xs text-blue-400 flex items-center justify-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Email may take up to 30 seconds to arrive. Check spam folder if needed.</span>
+                  </p>
+                </div>
               </div>
 
               <form className="space-y-6" onSubmit={handleVerify}>

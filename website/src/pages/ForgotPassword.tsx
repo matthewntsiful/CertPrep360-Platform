@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ShieldCheck, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ShieldCheck, Loader2, ArrowRight, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { resetPassword, confirmResetPassword } from 'aws-amplify/auth';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -13,18 +13,35 @@ const ForgotPassword: React.FC = () => {
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSlowWarning, setShowSlowWarning] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    // Move to confirm step immediately — don't make user wait for the API
-    setStep('CONFIRM');
-    setSuccess('If that email is registered, a reset code is on its way.');
-    resetPassword({ username: email }).catch(() => {
-      // silently ignore — user already sees the confirm step
-    });
+    setLoading(true);
+    setShowSlowWarning(false);
+    
+    // Show warning if taking longer than 3 seconds
+    const warningTimer = setTimeout(() => {
+      setShowSlowWarning(true);
+    }, 3000);
+
+    try {
+      await resetPassword({ username: email });
+      clearTimeout(warningTimer);
+      setStep('CONFIRM');
+      setSuccess('Reset code sent! Check your email (and spam folder).');
+    } catch (err: any) {
+      clearTimeout(warningTimer);
+      // Even on error, show the confirm step for security (don't reveal if email exists)
+      setStep('CONFIRM');
+      setSuccess('If that email is registered, a reset code has been sent.');
+    } finally {
+      setLoading(false);
+      setShowSlowWarning(false);
+    }
   };
 
   const handleConfirm = async (e: React.FormEvent) => {
@@ -64,11 +81,24 @@ const ForgotPassword: React.FC = () => {
 
               <form className="space-y-6" onSubmit={handleRequest}>
                 {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">{error}</div>}
-                {success && !error && (
-                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-sm font-medium flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" /> {success}
-                  </div>
-                )}
+                
+                <AnimatePresence>
+                  {showSlowWarning && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-sm font-medium flex items-start gap-3"
+                    >
+                      <Clock className="w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse" />
+                      <div>
+                        <p className="font-bold mb-1">Sending reset code...</p>
+                        <p className="text-xs text-amber-400">Email delivery may take up to 30 seconds.</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-orange-500 transition-colors" />
                   <input
@@ -82,10 +112,20 @@ const ForgotPassword: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="group relative w-full flex justify-center py-4 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-orange-500/20"
+                  disabled={loading}
+                  className="group relative w-full flex justify-center items-center gap-2 py-4 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-orange-500/20 disabled:opacity-50"
                 >
-                  Send Reset Code
-                  <ArrowRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      Send Reset Code
+                      <ArrowRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    </>
+                  )}
                 </button>
               </form>
 
@@ -101,7 +141,14 @@ const ForgotPassword: React.FC = () => {
                   <ShieldCheck className="h-8 w-8 text-white" strokeWidth={2.5} />
                 </div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">New Password</h2>
-                <p className="text-slate-400 text-sm">Enter the code sent to <span className="text-white font-bold">{email}</span></p>
+                <p className="text-slate-400 text-sm mb-2">Enter the code sent to</p>
+                <p className="text-white font-bold mb-4">{email}</p>
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-xs text-blue-400 flex items-center justify-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Code may take up to 30 seconds to arrive. Check spam folder.</span>
+                  </p>
+                </div>
               </div>
 
               <form className="space-y-6" onSubmit={handleConfirm}>
