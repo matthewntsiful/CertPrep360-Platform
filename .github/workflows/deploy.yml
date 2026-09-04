@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
 
 jobs:
   # ── Detect what changed ──────────────────────────────────────────────────────
@@ -35,6 +35,8 @@ jobs:
       is_prod: ${{ steps.env.outputs.is_prod }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -229,6 +231,7 @@ jobs:
     needs: [changes, build-frontend, approve-prod]
     if: needs.changes.outputs.is_prod == 'true'
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -260,6 +263,7 @@ jobs:
     needs: [changes, build-lambdas, approve-prod]
     if: needs.changes.outputs.is_prod == 'true'
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/download-artifact@v4
         with:

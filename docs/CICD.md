@@ -11,12 +11,19 @@ Automated deployment pipeline using GitHub Actions for continuous integration an
 **Triggers:**
 - Push to `main` branch → Deploy to production
 - Push to `develop` branch → Deploy to dev
+- Manual `workflow_dispatch` (choose `dev` or `prod`)
 
-**Steps:**
-1. Build website (generate static HTML from EJS)
-2. Upload artifacts
-3. Deploy to S3
-4. Invalidate CloudFront cache
+**Jobs:**
+
+| Job | Runs when |
+|-----|-----------|
+| `build-frontend` | `website/**` changed, `workflow_dispatch`, or any push to `main` |
+| `build-lambdas` | `backend/lambdas/**` changed, `workflow_dispatch`, or any push to `main` |
+| `deploy-dev-*` | `is_prod == false` (i.e. `develop` branch) |
+| `approve-prod` | `is_prod == true` — requires manual approval via `production` environment |
+| `deploy-prod-*` | `is_prod == true`, after approval |
+
+> **Note:** On pushes to `main`, both frontend and Lambda build jobs always run regardless of which files changed. This guarantees deployment artifacts are always available for production deploys.
 
 **Environments:**
 - **Dev**: `saa-exams-dev.blakkbrother.com`
@@ -63,18 +70,22 @@ terraform apply -var="github_org=YOUR_GITHUB_USERNAME" -var="github_repo=YOUR_RE
 
 ### 2. GitHub Secrets
 
-Add these secrets to your GitHub repository:
+Add `AWS_ROLE_ARN` as a secret in **each GitHub environment** (not as a repository-level secret):
 
+**`dev` environment secret:**
 ```
-AWS_ROLE_ARN_DEV=arn:aws:iam::ACCOUNT_ID:role/saa-exams-github-actions-dev
-AWS_ROLE_ARN_PROD=arn:aws:iam::ACCOUNT_ID:role/saa-exams-github-actions-prod
+AWS_ROLE_ARN=arn:aws:iam::ACCOUNT_ID:role/certprep360-github-actions-dev
+```
+
+**`production` environment secret:**
+```
+AWS_ROLE_ARN=arn:aws:iam::ACCOUNT_ID:role/certprep360-github-actions-prod
 ```
 
 **To add secrets:**
-1. Go to repository Settings
-2. Navigate to Secrets and variables → Actions
-3. Click "New repository secret"
-4. Add both role ARNs
+1. Go to repository Settings → Environments
+2. Click on the `dev` environment → Add secret → `AWS_ROLE_ARN`
+3. Repeat for the `production` environment with the prod role ARN
 
 ### 3. GitHub Environments
 
