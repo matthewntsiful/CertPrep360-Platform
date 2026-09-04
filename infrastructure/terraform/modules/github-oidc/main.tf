@@ -38,15 +38,15 @@ resource "aws_iam_role_policy" "github_actions_s3" {
     Statement = [
       {
         Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
+        Action = ["s3:PutObject","s3:GetObject","s3:DeleteObject","s3:ListBucket"]
+        Resource = [var.s3_bucket_arn, "${var.s3_bucket_arn}/*"]
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:GetObject","s3:PutObject","s3:ListBucket"]
         Resource = [
-          var.s3_bucket_arn,
-          "${var.s3_bucket_arn}/*"
+          "arn:aws:s3:::saa-exams-terraform-state",
+          "arn:aws:s3:::saa-exams-terraform-state/*"
         ]
       }
     ]
@@ -78,15 +78,15 @@ resource "aws_iam_role_policy" "github_actions_lambda" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "lambda:UpdateFunctionCode",
-          "lambda:GetFunction"
-        ]
-        Resource = "arn:aws:lambda:us-east-1:*:function:CertPrep360-*"
-      }
-    ]
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "lambda:UpdateFunctionCode",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:PublishVersion"
+      ]
+      Resource = "arn:aws:lambda:us-east-1:*:function:CertPrep360-*"
+    }]
   })
 }
