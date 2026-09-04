@@ -63,6 +63,7 @@ jobs:
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
         run: |
           terraform plan -out=tfplan \
+            -var-file=terraform.tfvars \
             -var="google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" \
             -var="google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}"
 
