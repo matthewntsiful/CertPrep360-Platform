@@ -4,7 +4,7 @@ resource "aws_ssm_parameter" "google_client_id" {
   type        = "SecureString"
   value       = var.google_client_id != "" ? var.google_client_id : "placeholder"
   tags        = var.tags
-  
+
   lifecycle {
     ignore_changes = [value]
   }

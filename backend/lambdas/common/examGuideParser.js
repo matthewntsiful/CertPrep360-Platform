@@ -233,7 +233,7 @@ export function parseDomains(text) {
 
 function parseTaskStatements(sectionText, domainNumber) {
   const lines = sectionText.split(/\r?\n/);
-  const taskLineRegex = /^[•\s\u2022\-]*Task\s+(\d+\.\d+)\s*[:\-\u2013\u2014]\s*(.+)$/i;
+  const taskLineRegex = /^[•\s\u2022\-]*Task(?:\s+Statement)?\s+(\d+\.\d+)\s*[:\-\u2013\u2014]\s*(.+)$/i;
   const taskMatches = [];
   for (let i = 0; i < lines.length; i++) {
     const m = taskLineRegex.exec(lines[i].trim());
@@ -423,6 +423,6 @@ export async function getExamGuide(certId) {
     domains,
     in_scope_services: inScopeServices,
     out_of_scope_services: outOfScopeServices,
-    ttl: Math.floor(Date.now() / 1000) + TTL_DAYS * 24 * 60 * 60,
+    expiresAt: Math.floor(Date.now() / 1000) + TTL_DAYS * 24 * 60 * 60,
   };
 }

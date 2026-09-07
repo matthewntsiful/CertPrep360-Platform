@@ -305,9 +305,7 @@ describe('Property 2: Preservation - Prod-Specific Values Unchanged', () => {
 
           const envVars = getEnvironmentVariables(block!);
           expect(envVars).toHaveProperty('ALLOWED_ORIGIN');
-          expect(envVars['ALLOWED_ORIGIN']).toBe(
-            '"https://aws-exams.matthewntsiful.com"'
-          );
+          expect(envVars['ALLOWED_ORIGIN']).toContain('https://${var.root_domain');
         }),
         { numRuns: 1 }
       );

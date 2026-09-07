@@ -4,13 +4,7 @@ import { useExamStore } from '../../store/useExamStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FormattedText } from '../FormattedText';
 import SoundEffects from '../../utils/sound';
-
-/**
- * Normalize the `correct` field to an array of uppercase answer letters.
- * Handles both concatenated format ("AB", "BCF") and comma-separated ("A,B", "A, C, F").
- */
-const parseCorrectAnswers = (correct: string): string[] =>
-  correct.toUpperCase().split(/[,\s]+/).filter(c => /^[A-Z]$/.test(c));
+import { answersMatch, normalizeAnswerKey } from '../../utils/answerKeys';
 
 const QuestionView: React.FC = () => {
   const { 
@@ -28,16 +22,16 @@ const QuestionView: React.FC = () => {
 
   const currentAnswer = answers[currentQuestionIndex];
 
-  // Use parsed correct answers so comma-separated and concatenated formats both work
-  const correctLetters = parseCorrectAnswers(q.correct);
-  const isMultiple = correctLetters.length > 1;
+  const correctLetters = normalizeAnswerKey(q.correct);
+  const requiredAnswers = q.answerCount || correctLetters.length || 1;
+  const isMultiple = requiredAnswers > 1;
 
   const handleOptionToggle = (letter: string) => {
     SoundEffects.playClick();
     if (isMultiple) {
       const existing = (currentAnswer as string[]) || [];
       // Don't allow selecting more than the required number of answers
-      if (!existing.includes(letter) && existing.length >= correctLetters.length) return;
+      if (!existing.includes(letter) && existing.length >= requiredAnswers) return;
       const next = existing.includes(letter)
         ? existing.filter(l => l !== letter)
         : [...existing, letter];
@@ -48,11 +42,8 @@ const QuestionView: React.FC = () => {
   };
 
   const isCorrect = () => {
-    if (!currentAnswer) return null;
-    if (Array.isArray(currentAnswer)) {
-      return [...currentAnswer].sort().join('') === [...correctLetters].sort().join('');
-    }
-    return currentAnswer === q.correct;
+    if (!currentAnswer || correctLetters.length === 0) return null;
+    return answersMatch(currentAnswer, correctLetters);
   };
 
   return (
@@ -90,10 +81,10 @@ const QuestionView: React.FC = () => {
         {isMultiple && (
           <div className="mb-6 flex items-center gap-2 px-4 py-2 bg-blue-500/5 border border-blue-500/10 rounded-xl text-blue-400 text-xs">
             <Info className="w-4 h-4" />
-            Pick <strong>{correctLetters.length}</strong> correct answers
+            Pick <strong>{requiredAnswers}</strong> correct answers
             {Array.isArray(currentAnswer) && currentAnswer.length > 0 && (
               <span className="ml-auto font-mono text-blue-300/60">
-                {currentAnswer.length}/{correctLetters.length} selected
+                {currentAnswer.length}/{requiredAnswers} selected
               </span>
             )}
           </div>
@@ -102,7 +93,7 @@ const QuestionView: React.FC = () => {
         <div className="space-y-3">
           {Object.entries(q.options).map(([letter, text]) => {
             const isSelected = Array.isArray(currentAnswer) ? currentAnswer.includes(letter) : currentAnswer === letter;
-            const showFeedback = studyMode && currentAnswer;
+            const showFeedback = studyMode && currentAnswer && correctLetters.length > 0;
             const isAnswerCorrect = correctLetters.includes(letter);
             
             let borderColor = 'border-slate-800/60';

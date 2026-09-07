@@ -1,65 +1,52 @@
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
+import { createAttemptManifest, toExamSafeQuestion } from "./common/attempts.js";
+import { jsonResponse, logError, logRequest, requireAuthenticatedUser } from "./common/security.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
 export const handler = async (event) => {
-    console.log("Event:", JSON.stringify(event, null, 2));
+  logRequest(event, "get-questions");
+  const userId = requireAuthenticatedUser(event);
+  if (!userId) return jsonResponse(401, { message: "Unauthorized" });
 
-    const { certId, examId } = event.pathParameters || {};
+  const { certId, examId } = event.pathParameters || {};
+  if (!certId || !examId) return jsonResponse(400, { message: "Missing certId or examId" });
 
-    if (!certId || !examId) {
-        return {
-            statusCode: 400,
-            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
-            body: JSON.stringify({ message: "Missing certId or examId" }),
-        };
-    }
+  try {
+    const items = [];
+    let lastKey;
+    do {
+      const response = await docClient.send(new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+        ExpressionAttributeValues: {
+          ":pk": `CERT#${certId.toUpperCase()}`,
+          ":skPrefix": `EXAM#${examId}#QUESTION#`,
+        },
+        ExclusiveStartKey: lastKey,
+      }));
+      items.push(...(response.Items || []));
+      lastKey = response.LastEvaluatedKey;
+    } while (lastKey);
 
-    try {
-        const items = [];
-        let lastKey = undefined;
-        do {
-            const command = new QueryCommand({
-                TableName: TABLE_NAME,
-                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-                ExpressionAttributeValues: {
-                    ":pk": `CERT#${certId.toUpperCase()}`,
-                    ":skPrefix": `EXAM#${examId}#QUESTION#`,
-                },
-                ExclusiveStartKey: lastKey,
-            });
-            const response = await docClient.send(command);
-            items.push(...(response.Items || []));
-            lastKey = response.LastEvaluatedKey;
-        } while (lastKey);
-        const questions = items.map(item => ({
-            q_id: item.q_id,
-            text: item.text,
-            options: item.options,
-            // Normalize correct field: strip commas/spaces so "A,B" and "A, B" both become "AB"
-            correct: typeof item.correct === 'string'
-                ? item.correct.toUpperCase().split(/[,\s]+/).filter(c => /^[A-Z]$/.test(c)).join('')
-                : item.correct,
-            explanation: item.explanation,
-            resources: item.resources || [],
-            domain: item.domain
-        }));
+    if (!items.length) return jsonResponse(404, { message: "No questions were found for this exam" });
 
-        return {
-            statusCode: 200,
-            headers: { 
-                "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(questions),
-        };
-    } catch (error) {
-        console.error("Error fetching questions:", error);
-        return {
-            statusCode: 500,
-            headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
-        };
-    }
+    const attempt = await createAttemptManifest({
+      docClient,
+      tableName: TABLE_NAME,
+      userId,
+      certId: certId.toUpperCase(),
+      examId,
+      questions: items,
+    });
+
+    return jsonResponse(200, {
+      attempt,
+      questions: items.map(toExamSafeQuestion),
+    });
+  } catch (error) {
+    logError("get-questions", error, event?.requestContext?.requestId || null);
+    return jsonResponse(500, { message: "Unable to load exam questions" });
+  }
 };

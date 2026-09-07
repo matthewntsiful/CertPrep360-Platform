@@ -1,21 +1,16 @@
 import { PutCommand, DeleteCommand, UpdateCommand, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
+import { logError, logRequest, requireAdmin } from "./common/security.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
 export const handler = async (event) => {
-    console.log("Event:", JSON.stringify(event, null, 2));
-
-    // Phase 3: RBAC (Role-Based Access Control) verification
-    const claims = event.requestContext?.authorizer?.claims;
-    const groups = claims ? (claims["cognito:groups"] || "").split(",") : [];
-    
-    // Ensure the invoking user belongs to the 'Admins' group in Cognito
-    if (!groups.includes("Admins")) {
+    logRequest(event, "admin-manage-content");
+    if (!requireAdmin(event)) {
         return {
             statusCode: 403,
             headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
-            body: JSON.stringify({ message: "Forbidden: Admin privileges required." }),
+            body: JSON.stringify({ message: "Administrator access is required." }),
         };
     }
 
@@ -211,11 +206,11 @@ export const handler = async (event) => {
         };
 
     } catch (error) {
-        console.error("Error managing content:", error);
+        logError("admin-manage-content", error, event?.requestContext?.requestId || null);
         return {
             statusCode: 500,
             headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
+            body: JSON.stringify({ message: "Unable to manage content" }),
         };
     }
 };

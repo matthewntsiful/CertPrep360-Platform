@@ -105,12 +105,12 @@ export async function fetchDynamicQuiz(domain: string, certId = 'SAA-C03', limit
 }
 
 /**
- * Initializes a Paystack transaction and returns the authorization URL.
+ * Initializes a server-priced Paystack transaction and returns the authorization URL.
  */
-export async function initializePayment(amount: number) {
+export async function initializePayment(productId = 'premium_monthly') {
   return await authFetch('/payment/initialize', {
     method: 'POST',
-    body: JSON.stringify({ amount })
+    body: JSON.stringify({ productId })
   });
 }
 

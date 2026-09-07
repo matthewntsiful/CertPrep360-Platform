@@ -9,20 +9,23 @@ interface ReviewModeProps {
 }
 
 const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
-  const { questions, answers } = useExamStore();
+  const { questions, result } = useExamStore();
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [filter, setFilter] = useState<'all' | 'wrong' | 'correct' | 'skipped'>('all');
 
+  if (!result) return null;
+
   const questionResults = questions.map((q, i) => {
-    const userAns = answers[i] ?? (answers as any)[String(i)];
-    let isCorrect = false;
-    if (userAns) {
-      isCorrect = Array.isArray(userAns)
-        ? [...userAns].sort().join('') === [...q.correct].sort().join('')
-        : userAns === q.correct;
-    }
-    return { q, userAns, isCorrect, skipped: !userAns, originalIndex: i };
+    const answer = result.answers[q.q_id];
+    return {
+      q,
+      userAns: answer?.selected,
+      correct: answer?.correct || [],
+      isCorrect: Boolean(answer?.isCorrect),
+      skipped: !answer?.selected,
+      originalIndex: i,
+    };
   });
 
   const filtered = questionResults.filter(r => {
@@ -35,7 +38,7 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
   const current = filtered[index];
   if (!current) return null;
 
-  const { q, userAns, isCorrect, skipped } = current;
+  const { q, userAns, correct, isCorrect, skipped } = current;
 
   const handleNext = () => { setIndex(i => Math.min(i + 1, filtered.length - 1)); setRevealed(false); };
   const handlePrev = () => { setIndex(i => Math.max(i - 1, 0)); setRevealed(false); };
@@ -96,7 +99,7 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
           <div className="space-y-3">
             {Object.entries(q.options).map(([letter, text]) => {
               const isUserAns = Array.isArray(userAns) ? userAns.includes(letter) : userAns === letter;
-              const isCorrectAns = q.correct.includes(letter);
+              const isCorrectAns = correct.includes(letter);
 
               let style = 'bg-slate-950 border-slate-800 text-slate-400';
               if (revealed) {
@@ -143,9 +146,9 @@ const ReviewMode: React.FC<ReviewModeProps> = ({ onClose }) => {
                   </div>
                 )}
 
-                {q.resources?.length > 0 && (
+                {(q.resources?.length ?? 0) > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {q.resources.map((r: any, i: number) => (
+                    {(q.resources ?? []).map((r, i: number) => (
                       <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-[10px] font-bold text-slate-400 hover:text-white transition-colors">
                         {r.type} <ExternalLink className="w-3 h-3" />

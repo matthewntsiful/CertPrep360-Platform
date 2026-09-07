@@ -8,21 +8,26 @@ on:
 
 jobs:
   frontend-check:
-    name: Frontend TypeScript Check
+    name: Frontend Build and Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
 
       - name: Install dependencies
         working-directory: ./website
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
-      - name: TypeScript check
+      - name: Production build and type check
         working-directory: ./website
-        run: npx tsc --noEmit
+        run: npm run build
+
+      - name: Run frontend tests
+        working-directory: ./website
+        run: npm test
+        timeout-minutes: 5
 
   backend-check:
     name: Backend Syntax & Tests
@@ -31,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
 
       - name: Install dependencies
         working-directory: ./backend/lambdas
@@ -47,9 +52,9 @@ jobs:
             fi
           done
 
-      - name: Run unit tests
+      - name: Run backend tests
         working-directory: ./backend/lambdas
-        run: node --test --test-timeout=10000 common/*.test.js
+        run: npm test
         timeout-minutes: 5
 
   terraform-validate:

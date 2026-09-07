@@ -121,6 +121,12 @@ export interface AttemptDetailResponse {
 
 /** Response from the dynamic quiz API with adaptive/multi-domain mode. */
 export interface DynamicQuizResponse {
+  /** Server-owned scoring attempt. The client must submit this identifier. */
+  attempt: {
+    attemptId: string;
+    startedAt: string;
+    expiresAt: number;
+  };
   /** Quiz generation mode */
   mode: 'single-domain' | 'adaptive' | 'multi-domain';
   /** Domains included in this quiz */
@@ -136,9 +142,7 @@ export interface DynamicQuizResponse {
     q_id: string;
     text: string;
     options: Record<string, string>;
-    correct: string;
-    explanation: string;
-    resources: Array<{ type: string; url: string }>;
+    answerCount: number;
     domain: string;
     cert_id: string;
     exam_id: string;
