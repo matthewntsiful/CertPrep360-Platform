@@ -3,12 +3,16 @@ import { PutCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 import { jsonResponse, logError, logRequest, parseJsonBody, requireAuthenticatedUser } from "./common/security.js";
 
+// DORMANT: CertPrep360 is currently free. This retained implementation is not
+// provisioned, routed, packaged, deployed, or supplied with payment secrets.
+
 const ssm = new SSMClient({});
 const TABLE_NAME = process.env.TABLE_NAME;
 const PAYSTACK_SECRET_PARAM = process.env.PAYSTACK_SECRET_PARAM;
 const PAYMENT_TTL_SECONDS = 30 * 60;
 
-// Prices are server-owned. Add plans here only after product, tax, and currency approval.
+// Retained future configuration. Do not activate without product, tax, currency,
+// provider-security, and infrastructure approval.
 const PRODUCTS = {
   premium_monthly: { amount: 500000, currency: "NGN", entitlement: "premium" },
 };

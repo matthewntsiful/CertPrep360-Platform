@@ -58,11 +58,6 @@ variable "manage_session_lambda_invoke_arn" {
   type        = string
 }
 
-variable "process_payment_lambda_invoke_arn" {
-  description = "Invoke ARN of the Process Payment Lambda"
-  type        = string
-}
-
 variable "marketplace_register_lambda_invoke_arn" {
   description = "Invoke ARN of the Marketplace Register Lambda"
   type        = string

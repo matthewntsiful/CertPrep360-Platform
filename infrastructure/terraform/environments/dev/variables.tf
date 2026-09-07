@@ -47,16 +47,3 @@ variable "google_client_secret" {
   sensitive   = true
   default     = ""
 }
-
-variable "paystack_public_key" {
-  description = "Paystack Public Key for future payments"
-  type        = string
-  default     = ""
-}
-
-variable "paystack_secret_key" {
-  description = "Paystack Secret Key for future payments"
-  type        = string
-  sensitive   = true
-  default     = ""
-}

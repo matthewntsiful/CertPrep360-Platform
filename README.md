@@ -2,6 +2,8 @@
 
 > Complete practice exam application for AWS Solutions Architect Associate certification preparation.
 
+> **Product access:** CertPrep360 is currently free. No payment provider, payment API route, or payment Lambda is deployed.
+
 [![AWS](https://img.shields.io/badge/AWS-SAA--C03-orange)](https://aws.amazon.com/certification/certified-solutions-architect-associate/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
 [![Terraform](https://img.shields.io/badge/Terraform-1.9+-purple)](https://www.terraform.io/)

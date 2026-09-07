@@ -9,7 +9,6 @@
  * - lambda_submit_results has no explicit memory_size (defaults to 256 MB) and timeout defaults to 30s
  * - All Lambda function_name values use CertPrep360-Prod-* prefix
  * - All Lambda environment_variables.TABLE_NAME reference module.dynamodb.table_name
- * - lambda_process_payment references SSM path /certprep360/prod/payments/paystack_secret_key
  * - lambda_get_catalog has ALLOWED_ORIGIN = "https://aws-exams.matthewntsiful.com"
  * - Cognito callback_urls and logout_urls contain only https://${local.subdomain} (no localhost)
  * - S3, CloudFront, Route53, monitoring, DynamoDB, SSM, Cognito, api_gateway modules are unchanged
@@ -119,7 +118,6 @@ function isBugConditionModule(moduleName: string): boolean {
     'lambda_get_catalog',
     'lambda_ai_generate_content',
     'lambda_manage_session',
-    'lambda_process_payment',
   ];
 
   // Category 4: github_oidc hardcoded project_name
@@ -144,7 +142,6 @@ const ALL_LAMBDA_MODULES = [
   'lambda_get_catalog',
   'lambda_ai_generate_content',
   'lambda_manage_session',
-  'lambda_process_payment',
 ] as const;
 
 /** Modules that should NOT be affected by the bug fix */
@@ -275,25 +272,6 @@ describe('Property 2: Preservation - Prod-Specific Values Unchanged', () => {
   });
 
   describe('Prod-specific configuration values are preserved', () => {
-    it('lambda_process_payment references prod SSM path for paystack_secret_key', () => {
-      /**
-       * **Validates: Requirements 3.6**
-       */
-      fc.assert(
-        fc.property(fc.constant('lambda_process_payment'), (lambdaName) => {
-          const block = extractModuleBlock(content, lambdaName);
-          expect(block).not.toBeNull();
-
-          const envVars = getEnvironmentVariables(block!);
-          expect(envVars).toHaveProperty('PAYSTACK_SECRET_PARAM');
-          expect(envVars['PAYSTACK_SECRET_PARAM']).toBe(
-            '"/certprep360/prod/payments/paystack_secret_key"'
-          );
-        }),
-        { numRuns: 1 }
-      );
-    });
-
     it('lambda_get_catalog has ALLOWED_ORIGIN set to prod domain', () => {
       /**
        * **Validates: Requirements 3.7**

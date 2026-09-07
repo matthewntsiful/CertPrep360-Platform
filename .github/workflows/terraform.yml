@@ -79,9 +79,7 @@ jobs:
             -var="github_org=matthewntsiful" \
             -var="github_repo=CertPrep360-Platform" \
             -var="google_client_id=${{ secrets.GOOGLE_CLIENT_ID }}" \
-            -var="google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}" \
-            -var="paystack_public_key=${{ secrets.PAYSTACK_PUBLIC_KEY }}" \
-            -var="paystack_secret_key=${{ secrets.PAYSTACK_SECRET_KEY }}"
+            -var="google_client_secret=${{ secrets.GOOGLE_CLIENT_SECRET }}"
 
       - name: Terraform Apply
         working-directory: ./infrastructure/terraform/environments/${{ steps.env.outputs.name }}
