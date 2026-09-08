@@ -19,6 +19,12 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_cloudwatch_log_group" "lambda" {
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = 30
+  tags              = var.tags
+}
+
 resource "aws_iam_policy" "dynamodb_access" {
   name        = "${var.function_name}-dynamodb-access"
   description = "Allow Lambda to access specific DynamoDB table"
@@ -141,7 +147,7 @@ resource "aws_iam_policy" "s3_read_access" {
           "s3:GetObject",
           "s3:ListBucket"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = flatten([
           for arn in var.s3_read_bucket_arns : [arn, "${arn}/*"]
         ])
@@ -171,6 +177,8 @@ resource "aws_lambda_function" "main" {
   }
 
   tags = var.tags
+
+  depends_on = [aws_cloudwatch_log_group.lambda]
 }
 
 

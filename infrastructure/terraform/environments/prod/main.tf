@@ -2,10 +2,10 @@ terraform {
   required_version = ">= 1.9"
 
   backend "s3" {
-    bucket         = "saa-exams-terraform-state"
-    key            = "prod/terraform.tfstate"
-    region         = "us-east-1"
-    encrypt        = true
+    bucket       = "saa-exams-terraform-state"
+    key          = "prod/terraform.tfstate"
+    region       = "us-east-1"
+    encrypt      = true
     use_lockfile = true
   }
 
@@ -31,7 +31,7 @@ locals {
   api_subdomain = "api.${var.root_domain}"
   tags = {
     Environment = "prod"
-    Project     = "SAA-C03-Exams"
+    Project     = "CertPrep360-Platform"
     ManagedBy   = "Terraform"
   }
 }
@@ -283,6 +283,7 @@ module "lambda_process_payment" {
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   ssm_parameter_arns        = module.ssm.payment_parameter_arns
+  memory_size               = 128
   environment_variables = {
     TABLE_NAME            = module.dynamodb.table_name
     PAYSTACK_SECRET_PARAM = "/certprep360/prod/payments/paystack_secret_key"
@@ -298,9 +299,9 @@ module "lambda_marketplace_register" {
   dynamodb_table_arn        = module.dynamodb.table_arn
   api_gateway_execution_arn = module.api_gateway.execution_arn
   environment_variables = {
-    TABLE_NAME                  = module.dynamodb.table_name
-    APP_URL                     = "https://${var.root_domain}"
-    MARKETPLACE_PRODUCT_CODE    = "dlzlo33jcrq5pa950xbpo0yd1"
+    TABLE_NAME               = module.dynamodb.table_name
+    APP_URL                  = "https://${var.root_domain}"
+    MARKETPLACE_PRODUCT_CODE = "dlzlo33jcrq5pa950xbpo0yd1"
   }
   tags = local.tags
 }
@@ -334,6 +335,7 @@ module "redirect_old_domain" {
 module "api_gateway" {
   source                                 = "../../modules/api-gateway"
   api_name                               = "CertPrep360-Prod-API"
+  allowed_origin                         = "https://${local.subdomain}"
   cognito_user_pool_arn                  = module.cognito.user_pool_arn
   get_questions_lambda_invoke_arn        = module.lambda_get_questions.invoke_arn
   submit_results_lambda_invoke_arn       = module.lambda_submit_results.invoke_arn
@@ -344,11 +346,10 @@ module "api_gateway" {
   admin_analytics_lambda_invoke_arn      = module.lambda_admin_analytics.invoke_arn
   ai_generate_content_lambda_invoke_arn  = module.lambda_ai_generate_content.invoke_arn
   manage_session_lambda_invoke_arn       = module.lambda_manage_session.invoke_arn
-  process_payment_lambda_invoke_arn          = module.lambda_process_payment.invoke_arn
-  marketplace_register_lambda_invoke_arn     = module.lambda_marketplace_register.invoke_arn
-  marketplace_webhook_lambda_invoke_arn      = module.lambda_marketplace_webhook.invoke_arn
+  process_payment_lambda_invoke_arn      = module.lambda_process_payment.invoke_arn
+  marketplace_register_lambda_invoke_arn = module.lambda_marketplace_register.invoke_arn
+  marketplace_webhook_lambda_invoke_arn  = module.lambda_marketplace_webhook.invoke_arn
   custom_domain_name                     = local.api_subdomain
   certificate_arn                        = module.route53.api_certificate_arn
   tags                                   = local.tags
 }
-

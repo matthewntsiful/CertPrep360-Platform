@@ -1,12 +1,13 @@
 import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
+import { logError, logRequest, requireAuthenticatedUser } from "./common/security.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
 export const handler = async (event) => {
-    console.log("Event:", JSON.stringify(event, null, 2));
+    logRequest(event, "manage-session");
 
-    const userId = event.requestContext.authorizer?.claims?.sub;
+    const userId = requireAuthenticatedUser(event);
     if (!userId) {
         return {
             statusCode: 401,
@@ -73,11 +74,11 @@ export const handler = async (event) => {
             };
         }
     } catch (error) {
-        console.error("Error managing session:", error);
+        logError("manage-session", error, event?.requestContext?.requestId || null);
         return {
             statusCode: 500,
             headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
+            body: JSON.stringify({ message: "Unable to manage session" }),
         };
     }
 };

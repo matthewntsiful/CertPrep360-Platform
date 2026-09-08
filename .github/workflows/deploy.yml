@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '24'
+  NODE_VERSION: '22'
 
 jobs:
   # ── Detect what changed ──────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ jobs:
       - name: Package all Lambdas
         working-directory: ./backend/lambdas
         run: |
-          LAMBDAS=("admin-analytics" "admin-manage-content" "ai-generate-content" "get-dynamic-quiz" "get-questions" "get-user-analytics" "submit-results" "manage-session" "process-payment" "get-catalog" "marketplace-register" "marketplace-webhook")
+          LAMBDAS=("admin-analytics" "admin-manage-content" "ai-generate-content" "get-dynamic-quiz" "get-questions" "get-user-analytics" "submit-results" "manage-session" "get-catalog" "marketplace-register" "marketplace-webhook")
           mkdir -p /tmp/lambda-zips
           for DIR in "${LAMBDAS[@]}"; do
             if [ -d "$DIR" ]; then
@@ -194,7 +194,6 @@ jobs:
           FUNCTION_MAP["get-user-analytics"]="CertPrep360-Dev-GetUserAnalytics"
           FUNCTION_MAP["submit-results"]="CertPrep360-Dev-SubmitResults"
           FUNCTION_MAP["manage-session"]="CertPrep360-Dev-ManageSession"
-          FUNCTION_MAP["process-payment"]="CertPrep360-Dev-ProcessPayment"
           FUNCTION_MAP["get-catalog"]="CertPrep360-Dev-GetCatalog"
           FUNCTION_MAP["marketplace-register"]="CertPrep360-Dev-MarketplaceRegister"
           FUNCTION_MAP["marketplace-webhook"]="CertPrep360-Dev-MarketplaceWebhook"
@@ -286,7 +285,6 @@ jobs:
           FUNCTION_MAP["get-user-analytics"]="CertPrep360-Prod-GetUserAnalytics"
           FUNCTION_MAP["submit-results"]="CertPrep360-Prod-SubmitResults"
           FUNCTION_MAP["manage-session"]="CertPrep360-Prod-ManageSession"
-          FUNCTION_MAP["process-payment"]="CertPrep360-Prod-ProcessPayment"
           FUNCTION_MAP["get-catalog"]="CertPrep360-Prod-GetCatalog"
           FUNCTION_MAP["marketplace-register"]="CertPrep360-Prod-MarketplaceRegister"
           FUNCTION_MAP["marketplace-webhook"]="CertPrep360-Prod-MarketplaceWebhook"

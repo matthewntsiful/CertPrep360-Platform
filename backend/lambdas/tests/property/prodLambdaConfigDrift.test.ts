@@ -130,7 +130,6 @@ const LAMBDAS_REQUIRING_FLAT_HANDLER = [
   'lambda_get_catalog',
   'lambda_ai_generate_content',
   'lambda_manage_session',
-  'lambda_process_payment',
 ] as const;
 
 // ── Property-Based Tests ──────────────────────────────────────────────────────

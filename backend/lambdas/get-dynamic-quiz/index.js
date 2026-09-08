@@ -3,16 +3,21 @@ import { docClient } from "./common/db.js";
 import { selectAndAllocate } from "./common/adaptiveSelection.js";
 import { getScheduledQuestions } from "./common/spacedScheduler.js";
 import { computeDomainScores } from "./common/domainScoring.js";
+import { createAttemptManifest, toExamSafeQuestion } from "./common/attempts.js";
+import { jsonResponse, logError, logRequest, requireAuthenticatedUser } from "./common/security.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 
 export const handler = async (event) => {
-    console.log("Event:", JSON.stringify(event, null, 2));
+    logRequest(event, "get-dynamic-quiz");
 
     const headers = {
         "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
         "Content-Type": "application/json",
     };
+
+    const userId = requireAuthenticatedUser(event);
+    if (!userId) return jsonResponse(401, { message: "Unauthorized" });
 
     const mode = event.queryStringParameters?.mode || null;
     const domainParam = event.queryStringParameters?.domain || null;
@@ -21,6 +26,19 @@ export const handler = async (event) => {
     const excludeIds = event.queryStringParameters?.exclude
         ? event.queryStringParameters.exclude.split(',')
         : [];
+
+    if (!/^[A-Z0-9]+-[A-Z0-9]+$/.test(certId)) {
+        return jsonResponse(400, { message: "Invalid certification identifier" });
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+        return jsonResponse(400, { message: "limit must be an integer between 1 and 50" });
+    }
+    if (excludeIds.length > 100 || excludeIds.some(id => id.length > 128)) {
+        return jsonResponse(400, { message: "exclude contains too many or invalid question identifiers" });
+    }
+    if (domainParam && (domainParam.length > 500 || domainParam.split(',').length > 8)) {
+        return jsonResponse(400, { message: "Invalid domain selection" });
+    }
 
     // Determine the quiz mode
     const isAdaptive = mode === "adaptive";
@@ -34,9 +52,6 @@ export const handler = async (event) => {
             body: JSON.stringify({ message: "Missing required query string parameter: domain or mode=adaptive" }),
         };
     }
-
-    // Get userId from Cognito authorizer (optional for backward compatibility)
-    const userId = event.requestContext?.authorizer?.claims?.sub || null;
 
     try {
         let questions = [];
@@ -74,21 +89,19 @@ export const handler = async (event) => {
             weakPoolIncluded = result.weakPoolIncluded;
         }
 
-        // Clean response — only send what the frontend needs
-        const cleanQuestions = questions.map(q => ({
-            q_id: q.q_id,
-            cert_id: q.cert_id,
-            exam_id: q.exam_id,
-            text: q.text,
-            options: q.options,
-            correct: typeof q.correct === 'string'
-                ? q.correct.toUpperCase().split(/[,\s]+/).filter(c => /^[A-Z]$/.test(c)).join('')
-                : q.correct,
-            explanation: q.explanation || "",
-            resources: q.resources || [],
-            domain: q.domain,
-            primary_service: q.primary_service,
-        }));
+        if (!questions.length) {
+            return jsonResponse(404, { message: "No questions are available for this selection" });
+        }
+
+        const attempt = await createAttemptManifest({
+            docClient,
+            tableName: TABLE_NAME,
+            userId,
+            certId,
+            examId: `Dynamic-${resolvedMode}`,
+            questions,
+        });
+        const cleanQuestions = questions.map(toExamSafeQuestion);
 
         return {
             statusCode: 200,
@@ -99,16 +112,13 @@ export const handler = async (event) => {
                 count: cleanQuestions.length,
                 totalAvailable: cleanQuestions.length,
                 weakPoolIncluded,
+                attempt,
                 questions: cleanQuestions,
             }),
         };
     } catch (error) {
-        console.error("Error fetching dynamic quiz:", error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
-        };
+        logError("get-dynamic-quiz", error, event?.requestContext?.requestId || null);
+        return jsonResponse(500, { message: "Unable to load dynamic quiz" });
     }
 };
 
@@ -431,19 +441,30 @@ async function fetchQuestionsByIds(questionIds, certId) {
 
     for (const qId of questionIds) {
         try {
-            // Try to get the question by its known key pattern
+            // Questions are stored beneath EXAM#<examId>#QUESTION#<qId>.
+            // Query the certification partition and filter by immutable q_id until
+            // a dedicated question-ID index is introduced.
+            let lastKey;
+            let foundQuestion = null;
+            do {
             const command = new QueryCommand({
                 TableName: TABLE_NAME,
-                KeyConditionExpression: "PK = :pk AND SK = :sk",
+                KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+                FilterExpression: "q_id = :qId",
                 ExpressionAttributeValues: {
                     ":pk": `CERT#${certId}`,
-                    ":sk": `QUESTION#${qId}`,
+                    ":skPrefix": "EXAM#",
+                    ":qId": qId,
                 },
+                ExclusiveStartKey: lastKey,
             });
             const response = await docClient.send(command);
             if (response.Items && response.Items.length > 0) {
-                questions.push(response.Items[0]);
+                foundQuestion = response.Items[0];
             }
+            lastKey = response.LastEvaluatedKey;
+            } while (!foundQuestion && lastKey);
+            if (foundQuestion) questions.push(foundQuestion);
         } catch (error) {
             console.warn(`Failed to fetch question ${qId}:`, error.message);
         }

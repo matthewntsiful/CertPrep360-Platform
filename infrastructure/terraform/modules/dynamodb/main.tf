@@ -25,14 +25,19 @@ resource "aws_dynamodb_table" "main" {
   }
 
   global_secondary_index {
-    name               = "GSI1"
-    hash_key           = "GSI1-PK"
-    range_key          = "GSI1-SK"
-    projection_type    = "ALL"
+    name            = "GSI1"
+    hash_key        = "GSI1-PK"
+    range_key       = "GSI1-SK"
+    projection_type = "ALL"
   }
 
   point_in_time_recovery {
     enabled = true
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
   }
 
   tags = var.tags

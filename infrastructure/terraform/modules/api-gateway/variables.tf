@@ -3,6 +3,11 @@ variable "api_name" {
   type        = string
 }
 
+variable "allowed_origin" {
+  description = "Single browser origin permitted to call the API"
+  type        = string
+}
+
 variable "cognito_user_pool_arn" {
   description = "The ARN of the Cognito User Pool for authorization"
   type        = string

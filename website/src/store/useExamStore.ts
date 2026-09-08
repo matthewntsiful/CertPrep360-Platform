@@ -1,11 +1,21 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { fetchAuthSession } from '@aws-amplify/auth';
-import type { Question, ExamSession } from '../types/exam';
+import type { ExamResult, Question, ExamSession } from '../types/exam';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.example.com/dev';
 
-// Helper: get the Cognito JWT and make an authenticated API request
+interface AttemptReference {
+  attemptId: string;
+  startedAt: string;
+  expiresAt: number;
+}
+
+interface ExamStartResponse {
+  attempt: AttemptReference;
+  questions: Question[];
+}
+
 async function authFetch(path: string, options: RequestInit = {}) {
   const session = await fetchAuthSession();
   const token = session.tokens?.idToken?.toString();
@@ -15,15 +25,11 @@ async function authFetch(path: string, options: RequestInit = {}) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
-  }
-
+  if (!response.ok) throw new Error(`API error: ${response.status}`);
   return response.json();
 }
 
@@ -36,7 +42,7 @@ export interface QuizMetadata {
 interface ExamStore extends ExamSession {
   quizMeta: QuizMetadata | null;
   startExam: (certId: string, examId: string) => Promise<void>;
-  startDynamicQuiz: (domain: string, questions: Question[], meta?: QuizMetadata) => void;
+  startDynamicQuiz: (certId: string, domain: string, questions: Question[], attemptId: string, meta?: QuizMetadata) => void;
   setAnswer: (questionIndex: number, answer: string | string[]) => void;
   toggleFlag: (questionIndex: number) => void;
   nextQuestion: () => void;
@@ -45,99 +51,109 @@ interface ExamStore extends ExamSession {
   setStudyMode: (enabled: boolean) => void;
   toggleTimer: () => void;
   tick: () => void;
-  completeExam: () => void;
+  completeExam: () => Promise<void>;
   resetExam: () => void;
 }
 
-const INITIAL_TIME = 130 * 60; // 130 minutes
+const INITIAL_TIME = 130 * 60;
 
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 const scheduleSync = (state: ExamStore) => {
   if (state.status !== 'running' || !state.examId || state.examId.startsWith('Dynamic-')) return;
-  
   if (syncTimeout) clearTimeout(syncTimeout);
   syncTimeout = setTimeout(async () => {
     try {
-      const sessionData = {
-        answers: state.answers,
-        flaggedQuestions: Array.from(state.flaggedQuestions),
-        timeLeft: state.timeLeft,
-        currentQuestionIndex: state.currentQuestionIndex,
-        startTime: state.startTime,
-      };
       await authFetch('/session', {
         method: 'POST',
         body: JSON.stringify({
           examId: state.examId,
           certId: state.certId,
-          sessionData
-        })
+          sessionData: {
+            answers: state.answers,
+            flaggedQuestions: Array.from(state.flaggedQuestions),
+            timeLeft: state.timeLeft,
+            currentQuestionIndex: state.currentQuestionIndex,
+            startTime: state.startTime,
+          },
+        }),
       });
-    } catch (e) {
-      console.error('Failed to sync session to backend:', e);
+    } catch {
+      // A local exam may continue; final submission communicates recoverable errors.
     }
   }, 2000);
+};
+
+const initialState = {
+  examId: '',
+  certId: '',
+  attemptId: null,
+  questions: [] as Question[],
+  currentQuestionIndex: 0,
+  answers: {} as Record<number, string | string[]>,
+  flaggedQuestions: new Set<number>(),
+  timeLeft: INITIAL_TIME,
+  status: 'idle' as const,
+  studyMode: false,
+  startTime: null,
+  submissionError: null,
+  result: null,
+  quizMeta: null,
+};
+
+const migratePersistedExamState = (persistedState: unknown) => {
+  const state = persistedState as { studyMode?: unknown } | null;
+  return { studyMode: state?.studyMode === true };
 };
 
 export const useExamStore = create<ExamStore>()(
   persist(
     (set) => ({
-      examId: '',
-      certId: '',
-      questions: [],
-      currentQuestionIndex: 0,
-      answers: {},
-      flaggedQuestions: new Set<number>(),
-      timeLeft: INITIAL_TIME,
-      status: 'idle',
-      studyMode: false,
-      startTime: null,
-      quizMeta: null,
+      ...initialState,
 
       startExam: async (certId, examId) => {
         const normalizedCertId = certId.toUpperCase();
-        set({ status: 'idle', questions: [], answers: {}, flaggedQuestions: new Set(), timeLeft: INITIAL_TIME, currentQuestionIndex: 0, certId: normalizedCertId, examId });
-        
+        set({ ...initialState, status: 'loading', certId: normalizedCertId, examId });
         try {
-          const questions = await authFetch(`/questions/${normalizedCertId}/${examId}`) as Question[];
-          
+          const response = await authFetch(`/questions/${normalizedCertId}/${examId}`) as ExamStartResponse;
+          if (!response?.attempt?.attemptId || !Array.isArray(response.questions) || response.questions.length === 0) {
+            throw new Error('The server did not issue a valid exam attempt');
+          }
+
           let session = null;
           try {
-            const res = await authFetch(`/session/${normalizedCertId}/${examId}`);
-            if (res.session && res.session.sessionData) {
-              session = res.session.sessionData;
-            }
-          } catch (e) {
-            console.warn('No active session found or error loading session');
+            const resumed = await authFetch(`/session/${normalizedCertId}/${examId}`);
+            session = resumed?.session?.sessionData || null;
+          } catch {
+            // Absence of a session is normal for a newly issued attempt.
           }
 
           set({
             certId: normalizedCertId,
             examId,
-            questions,
+            attemptId: response.attempt.attemptId,
+            questions: response.questions,
             status: 'running',
             answers: session?.answers || {},
             flaggedQuestions: session?.flaggedQuestions ? new Set(session.flaggedQuestions) : new Set(),
-            timeLeft: session?.timeLeft || (questions.length * 2 * 60),
+            timeLeft: session?.timeLeft || Math.max(0, response.attempt.expiresAt - Math.floor(Date.now() / 1000)),
             currentQuestionIndex: session?.currentQuestionIndex || 0,
-            startTime: session?.startTime || Date.now(),
+            startTime: Date.parse(response.attempt.startedAt),
           });
-        } catch (error) {
-          console.error('Failed to load questions:', error);
-          set({ status: 'idle' });
+        } catch {
+          set({ status: 'error', submissionError: 'Unable to load this exam. Please retry or sign in again.' });
         }
       },
 
-      startDynamicQuiz: (domain, questions, meta) => {
+      startDynamicQuiz: (certId, domain, questions, attemptId, meta) => {
         set({
+          ...initialState,
           status: 'running',
           questions,
-          answers: {},
           flaggedQuestions: new Set(),
-          timeLeft: questions.length * 2 * 60, // 2 minutes per question (e.g. 20 mins for 10 questions)
-          currentQuestionIndex: 0,
-          certId: 'SAA-C03',
+          timeLeft: questions.length * 2 * 60,
+          certId: certId.toUpperCase(),
           examId: `Dynamic-${domain}`,
+          attemptId,
           startTime: Date.now(),
           quizMeta: meta || null,
         });
@@ -153,119 +169,88 @@ export const useExamStore = create<ExamStore>()(
 
       toggleFlag: (index) => {
         set((state) => {
-          const next = new Set(state.flaggedQuestions);
-          if (next.has(index)) next.delete(index);
-          else next.add(index);
-          const nextState = { ...state, flaggedQuestions: next };
+          const flaggedQuestions = new Set(state.flaggedQuestions);
+          if (flaggedQuestions.has(index)) flaggedQuestions.delete(index);
+          else flaggedQuestions.add(index);
+          const nextState = { ...state, flaggedQuestions };
           scheduleSync(nextState as ExamStore);
           return nextState;
         });
       },
 
-      nextQuestion: () => {
-        set((state) => {
-          const nextState = { ...state, currentQuestionIndex: Math.min(state.currentQuestionIndex + 1, state.questions.length - 1) };
-          scheduleSync(nextState as ExamStore);
-          return nextState;
-        });
-      },
+      nextQuestion: () => set((state) => {
+        const nextState = { ...state, currentQuestionIndex: Math.min(state.currentQuestionIndex + 1, state.questions.length - 1) };
+        scheduleSync(nextState as ExamStore);
+        return nextState;
+      }),
 
-      prevQuestion: () => {
-        set((state) => {
-          const nextState = { ...state, currentQuestionIndex: Math.max(state.currentQuestionIndex - 1, 0) };
-          scheduleSync(nextState as ExamStore);
-          return nextState;
-        });
-      },
+      prevQuestion: () => set((state) => {
+        const nextState = { ...state, currentQuestionIndex: Math.max(state.currentQuestionIndex - 1, 0) };
+        scheduleSync(nextState as ExamStore);
+        return nextState;
+      }),
 
-      goToQuestion: (index) => {
-        set((state) => {
-          const nextState = { ...state, currentQuestionIndex: index };
-          scheduleSync(nextState as ExamStore);
-          return nextState;
-        });
-      },
+      goToQuestion: (index) => set((state) => {
+        const nextState = { ...state, currentQuestionIndex: Math.max(0, Math.min(index, state.questions.length - 1)) };
+        scheduleSync(nextState as ExamStore);
+        return nextState;
+      }),
 
       setStudyMode: (enabled) => set({ studyMode: enabled }),
 
       toggleTimer: () => set((state) => ({
-        status: state.status === 'paused' ? 'running' : 'paused'
+        status: state.status === 'paused' ? 'running' : state.status === 'running' ? 'paused' : state.status,
       })),
 
       tick: () => set((state) => {
         if (state.status !== 'running') return state;
-        if (state.timeLeft <= 0) return { status: 'completed' as const };
-        // We do not scheduleSync on every tick to avoid flooding, sync relies on user actions
+        if (state.timeLeft <= 1) {
+          queueMicrotask(() => { void useExamStore.getState().completeExam(); });
+          return { timeLeft: 0 };
+        }
         return { timeLeft: state.timeLeft - 1 };
       }),
 
       completeExam: async () => {
         const state = useExamStore.getState();
-        const { questions, answers, certId, examId, startTime } = state;
-
-        // Calculate score
-        let correct = 0;
-        const detailedAnswers: Record<string, any> = {};
-        questions.forEach((q, i) => {
-          const answer = answers[i];
-          // Normalize correct field: handles both "AB" and "A,B" formats
-          const correctLetters = q.correct.toUpperCase().split(/[,\s]+/).filter((c: string) => /^[A-Z]$/.test(c));
-          const isCorrect = !!answer && (Array.isArray(answer)
-            ? [...answer].sort().join('') === [...correctLetters].sort().join('')
-            : answer === q.correct);
-          if (isCorrect) correct++;
-          detailedAnswers[i] = {
-            q_id: q.q_id,
-            domain: q.domain || "Unassigned",
-            selected: answer || null,
-            isCorrect
-          };
-        });
-        const score = Math.round((correct / Math.max(questions.length, 1)) * 100);
-        const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
-
-        try {
-          await authFetch('/results', {
-            method: 'POST',
-            body: JSON.stringify({ examId, certId: certId.toUpperCase(), score, timeTaken, answers: detailedAnswers }),
-          });
-        } catch (err) {
-          console.error('Failed to submit exam results:', err);
+        if (state.status === 'submitting' || state.status === 'completed') return;
+        if (!state.attemptId) {
+          set({ status: 'error', submissionError: 'This exam has no active server attempt. Please restart it.' });
+          return;
         }
 
-        set({ status: 'completed' });
+        const answers = Object.fromEntries(state.questions.map((question, index) => [
+          question.q_id,
+          state.answers[index] ?? null,
+        ]));
+        set({ status: 'submitting', submissionError: null });
+
+        try {
+          const result = await authFetch('/results', {
+            method: 'POST',
+            body: JSON.stringify({ attemptId: state.attemptId, answers }),
+          }) as ExamResult;
+          set({ status: 'completed', result, submissionError: null });
+        } catch {
+          set({
+            status: 'error',
+            submissionError: 'Your answers have not been recorded. Check your connection and retry submission.',
+          });
+        }
       },
 
-      resetExam: () => set({
-        status: 'idle',
-        answers: {},
-        flaggedQuestions: new Set(),
-        timeLeft: INITIAL_TIME,
-        currentQuestionIndex: 0,
-        quizMeta: null,
-      }),
+      resetExam: () => {
+        if (syncTimeout) clearTimeout(syncTimeout);
+        set((state) => ({ ...initialState, studyMode: state.studyMode }));
+      },
     }),
     {
       name: 'certprep360-exam-storage',
+      version: 2,
       storage: createJSONStorage(() => localStorage),
-      // Set serializes automatically, but we need to handle the Set type specifically if we want to revive it
-      partialize: (state) => ({
-        ...state,
-        flaggedQuestions: Array.from(state.flaggedQuestions),
-      }) as any,
-      onRehydrateStorage: () => (state) => {
-        if (state && Array.isArray(state.flaggedQuestions)) {
-          state.flaggedQuestions = new Set(state.flaggedQuestions);
-        }
-        // Normalize answer keys from strings back to numbers
-        if (state && state.answers) {
-          const normalized: Record<number, string | string[]> = {};
-          Object.entries(state.answers).forEach(([k, v]) => {
-            normalized[Number(k)] = v as string | string[];
-          });
-          state.answers = normalized;
-        }
-      },
-    }
-  )
+      // Never retain questions, answer keys, learner answers, or server attempts on a shared device.
+      partialize: (state) => ({ studyMode: state.studyMode }),
+      migrate: migratePersistedExamState,
+    },
+  ),
 );

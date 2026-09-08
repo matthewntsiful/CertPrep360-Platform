@@ -9,23 +9,49 @@ export interface Question {
   exam_id: string;
   text: string;
   options: Record<string, string>;
-  correct: string;
+  /** Present only after server-scored completion or in an explicit study flow. */
+  correct?: string | string[];
+  /** Number of selections required; safe to expose during an exam. */
+  answerCount?: number;
   domain?: string;
-  explanation: string;
-  resources: Resource[];
+  explanation?: string;
+  resources?: Resource[];
 }
 
 export interface ExamSession {
   examId: string;
   certId: string;
+  attemptId: string | null;
   questions: Question[];
   currentQuestionIndex: number;
   answers: Record<number, string | string[]>;
   flaggedQuestions: Set<number>;
   timeLeft: number; // in seconds
-  status: 'idle' | 'running' | 'paused' | 'completed';
+  status: 'idle' | 'loading' | 'running' | 'paused' | 'submitting' | 'completed' | 'error';
   studyMode: boolean;
   startTime: number | null;
+  submissionError: string | null;
+  result: ExamResult | null;
+}
+
+export interface ExamResult {
+  attemptId: string;
+  score: number;
+  correctCount: number;
+  totalQuestions: number;
+  timeTaken: number;
+  passed: boolean;
+  passingScore: number;
+  domainScores: Record<string, number>;
+  answers: Record<string, {
+    q_id: string;
+    domain: string;
+    selected: string | string[] | null;
+    isCorrect: boolean;
+    correct: string[];
+    explanation: string;
+    resources: Resource[];
+  }>;
 }
 
 export interface JobStatus {

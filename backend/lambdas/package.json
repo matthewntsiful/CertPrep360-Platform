@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Serverless handlers for CertPrep360",
+  "scripts": {
+    "test": "node --test --test-timeout=10000 common/*.test.js && vitest run"
+  },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.0.0",

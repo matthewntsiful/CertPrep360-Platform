@@ -15,30 +15,28 @@ resource "aws_api_gateway_request_validator" "body_validator" {
   validate_request_parameters = false
 }
 
-# Phase 4: JSON Schema model for POST /results
+# Server-issued attempt ID and learner selections only. Score, time, and
+# correctness are calculated on the server and must not be accepted from clients.
 resource "aws_api_gateway_model" "submit_results_model" {
   rest_api_id  = aws_api_gateway_rest_api.main.id
   name         = "SubmitResultsRequest"
   content_type = "application/json"
-  schema       = jsonencode({
+  schema = jsonencode({
     "$schema" = "http://json-schema.org/draft-04/schema#"
     type      = "object"
-    required  = ["examId", "certId", "score", "timeTaken"]
+    required  = ["attemptId", "answers"]
     properties = {
-      examId    = { type = "string" }
-      certId    = { type = "string" }
-      score     = { type = "number", minimum = 0, maximum = 100 }
-      timeTaken = { type = "number", minimum = 0 }
-      answers   = { type = "object" }
+      attemptId = { type = "string", minLength = 1, maxLength = 128 }
+      answers   = { type = "object", maxProperties = 100 }
     }
   })
 }
 
 resource "aws_api_gateway_authorizer" "cognito" {
-  name                             = "CognitoAuthorizer"
-  type                             = "COGNITO_USER_POOLS"
-  rest_api_id                      = aws_api_gateway_rest_api.main.id
-  provider_arns                    = [var.cognito_user_pool_arn]
+  name          = "CognitoAuthorizer"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  provider_arns = [var.cognito_user_pool_arn]
   # TTL=0 disables authorizer result caching. Default 300s was causing
   # stale failed-auth responses to be served for 5 minutes → ERR_TIMED_OUT.
   authorizer_result_ttl_in_seconds = 0
@@ -162,9 +160,9 @@ resource "aws_api_gateway_method" "post_session" {
 }
 
 resource "aws_api_gateway_integration" "session_post_lambda" {
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_resource.session.id
-  http_method = aws_api_gateway_method.post_session.http_method
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.session.id
+  http_method             = aws_api_gateway_method.post_session.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = var.manage_session_lambda_invoke_arn
@@ -195,9 +193,9 @@ resource "aws_api_gateway_method" "get_session" {
 }
 
 resource "aws_api_gateway_integration" "session_get_lambda" {
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  resource_id = aws_api_gateway_resource.session_exam_id.id
-  http_method = aws_api_gateway_method.get_session.http_method
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.session_exam_id.id
+  http_method             = aws_api_gateway_method.get_session.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = var.manage_session_lambda_invoke_arn
@@ -387,8 +385,8 @@ resource "aws_api_gateway_method_response" "options_catalog" {
   }
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true
-    "method.response.header.Access-Control-Allow-Methods"   = true
-    "method.response.header.Access-Control-Allow-Origin"    = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
   }
 }
 
@@ -399,8 +397,8 @@ resource "aws_api_gateway_integration_response" "options_catalog" {
   status_code = aws_api_gateway_method_response.options_catalog.status_code
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods"   = "'GET,OPTIONS'"
-    "method.response.header.Access-Control-Allow-Origin"    = "'*'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
   depends_on = [aws_api_gateway_integration.options_catalog]
 }
@@ -582,7 +580,7 @@ resource "aws_api_gateway_integration_response" "options_questions" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin}'"
   }
 }
 
@@ -627,7 +625,7 @@ resource "aws_api_gateway_integration_response" "options_results" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'${var.allowed_origin}'"
   }
 }
 
@@ -1128,6 +1126,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.get_session.id,
       aws_api_gateway_integration.session_post_lambda.id,
       aws_api_gateway_integration.session_get_lambda.id,
+      aws_api_gateway_method.options_session.id,
+      aws_api_gateway_method.options_session_exam.id,
       aws_api_gateway_resource.payment.id,
       aws_api_gateway_resource.payment_initialize.id,
       aws_api_gateway_method.post_payment_initialize.id,
@@ -1135,8 +1135,6 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.payment_verify.id,
       aws_api_gateway_method.post_payment_verify.id,
       aws_api_gateway_integration.payment_verify_lambda.id,
-      aws_api_gateway_method.options_session.id,
-      aws_api_gateway_method.options_session_exam.id,
       aws_api_gateway_method.options_payment_initialize.id,
       aws_api_gateway_method.options_payment_verify.id,
       aws_api_gateway_resource.marketplace.id,

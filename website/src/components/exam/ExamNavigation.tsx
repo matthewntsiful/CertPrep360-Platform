@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Target, Flag } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
 
 const ExamNavigation: React.FC = () => {
-  const { questions, currentQuestionIndex, nextQuestion, prevQuestion, completeExam, toggleFlag, flaggedQuestions } = useExamStore();
+  const { questions, currentQuestionIndex, nextQuestion, prevQuestion, completeExam, toggleFlag, flaggedQuestions, status } = useExamStore();
 
   if (!questions.length) return null;
 
@@ -48,9 +48,9 @@ const ExamNavigation: React.FC = () => {
 
         {/* Next / Finish */}
         {isLastQuestion ? (
-          <button onClick={completeExam}
-            className="flex items-center gap-2 px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full font-black text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20 uppercase tracking-widest">
-            Finish <Target className="w-4 h-4" />
+          <button onClick={() => void completeExam()} disabled={status === 'submitting'}
+            className="flex items-center gap-2 px-6 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-full font-black text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20 uppercase tracking-widest">
+            {status === 'submitting' ? 'Saving…' : 'Finish'} <Target className="w-4 h-4" />
           </button>
         ) : (
           <button onClick={nextQuestion}

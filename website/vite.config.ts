@@ -38,22 +38,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\..*\/questions\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-questions-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-        ],
+        // Authenticated assessment responses are deliberately never cached.
+        // Offline content, if introduced, requires an explicit user-scoped design.
+        runtimeCaching: [],
       },
     })
   ],

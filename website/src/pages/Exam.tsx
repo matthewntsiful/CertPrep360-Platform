@@ -12,7 +12,7 @@ import PauseOverlay from '../components/exam/PauseOverlay';
 
 const ExamPage: React.FC = () => {
   const { certId, examId } = useParams<{ certId: string; examId: string }>();
-  const { status, startExam, questions, examId: storeExamId, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
+  const { status, startExam, completeExam, submissionError, questions, examId: storeExamId, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
   const loadedRef = useRef<string>('');
 
   useTimer();
@@ -72,7 +72,23 @@ const ExamPage: React.FC = () => {
 
   if (status === 'completed') return <ExamResults />;
 
-  if (status === 'idle' || (status === 'running' && questions.length === 0)) {
+  if (status === 'error') {
+    const canRetrySubmission = questions.length > 0;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] flex-col gap-4 text-center px-4">
+        <p className="text-red-400 font-bold">{submissionError || 'Unable to continue this exam.'}</p>
+        <button
+          type="button"
+          onClick={() => canRetrySubmission ? void completeExam() : void startExam(certId!, examId!)}
+          className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors"
+        >
+          {canRetrySubmission ? 'Retry Submission' : 'Retry Loading Exam'}
+        </button>
+      </div>
+    );
+  }
+
+  if (status === 'loading' || status === 'idle' || (status === 'running' && questions.length === 0)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] flex-col gap-4">
         <div className="w-10 h-10 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />

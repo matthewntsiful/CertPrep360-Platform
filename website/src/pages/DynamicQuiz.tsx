@@ -20,7 +20,7 @@ type QuizMode = 'setup' | 'loading' | 'running' | 'error';
 const DynamicQuizPage: React.FC = () => {
   const { domain } = useParams<{ domain: string }>();
   const [searchParams] = useSearchParams();
-  const { status, startDynamicQuiz, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
+  const { status, startDynamicQuiz, completeExam, submissionError, nextQuestion, prevQuestion, toggleFlag, toggleTimer, currentQuestionIndex } = useExamStore();
   const loadedRef = useRef<string>('');
 
   // Setup state
@@ -46,9 +46,6 @@ const DynamicQuizPage: React.FC = () => {
   function mapResponseQuestions(questions: DynamicQuizResponse['questions']): Question[] {
     return questions.map(q => ({
       ...q,
-      correct: q.correct || '',
-      explanation: q.explanation || '',
-      resources: q.resources || [],
     }));
   }
 
@@ -103,7 +100,8 @@ const DynamicQuizPage: React.FC = () => {
           weakPoolIncluded: quiz.weakPoolIncluded,
         };
         setQuizMeta(meta);
-        startDynamicQuiz('Adaptive', mapResponseQuestions(quiz.questions), meta);
+        if (!quiz.attempt?.attemptId) throw new Error('Secure quiz attempt was not issued');
+        startDynamicQuiz(certId, 'Adaptive', mapResponseQuestions(quiz.questions), quiz.attempt.attemptId, meta);
         setPageMode('running');
       } else {
         setError('No questions available for adaptive mode. Try completing more exams first.');
@@ -128,7 +126,8 @@ const DynamicQuizPage: React.FC = () => {
           weakPoolIncluded: quiz.weakPoolIncluded,
         };
         setQuizMeta(meta);
-        startDynamicQuiz(domains.join(', '), mapResponseQuestions(quiz.questions), meta);
+        if (!quiz.attempt?.attemptId) throw new Error('Secure quiz attempt was not issued');
+        startDynamicQuiz(certId, domains.join(', '), mapResponseQuestions(quiz.questions), quiz.attempt.attemptId, meta);
         setPageMode('running');
       } else {
         setError('No questions available for the selected domains.');
@@ -145,7 +144,7 @@ const DynamicQuizPage: React.FC = () => {
     setPageMode('loading');
     setError(null);
     try {
-      const quiz = await fetchDynamicQuiz(domainName);
+      const quiz = await fetchDynamicQuiz(domainName, certId, quizLimit);
       if (quiz && quiz.questions) {
         const meta: QuizMetadata | null = quiz.weakPoolIncluded != null ? {
           mode: quiz.mode || 'single-domain',
@@ -153,7 +152,8 @@ const DynamicQuizPage: React.FC = () => {
           weakPoolIncluded: quiz.weakPoolIncluded || 0,
         } : null;
         setQuizMeta(meta);
-        startDynamicQuiz(domainName, mapResponseQuestions(quiz.questions), meta ?? undefined);
+        if (!quiz.attempt?.attemptId) throw new Error('Secure quiz attempt was not issued');
+        startDynamicQuiz(certId, domainName, mapResponseQuestions(quiz.questions), quiz.attempt.attemptId, meta ?? undefined);
         setPageMode('running');
       } else {
         setError('Failed to generate dynamic quiz or no questions available for this domain.');
@@ -203,6 +203,21 @@ const DynamicQuizPage: React.FC = () => {
 
   // Completed state
   if (status === 'completed') return <ExamResults />;
+
+  if (status === 'error') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] flex-col gap-4 text-center px-4">
+        <p className="text-red-400 font-bold">{submissionError || 'Unable to continue this quiz.'}</p>
+        <button
+          type="button"
+          onClick={() => void completeExam()}
+          className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors"
+        >
+          Retry Submission
+        </button>
+      </div>
+    );
+  }
 
   // Error state
   if (pageMode === 'error') {

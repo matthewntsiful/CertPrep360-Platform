@@ -70,6 +70,12 @@ let mockStoreState = {
   currentQuestionIndex: 0,
 };
 
+const TEST_ATTEMPT = {
+  attemptId: 'attempt-123',
+  startedAt: '2026-09-07T00:00:00.000Z',
+  expiresAt: 1_800_000_000,
+};
+
 vi.mock('../store/useExamStore', () => ({
   useExamStore: () => ({
     status: mockStoreState.status,
@@ -140,13 +146,14 @@ describe('DynamicQuiz - Adaptive Mode', () => {
     it('calls startAdaptiveQuiz API when starting adaptive quiz', async () => {
       const user = userEvent.setup();
       const mockQuizResponse = {
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive' as const,
         domains: ['Design Resilient Architectures', 'Design Secure Architectures'],
         count: 20,
         totalAvailable: 100,
         weakPoolIncluded: 3,
         questions: [
-          { q_id: 'q1', text: 'Question 1', options: { A: 'a', B: 'b' }, domain: 'Design Resilient Architectures', cert_id: 'SAA-C03', exam_id: 'exam-1' },
+          { q_id: 'q1', text: 'Question 1', options: { A: 'a', B: 'b' }, answerCount: 1, domain: 'Design Resilient Architectures', cert_id: 'SAA-C03', exam_id: 'exam-1' },
         ],
       };
       vi.mocked(startAdaptiveQuiz).mockResolvedValue(mockQuizResponse);
@@ -257,13 +264,14 @@ describe('DynamicQuiz - Adaptive Mode', () => {
     it('calls startMultiDomainQuiz API with selected domains', async () => {
       const user = userEvent.setup();
       const mockQuizResponse = {
+        attempt: TEST_ATTEMPT,
         mode: 'multi-domain' as const,
         domains: ['Design Resilient Architectures', 'Design Secure Architectures'],
         count: 20,
         totalAvailable: 80,
         weakPoolIncluded: 2,
         questions: [
-          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, domain: 'Design Resilient Architectures', cert_id: 'SAA-C03', exam_id: 'exam-1' },
+          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, answerCount: 1, domain: 'Design Resilient Architectures', cert_id: 'SAA-C03', exam_id: 'exam-1' },
         ],
       };
       vi.mocked(startMultiDomainQuiz).mockResolvedValue(mockQuizResponse);
@@ -307,13 +315,14 @@ describe('DynamicQuiz - Adaptive Mode', () => {
       mockUseParams.mockReturnValue({ domain: 'adaptive' });
 
       vi.mocked(startAdaptiveQuiz).mockResolvedValue({
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive',
         domains: ['Design Resilient Architectures', 'Design Secure Architectures'],
         count: 20,
         totalAvailable: 100,
         weakPoolIncluded: 5,
         questions: [
-          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
+          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, answerCount: 1, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
         ],
       });
 
@@ -330,13 +339,14 @@ describe('DynamicQuiz - Adaptive Mode', () => {
       mockUseParams.mockReturnValue({ domain: 'adaptive' });
 
       vi.mocked(startAdaptiveQuiz).mockResolvedValue({
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive',
         domains: ['Design Resilient Architectures', 'Design Secure Architectures'],
         count: 20,
         totalAvailable: 100,
         weakPoolIncluded: 3,
         questions: [
-          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
+          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, answerCount: 1, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
         ],
       });
 
@@ -352,13 +362,14 @@ describe('DynamicQuiz - Adaptive Mode', () => {
       mockUseParams.mockReturnValue({ domain: 'adaptive' });
 
       vi.mocked(startAdaptiveQuiz).mockResolvedValue({
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive',
         domains: ['Design Resilient Architectures'],
         count: 10,
         totalAvailable: 50,
         weakPoolIncluded: 2,
         questions: [
-          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
+          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, answerCount: 1, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
         ],
       });
 
@@ -374,13 +385,14 @@ describe('DynamicQuiz - Adaptive Mode', () => {
       mockUseParams.mockReturnValue({ domain: 'adaptive' });
 
       vi.mocked(startAdaptiveQuiz).mockResolvedValue({
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive',
         domains: ['Design Resilient Architectures'],
         count: 10,
         totalAvailable: 50,
         weakPoolIncluded: 0,
         questions: [
-          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
+          { q_id: 'q1', text: 'Q1', options: { A: 'a' }, answerCount: 1, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' },
         ],
       });
 
@@ -410,6 +422,7 @@ describe('DynamicQuiz - Adaptive Mode', () => {
       mockUseParams.mockReturnValue({ domain: 'adaptive' });
 
       vi.mocked(startAdaptiveQuiz).mockResolvedValue({
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive',
         domains: [],
         count: 0,
@@ -459,12 +472,13 @@ describe('DynamicQuiz - Adaptive Mode', () => {
     it('passes selected question limit to API', async () => {
       const user = userEvent.setup();
       vi.mocked(startAdaptiveQuiz).mockResolvedValue({
+        attempt: TEST_ATTEMPT,
         mode: 'adaptive',
         domains: ['D1'],
         count: 10,
         totalAvailable: 50,
         weakPoolIncluded: 0,
-        questions: [{ q_id: 'q1', text: 'Q1', options: { A: 'a' }, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' }],
+        questions: [{ q_id: 'q1', text: 'Q1', options: { A: 'a' }, answerCount: 1, domain: 'D1', cert_id: 'SAA-C03', exam_id: 'e1' }],
       });
 
       render(<DynamicQuizPage />);
