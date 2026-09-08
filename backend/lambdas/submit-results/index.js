@@ -1,173 +1,169 @@
 import { PutCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 import { computeDomainScores } from "./common/domainScoring.js";
-import { truncateSnapshots, estimateSize } from "./common/snapshotTruncation.js";
-import { addToBox1, promote, demote, removeFromPool } from "./common/weakPool.js";
+import { addToBox1, promote, demote } from "./common/weakPool.js";
+import { answerKeysMatch, normalizeAnswerKey } from "./common/answerKeys.js";
+import { jsonResponse, logError, logRequest, parseJsonBody, requireAuthenticatedUser } from "./common/security.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
+const DEFAULT_PASSING_SCORE = 72;
 
 export const handler = async (event) => {
-    console.log("Event:", JSON.stringify(event, null, 2));
+  logRequest(event, "submit-results");
+  const userId = requireAuthenticatedUser(event);
+  if (!userId) return jsonResponse(401, { message: "Unauthorized" });
 
-    const headers = {
-        "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com",
+  try {
+    const body = parseJsonBody(event);
+    const attemptId = typeof body.attemptId === "string" ? body.attemptId : "";
+    const submittedAnswers = body.answers && typeof body.answers === "object" ? body.answers : null;
+    if (!attemptId || !submittedAnswers) {
+      return jsonResponse(400, { message: "attemptId and answers are required" });
+    }
+
+    const manifestResponse = await docClient.send(new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { PK: `USER#${userId}`, SK: `ATTEMPT#${attemptId}#MANIFEST` },
+    }));
+    const manifest = manifestResponse.Item;
+    if (!manifest || manifest.type !== "ATTEMPT_MANIFEST") {
+      return jsonResponse(404, { message: "Active attempt was not found" });
+    }
+    if (manifest.status !== "ACTIVE") {
+      return jsonResponse(409, { message: "This attempt has already been submitted or is no longer active" });
+    }
+    if (manifest.expiresAt && Math.floor(Date.now() / 1000) > manifest.expiresAt) {
+      return jsonResponse(409, { message: "This attempt has expired" });
+    }
+
+    const detailedAnswers = {};
+    let correctCount = 0;
+    for (const question of manifest.questions || []) {
+      const selected = submittedAnswers[question.q_id] ?? null;
+      const correct = normalizeAnswerKey(question.correct);
+      const isCorrect = answerKeysMatch(selected, correct);
+      if (isCorrect) correctCount += 1;
+      detailedAnswers[question.q_id] = {
+        q_id: question.q_id,
+        domain: question.domain || "Unassigned",
+        selected,
+        isCorrect,
+        correct,
+        explanation: question.explanation || "",
+        resources: question.resources || [],
+      };
+    }
+
+    const totalQuestions = (manifest.questions || []).length;
+    const score = Math.round((correctCount / Math.max(totalQuestions, 1)) * 100);
+    const domainScores = computeDomainScores(detailedAnswers);
+    const timestamp = new Date().toISOString();
+    const timeTaken = Math.max(0, Math.round((Date.now() - Date.parse(manifest.startedAt)) / 60000));
+    const passed = score >= (manifest.passingScore || DEFAULT_PASSING_SCORE);
+
+    const attemptItem = {
+      PK: `USER#${userId}`,
+      SK: `ATTEMPT#${attemptId}`,
+      type: "EXAM_ATTEMPT",
+      attemptId,
+      certId: manifest.certId,
+      examId: manifest.examId || "DynamicQuiz",
+      score,
+      passed,
+      passingScore: manifest.passingScore || DEFAULT_PASSING_SCORE,
+      timeTaken,
+      answers: detailedAnswers,
+      domainScores,
+      contentVersion: manifest.contentVersion || "unversioned",
+      timestamp,
     };
 
-    // UserId comes from Cognito Authorizer context
-    const userId = event.requestContext.authorizer?.claims?.sub;
-    const body = JSON.parse(event.body || "{}");
-    const { examId, score, timeTaken, answers, questionSnapshots } = body;
-    const certId = (body.certId || "").toUpperCase();
-
-    if (!userId || !examId || score === undefined) {
-        return {
-            statusCode: 400,
-            headers,
-            body: JSON.stringify({ message: "Missing required fields (auth, examId, or score)" }),
-        };
-    }
-
-    const timestamp = new Date().toISOString();
+    await docClient.send(new PutCommand({
+      TableName: TABLE_NAME,
+      Item: attemptItem,
+      ConditionExpression: "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+    }));
 
     try {
-        // Compute per-domain accuracy scores from answers
-        const domainScores = answers ? computeDomainScores(answers) : {};
-
-        // Build the attempt item
-        const attemptItem = {
-            PK: `USER#${userId}`,
-            SK: `ATTEMPT#${timestamp}#EXAM#${examId}`,
-            certId: certId,
-            examId: examId,
-            score: score,
-            timeTaken: timeTaken,
-            answers: answers,
-            domainScores: domainScores,
-            timestamp: timestamp,
-            type: "EXAM_ATTEMPT",
-        };
-
-        // Process and store question snapshots if provided
-        if (questionSnapshots && questionSnapshots.length > 0) {
-            // Estimate the base item size (without snapshots) for truncation budget
-            const baseItemSize = estimateSize(attemptItem);
-            // Truncate snapshots if needed to stay under 400KB
-            attemptItem.questionSnapshots = truncateSnapshots(questionSnapshots, baseItemSize);
-        }
-
-        // Write the attempt record
-        await docClient.send(new PutCommand({
-            TableName: TABLE_NAME,
-            Item: attemptItem,
-        }));
-
-        // Update Weak Pool with Leitner box transitions
-        if (answers && certId) {
-            await updateWeakPool(userId, certId, answers);
-        }
-
-        return {
-            statusCode: 201,
-            headers,
-            body: JSON.stringify({ message: "Result saved successfully", attemptId: timestamp }),
-        };
+      await docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: `USER#${userId}`, SK: `ATTEMPT#${attemptId}#MANIFEST` },
+        UpdateExpression: "SET #status = :submitted, submittedAt = :timestamp",
+        ConditionExpression: "#status = :active",
+        ExpressionAttributeNames: { "#status": "status" },
+        ExpressionAttributeValues: { ":active": "ACTIVE", ":submitted": "SUBMITTED", ":timestamp": timestamp },
+      }));
     } catch (error) {
-        console.error("Error saving result:", error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ message: "Internal Server Error", error: error.message }),
-        };
+      // The result is immutable once written. A retry will safely report it as submitted.
+      logError("submit-results-manifest-finalization", error, event?.requestContext?.requestId || null);
     }
+
+    await updateWeakPool(userId, manifest.certId, detailedAnswers);
+
+    return jsonResponse(201, {
+      message: "Result saved successfully",
+      attemptId,
+      score,
+      correctCount,
+      totalQuestions,
+      timeTaken,
+      passed,
+      passingScore: manifest.passingScore || DEFAULT_PASSING_SCORE,
+      domainScores,
+      answers: detailedAnswers,
+    });
+  } catch (error) {
+    logError("submit-results", error, event?.requestContext?.requestId || null);
+    if (error instanceof SyntaxError) return jsonResponse(400, { message: "Request body must be valid JSON" });
+    if (error?.name === "ConditionalCheckFailedException") {
+      return jsonResponse(409, { message: "This attempt has already been submitted" });
+    }
+    return jsonResponse(500, { message: "Unable to save result" });
+  }
 };
 
-/**
- * Update the user's Weak Pool based on answer correctness.
- * - Incorrect answers not in pool → add to Box 1
- * - Correct answers in pool → promote (Box 1→2, 2→3, 3→remove)
- * - Incorrect answers in pool → demote to Box 1
- *
- * Uses DynamoDB UpdateItem with SET for atomic updates.
- * Creates the Weak Pool item if it doesn't exist.
- */
 async function updateWeakPool(userId, certId, answers) {
-    const pk = `USER#${userId}`;
-    const sk = `WEAK_POOL#${certId}`;
+  const pk = `USER#${userId}`;
+  const sk = `WEAK_POOL#${certId}`;
+  let currentPool = {};
+  let poolExists = false;
 
-    // Fetch the current Weak Pool state
-    let currentPool = {};
-    let poolExists = false;
-
-    try {
-        const getResult = await docClient.send(new GetCommand({
-            TableName: TABLE_NAME,
-            Key: { PK: pk, SK: sk },
-        }));
-
-        if (getResult.Item) {
-            currentPool = getResult.Item.questions || {};
-            poolExists = true;
-        }
-    } catch (error) {
-        console.error("Error fetching Weak Pool:", error);
-        // Continue with empty pool — we'll create it
+  try {
+    const getResult = await docClient.send(new GetCommand({ TableName: TABLE_NAME, Key: { PK: pk, SK: sk } }));
+    if (getResult.Item) {
+      currentPool = getResult.Item.questions || {};
+      poolExists = true;
     }
+  } catch (error) {
+    logError("submit-results-weak-pool-read", error);
+  }
 
-    // Apply Leitner box transitions based on answer correctness
-    let updatedPool = { ...currentPool };
+  let updatedPool = { ...currentPool };
+  for (const answer of Object.values(answers)) {
+    const { q_id, domain, isCorrect } = answer;
+    if (!q_id) continue;
+    const isInPool = q_id in updatedPool;
+    if (isCorrect && isInPool) updatedPool = promote(updatedPool, q_id);
+    else if (!isCorrect && isInPool) updatedPool = demote(updatedPool, q_id);
+    else if (!isCorrect) updatedPool = addToBox1(updatedPool, q_id, domain || "", certId);
+  }
 
-    for (const answer of Object.values(answers)) {
-        const { q_id, domain, isCorrect } = answer;
-        if (!q_id) continue;
-
-        const isInPool = q_id in updatedPool;
-
-        if (isCorrect && isInPool) {
-            // Correct answer on a Weak Pool question → promote
-            updatedPool = promote(updatedPool, q_id);
-        } else if (!isCorrect && isInPool) {
-            // Incorrect answer on a Weak Pool question → demote to Box 1
-            updatedPool = demote(updatedPool, q_id);
-        } else if (!isCorrect && !isInPool) {
-            // New incorrect answer → add to Box 1
-            updatedPool = addToBox1(updatedPool, q_id, domain || "", certId);
-        }
-        // Correct answer not in pool → no action needed
+  const now = new Date().toISOString();
+  try {
+    if (poolExists) {
+      await docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK: pk, SK: sk },
+        UpdateExpression: "SET questions = :questions, updatedAt = :now",
+        ExpressionAttributeValues: { ":questions": updatedPool, ":now": now },
+      }));
+    } else {
+      await docClient.send(new PutCommand({
+        TableName: TABLE_NAME,
+        Item: { PK: pk, SK: sk, questions: updatedPool, sessionCounter: 0, updatedAt: now, type: "WEAK_POOL" },
+      }));
     }
-
-    // Write the updated Weak Pool back to DynamoDB
-    const now = new Date().toISOString();
-
-    try {
-        if (poolExists) {
-            // Update existing item with SET for questions and updatedAt,
-            // ADD for sessionCounter (atomic increment)
-            await docClient.send(new UpdateCommand({
-                TableName: TABLE_NAME,
-                Key: { PK: pk, SK: sk },
-                UpdateExpression: "SET questions = :questions, updatedAt = :now ADD sessionCounter :inc",
-                ExpressionAttributeValues: {
-                    ":questions": updatedPool,
-                    ":now": now,
-                    ":inc": 1,
-                },
-            }));
-        } else {
-            // Create new Weak Pool item with initial state
-            await docClient.send(new PutCommand({
-                TableName: TABLE_NAME,
-                Item: {
-                    PK: pk,
-                    SK: sk,
-                    questions: updatedPool,
-                    sessionCounter: 1,
-                    updatedAt: now,
-                    type: "WEAK_POOL",
-                },
-            }));
-        }
-    } catch (error) {
-        // Log but don't fail the request — the attempt was already saved
-        console.error("Error updating Weak Pool:", error);
-    }
+  } catch (error) {
+    logError("submit-results-weak-pool-write", error);
+  }
 }

@@ -21,19 +21,6 @@ variable "google_client_secret" {
   default     = ""
 }
 
-variable "paystack_public_key" {
-  description = "Paystack Public Key"
-  type        = string
-  default     = ""
-}
-
-variable "paystack_secret_key" {
-  description = "Paystack Secret Key"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 variable "tags" {
   description = "Tags for SSM resources"
   type        = map(string)

@@ -8,6 +8,7 @@ import { buildCoverageState, selectSlot, updateCoverageState, computeSlotDistrib
 import { DeduplicationEngine } from "./common/deduplicationEngine.js";
 import { buildCoverageReport, persistCoverageReport } from "./common/coverageTracker.js";
 import { validateExam, persistQualityReport } from "./common/qualityValidator.js";
+import { logError, logRequest, requireAdmin } from "./common/security.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -190,7 +191,7 @@ const jsonResponse = (statusCode, body) => ({
 const createJob = async (certId, examId) => {
   const jobId = uuidv4();
   const now = new Date().toISOString();
-  const ttl = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7-day TTL
+  const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7-day TTL
 
   await docClient.send(new PutCommand({
     TableName: TABLE_NAME,
@@ -207,7 +208,7 @@ const createJob = async (certId, examId) => {
       started_at: now,
       completed_at: null,
       error: null,
-      ttl,
+      expiresAt,
     },
   }));
 
@@ -634,11 +635,17 @@ const runBatchGeneration = async (certId, examId, jobId, examGuide) => {
 // ── Lambda handler ────────────────────────────────────────────────────────────
 
 export const handler = async (event) => {
-  console.log("AI Factory Request:", JSON.stringify(event));
+  logRequest(event, "ai-generate-content");
 
   try {
     const body = event.body ? JSON.parse(event.body) : event;
     const { mode = 'generate', certId, topic, context, count = 1, domain, question } = body;
+    // batch-run events are self-invoked by this Lambda and do not carry an API
+    // Gateway context. Every browser/API request still requires an Admins claim.
+    const isInternalBatchRun = mode === 'batch-run' && !event?.requestContext;
+    if (!isInternalBatchRun && !requireAdmin(event)) {
+      return jsonResponse(403, { error: 'Administrator access is required' });
+    }
 
     // ── ENRICH MODE ──────────────────────────────────────────────────────────
     if (mode === 'enrich') {
@@ -1025,11 +1032,11 @@ Return ONLY a JSON array of question objects:
     };
 
   } catch (error) {
-    console.error("AI Generation Error:", error);
+    logError("ai-generate-content", error, event?.requestContext?.requestId || null);
     return {
       statusCode: 500,
       headers: { "Access-Control-Allow-Origin": ALLOWED_ORIGIN },
-      body: JSON.stringify({ error: "Failed to generate content", details: error.message })
+      body: JSON.stringify({ error: "Failed to generate content" })
     };
   }
 };

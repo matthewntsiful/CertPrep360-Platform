@@ -104,26 +104,6 @@ export async function fetchDynamicQuiz(domain: string, certId = 'SAA-C03', limit
   }
 }
 
-/**
- * Initializes a Paystack transaction and returns the authorization URL.
- */
-export async function initializePayment(amount: number) {
-  return await authFetch('/payment/initialize', {
-    method: 'POST',
-    body: JSON.stringify({ amount })
-  });
-}
-
-/**
- * Verifies a Paystack transaction after the user completes payment.
- */
-export async function verifyPayment(reference: string) {
-  return await authFetch('/payment/verify', {
-    method: 'POST',
-    body: JSON.stringify({ reference })
-  });
-}
-
 // ─── Study Mode Enhancement APIs ────────────────────────────────────────────
 
 /**

@@ -122,9 +122,9 @@ resource "aws_cloudfront_distribution" "exam_distribution" {
 
   viewer_certificate {
     cloudfront_default_certificate = var.domain_name == ""
-    acm_certificate_arn           = var.domain_name != "" ? var.ssl_certificate_arn : null
-    ssl_support_method            = var.domain_name != "" ? "sni-only" : null
-    minimum_protocol_version      = "TLSv1.2_2021"
+    acm_certificate_arn            = var.domain_name != "" ? var.ssl_certificate_arn : null
+    ssl_support_method             = var.domain_name != "" ? "sni-only" : null
+    minimum_protocol_version       = "TLSv1.2_2021"
   }
 
   tags = var.tags

@@ -1,150 +1,126 @@
 import { ListUsersCommand, CognitoIdentityProviderClient } from "@aws-sdk/client-cognito-identity-provider";
-import { ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
+import { jsonResponse, logError, logRequest, requireAdmin } from "./common/security.js";
 
 const cognitoClient = new CognitoIdentityProviderClient({});
 const TABLE_NAME = process.env.TABLE_NAME;
 const USER_POOL_ID = process.env.USER_POOL_ID;
 
 export const handler = async (event) => {
-  console.log("Admin Analytics Event:", JSON.stringify(event, null, 2));
-  
-  const action = event.queryStringParameters?.action || 'summary';
+  logRequest(event, "admin-analytics");
+
+  if (!requireAdmin(event)) {
+    return jsonResponse(403, { message: "Administrator access is required" });
+  }
+
+  const action = event.queryStringParameters?.action || "summary";
+  if (!["summary", "listUsers"].includes(action)) {
+    return jsonResponse(400, { message: "Unsupported analytics action" });
+  }
 
   try {
+    if (action === "listUsers") {
+      const allUsers = [];
+      let paginationToken;
 
-    if (action === 'listUsers') {
-      let allUsers = [];
-      let paginationToken = undefined;
-      
       do {
-        const listUsersCmd = new ListUsersCommand({
+        const usersResponse = await cognitoClient.send(new ListUsersCommand({
           UserPoolId: USER_POOL_ID,
           Limit: 60,
-          PaginationToken: paginationToken
-        });
-        const usersResponse = await cognitoClient.send(listUsersCmd);
+          PaginationToken: paginationToken,
+        }));
         allUsers.push(...(usersResponse.Users || []));
         paginationToken = usersResponse.PaginationToken;
       } while (paginationToken);
-      
-      const formattedUsers = allUsers.map(u => ({
-        id: u.Attributes.find(a => a.Name === 'sub')?.Value,
-        email: u.Attributes.find(a => a.Name === 'email')?.Value,
-        status: u.UserStatus,
-        joined: u.UserCreateDate,
-        enabled: u.Enabled
+
+      const formattedUsers = allUsers.map(user => ({
+        id: user.Attributes.find(attribute => attribute.Name === "sub")?.Value,
+        email: user.Attributes.find(attribute => attribute.Name === "email")?.Value,
+        status: user.UserStatus,
+        joined: user.UserCreateDate,
+        enabled: user.Enabled,
       }));
 
-      return {
-        statusCode: 200,
-        headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
-        body: JSON.stringify(formattedUsers),
-      };
+      return jsonResponse(200, formattedUsers);
     }
 
-    // Default: summary action
-    // 1. Fetch real user count
-    const listUsersCmd = new ListUsersCommand({
-      UserPoolId: USER_POOL_ID,
-      Limit: 1
-    });
-    // Cognito doesn't give a total count easily without pagination, so we approximate or scan.
-    // For small/medium pools, we can list with Pagination.
     let totalUsersCount = 0;
-    let usersByMonth = {};
+    const usersByMonth = {};
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    let nextToken = undefined;
+    let nextToken;
 
     do {
-      const cmd = new ListUsersCommand({ UserPoolId: USER_POOL_ID, PaginationToken: nextToken, Limit: 60 });
-      const resp = await cognitoClient.send(cmd);
-      const users = resp.Users || [];
+      const response = await cognitoClient.send(new ListUsersCommand({
+        UserPoolId: USER_POOL_ID,
+        PaginationToken: nextToken,
+        Limit: 60,
+      }));
+      const users = response.Users || [];
       totalUsersCount += users.length;
-      
-      users.forEach(u => {
-        if (u.UserCreateDate) {
-          const date = new Date(u.UserCreateDate);
+
+      users.forEach(user => {
+        if (user.UserCreateDate) {
+          const date = new Date(user.UserCreateDate);
           const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
           usersByMonth[monthKey] = (usersByMonth[monthKey] || 0) + 1;
         }
       });
-      
-      nextToken = resp.PaginationToken;
+      nextToken = response.PaginationToken;
     } while (nextToken);
 
-    // Format growth data (sort by date)
     const growth = Object.entries(usersByMonth)
-      .map(([month, count]) => ({ 
-        month, 
-        users: count, 
-        _sort: new Date(month.split(' ')[1], months.indexOf(month.split(' ')[0])).getTime() 
+      .map(([month, count]) => ({
+        month,
+        users: count,
+        _sort: new Date(month.split(" ")[1], months.indexOf(month.split(" ")[0])).getTime(),
       }))
-      .sort((a, b) => a._sort - b._sort)
+      .sort((first, second) => first._sort - second._sort)
       .map(({ month, users }) => ({ month, users }));
 
-    // 2. Aggregate EXAM_ATTEMPT records from DynamoDB
-    const scanAttemptsCmd = new ScanCommand({
+    const attemptsResponse = await docClient.send(new ScanCommand({
       TableName: TABLE_NAME,
-      FilterExpression: "#type = :t",
+      FilterExpression: "#type = :type",
       ExpressionAttributeNames: { "#type": "type" },
-      ExpressionAttributeValues: { ":t": "EXAM_ATTEMPT" }
-    });
-
-    const attemptsResponse = await docClient.send(scanAttemptsCmd);
+      ExpressionAttributeValues: { ":type": "EXAM_ATTEMPT" },
+    }));
     const attempts = attemptsResponse.Items || [];
-    
-    // Performance aggregation
+
     const performanceMap = {};
-    attempts.forEach(a => {
-      const examName = a.examId || 'Unknown';
+    attempts.forEach(attempt => {
+      const examName = attempt.examId || "Unknown";
       if (!performanceMap[examName]) performanceMap[examName] = { name: examName, pass: 0, fail: 0 };
-      if (a.score >= 70) performanceMap[examName].pass++;
-      else performanceMap[examName].fail++;
+      if (attempt.passed) performanceMap[examName].pass += 1;
+      else performanceMap[examName].fail += 1;
     });
 
-    // Content Stats - Paginated Scan for accurate total count
     let realQuestionCount = 0;
-    let questionsNextToken = undefined;
+    let questionsNextToken;
     do {
-      const scanQuestionsCmd = new ScanCommand({
+      const response = await docClient.send(new ScanCommand({
         TableName: TABLE_NAME,
-        FilterExpression: "#type = :t",
+        FilterExpression: "#type = :type",
         ExpressionAttributeNames: { "#type": "type" },
-        ExpressionAttributeValues: { ":t": "QUESTION" },
+        ExpressionAttributeValues: { ":type": "QUESTION" },
         ExclusiveStartKey: questionsNextToken,
-        Select: "COUNT"
-      });
-      const qResp = await docClient.send(scanQuestionsCmd);
-      realQuestionCount += (qResp.Count || 0);
-      questionsNextToken = qResp.LastEvaluatedKey;
+        Select: "COUNT",
+      }));
+      realQuestionCount += response.Count || 0;
+      questionsNextToken = response.LastEvaluatedKey;
     } while (questionsNextToken);
 
-    const stats = {
+    return jsonResponse(200, {
       overview: [
         { label: "Total Architects", value: totalUsersCount.toLocaleString(), trend: "Live", type: "users" },
         { label: "Exam Questions", value: realQuestionCount.toLocaleString(), trend: "Live", type: "content" },
         { label: "Exam Attempts", value: attempts.length.toLocaleString(), trend: "Live", type: "sessions" },
-        { label: "Overall Pass Rate", value: `${attempts.length > 0 ? Math.round((attempts.filter(a => a.score >= 70).length / attempts.length) * 100) : 0}%`, trend: "Dynamic", type: "health" },
+        { label: "Overall Pass Rate", value: `${attempts.length > 0 ? Math.round((attempts.filter(attempt => attempt.passed).length / attempts.length) * 100) : 0}%`, trend: "Dynamic", type: "health" },
       ],
-      details: {
-        growth: growth,
-        performance: Object.values(performanceMap).slice(0, 5) // Top 5 exams
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    return {
-      statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com", "Content-Type": "application/json" },
-      body: JSON.stringify(stats),
-    };
-  } catch (err) {
-    console.error("Admin Analytics Error:", err);
-    return {
-      statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
-      body: JSON.stringify({ message: "Internal Server Error", error: err.message }),
-    };
+      details: { growth, performance: Object.values(performanceMap).slice(0, 5) },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logError("admin-analytics", error, event?.requestContext?.requestId || null);
+    return jsonResponse(500, { message: "Unable to retrieve analytics" });
   }
 };

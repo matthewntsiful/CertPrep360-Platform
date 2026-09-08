@@ -639,15 +639,17 @@ describe('Dynamic Quiz - Response Shape', () => {
     expect(body).toHaveProperty('count');
     expect(body).toHaveProperty('totalAvailable');
     expect(body).toHaveProperty('weakPoolIncluded');
+    expect(body).toHaveProperty('attempt.attemptId');
     expect(body).toHaveProperty('questions');
     expect(Array.isArray(body.questions)).toBe(true);
     expect(Array.isArray(body.domains)).toBe(true);
     expect(typeof body.count).toBe('number');
     expect(typeof body.weakPoolIncluded).toBe('number');
+    expect(body.questions.every((question: Record<string, unknown>) => !('correct' in question) && !('explanation' in question))).toBe(true);
   });
 
   it('returns 400 when neither domain nor mode=adaptive is provided', async () => {
-    const event = makeEvent({ certId: 'SAA-C03', limit: '10' });
+    const event = makeEvent({ certId: 'SAA-C03', limit: '10' }, 'user-123');
     const response = await handler(event);
 
     expect(response.statusCode).toBe(400);

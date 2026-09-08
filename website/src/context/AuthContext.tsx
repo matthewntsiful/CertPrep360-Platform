@@ -11,6 +11,7 @@ import {
   resendSignUpCode,
   type AuthUser 
 } from 'aws-amplify/auth';
+import { useExamStore } from '../store/useExamStore';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -43,6 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(() => checkUser(), 500);
           break;
         case 'signedOut':
+          useExamStore.getState().resetExam();
+          useExamStore.persist.clearStorage();
           setUser(null);
           setAttributes(null);
           setIsAdmin(false);
@@ -81,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     await signOut();
+    useExamStore.getState().resetExam();
+    useExamStore.persist.clearStorage();
     setUser(null);
     setAttributes(null);
   };

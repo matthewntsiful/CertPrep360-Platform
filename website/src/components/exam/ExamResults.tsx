@@ -3,50 +3,40 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, XCircle, RotateCcw, Home as HomeIcon, Clock, Target, CheckCircle2, Share2, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useExamStore } from '../../store/useExamStore';
-import { RESOURCES_DATA } from '../../data/resourcesData';
 import SoundEffects from '../../utils/sound';
 import ReviewMode from './ReviewMode';
 
 const ExamResults: React.FC = () => {
   const navigate = useNavigate();
-  const { questions, answers, resetExam, startTime, certId, examId, quizMeta } = useExamStore();
+  const { questions, resetExam, certId, examId, quizMeta, result } = useExamStore();
   const [showShare, setShowShare] = useState(false);
   const [inReview, setInReview] = useState(false);
-
-
-  const certMetadata = RESOURCES_DATA[certId.toLowerCase()];
-
-  let correctCount = 0;
-  const domainPerformance: Record<string, { correct: number; total: number }> = {};
-  const questionResults = questions.map((q, i) => {
-    const userAns = answers[i] ?? (answers as any)[String(i)];
-    const domain = q.domain || 'General';
-    if (!domainPerformance[domain]) domainPerformance[domain] = { correct: 0, total: 0 };
-    domainPerformance[domain].total++;
-
-    let isCorrect = false;
-    if (userAns) {
-      isCorrect = Array.isArray(userAns)
-        ? [...userAns].sort().join('') === [...q.correct].sort().join('')
-        : userAns === q.correct;
-    }
-    if (isCorrect) { correctCount++; domainPerformance[domain].correct++; }
-    return { q, userAns, isCorrect, skipped: !userAns };
-  });
-
-  const score = Math.round((correctCount / questions.length) * 100);
-  const passed = score >= (parseInt(certMetadata?.passingScore) || 72);
-  const timeTaken = startTime ? Math.round((Date.now() - startTime) / 1000 / 60) : 0;
+  const [copied, setCopied] = useState(false);
+  const passed = result?.passed ?? false;
 
   useEffect(() => {
-    if (passed) {
-      SoundEffects.playSuccess();
-    } else {
-      SoundEffects.playCompletion();
-    }
-  }, [passed]);
+    if (!result) return;
+    if (passed) SoundEffects.playSuccess();
+    else SoundEffects.playCompletion();
+  }, [passed, result]);
 
-  const [copied, setCopied] = useState(false);
+  if (!result) {
+    return <div className="py-12 text-center text-slate-400">The final server-scored result is unavailable. Please return to your dashboard.</div>;
+  }
+
+  const domainPerformance: Record<string, { correct: number; total: number }> = {};
+  const questionResults = questions.map((q) => {
+    const answer = result.answers[q.q_id];
+    const domain = answer?.domain || q.domain || 'General';
+    if (!domainPerformance[domain]) domainPerformance[domain] = { correct: 0, total: 0 };
+    domainPerformance[domain].total++;
+    if (answer?.isCorrect) domainPerformance[domain].correct++;
+    return { q, userAns: answer?.selected, isCorrect: Boolean(answer?.isCorrect), skipped: !answer?.selected };
+  });
+
+  const correctCount = result.correctCount;
+  const score = result.score;
+  const timeTaken = result.timeTaken;
   const shareUrl = 'https://aws-exams.matthewntsiful.com';
   const shareText = `🎯 ${passed ? '✅ PASSED' : '📚 Practice Run'} — I scored ${score}% on the AWS ${certId} Practice Exam on CertPrep360!\n\n${correctCount}/${questions.length} correct in ${timeTaken} minutes.\n\nPrepare for your AWS certification 👇\n${shareUrl}`;
 

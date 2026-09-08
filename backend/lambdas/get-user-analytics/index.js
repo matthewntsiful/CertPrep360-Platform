@@ -1,6 +1,7 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 import { encodeCursor, decodeCursor, clampPageSize } from "./common/pagination.js";
+import { logError, logRequest, requireAuthenticatedUser } from "./common/security.js";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 const PASS_THRESHOLD = 72;
@@ -21,14 +22,11 @@ const PASS_THRESHOLD = 72;
  *   - sort (date_asc | date_desc | score_asc | score_desc) — default date_desc
  */
 export const handler = async (event) => {
-  console.log("Event:", JSON.stringify(event, null, 2));
-
-  const userId =
-    event.requestContext?.authorizer?.claims?.sub ||
-    event.pathParameters?.userId;
+  logRequest(event, "get-user-analytics");
+  const userId = requireAuthenticatedUser(event);
 
   if (!userId) {
-    return respond(400, { message: "Missing userId or unauthorized" });
+    return respond(401, { message: "Unauthorized" });
   }
 
   const params = event.queryStringParameters || {};
@@ -47,32 +45,28 @@ export const handler = async (event) => {
     // --- Dashboard summary (default) ---
     return await handleDashboardSummary(userId);
   } catch (error) {
-    console.error("Error fetching analytics:", error);
+    logError("get-user-analytics", error, event?.requestContext?.requestId || null);
 
     if (error.message === "Invalid cursor format") {
       return respond(400, { message: "Invalid cursor" });
     }
 
-    return respond(500, { message: "Internal Server Error", error: error.message });
+    return respond(500, { message: "Unable to retrieve analytics" });
   }
 };
 
 // ─── Single Attempt Detail ───────────────────────────────────────────────────
 
 async function handleSingleAttempt(userId, attemptId) {
-  const command = new QueryCommand({
+  const command = new GetCommand({
     TableName: TABLE_NAME,
-    KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-    ExpressionAttributeValues: {
-      ":pk": `USER#${userId}`,
-      ":skPrefix": `ATTEMPT#${attemptId}`,
-    },
+    Key: { PK: `USER#${userId}`, SK: `ATTEMPT#${attemptId}` },
   });
 
   const response = await docClient.send(command);
-  const item = response.Items?.[0];
+  const item = response.Item;
 
-  if (!item) {
+  if (!item || item.type !== "EXAM_ATTEMPT") {
     return respond(404, { message: "Attempt not found" });
   }
 
@@ -131,19 +125,16 @@ async function handlePaginatedHistory(userId, params) {
       ExpressionAttributeValues: {
         ":pk": `USER#${userId}`,
         ":skPrefix": "ATTEMPT#",
+        ":attemptType": "EXAM_ATTEMPT",
         ...expressionAttributeValues,
       },
       ScanIndexForward: scanForward,
       Limit: pageSize,
+      FilterExpression: filterExpression
+        ? "#type = :attemptType AND " + filterExpression
+        : "#type = :attemptType",
+      ExpressionAttributeNames: { "#type": "type", ...expressionAttributeNames },
     };
-
-    if (expressionAttributeNames) {
-      queryParams.ExpressionAttributeNames = expressionAttributeNames;
-    }
-
-    if (filterExpression) {
-      queryParams.FilterExpression = filterExpression;
-    }
 
     if (cursor) {
       queryParams.ExclusiveStartKey = cursor;
@@ -267,18 +258,15 @@ async function fetchAllAttempts(userId, filterExpression, expressionAttributeVal
       ExpressionAttributeValues: {
         ":pk": `USER#${userId}`,
         ":skPrefix": "ATTEMPT#",
+        ":attemptType": "EXAM_ATTEMPT",
         ...expressionAttributeValues,
       },
       ScanIndexForward: true,
+      FilterExpression: filterExpression
+        ? "#type = :attemptType AND " + filterExpression
+        : "#type = :attemptType",
+      ExpressionAttributeNames: { "#type": "type", ...expressionAttributeNames },
     };
-
-    if (expressionAttributeNames) {
-      queryParams.ExpressionAttributeNames = expressionAttributeNames;
-    }
-
-    if (filterExpression) {
-      queryParams.FilterExpression = filterExpression;
-    }
 
     if (lastEvaluatedKey) {
       queryParams.ExclusiveStartKey = lastEvaluatedKey;
@@ -304,18 +292,15 @@ async function getTotalCount(userId, filterExpression, expressionAttributeValues
     ExpressionAttributeValues: {
       ":pk": `USER#${userId}`,
       ":skPrefix": "ATTEMPT#",
+      ":attemptType": "EXAM_ATTEMPT",
       ...expressionAttributeValues,
     },
     Select: "COUNT",
+    FilterExpression: filterExpression
+      ? "#type = :attemptType AND " + filterExpression
+      : "#type = :attemptType",
+    ExpressionAttributeNames: { "#type": "type", ...expressionAttributeNames },
   };
-
-  if (expressionAttributeNames) {
-    queryParams.ExpressionAttributeNames = expressionAttributeNames;
-  }
-
-  if (filterExpression) {
-    queryParams.FilterExpression = filterExpression;
-  }
 
   let totalCount = 0;
   let lastEvaluatedKey = undefined;

@@ -13,9 +13,9 @@ resource "aws_iam_role" "cognito_ses" {
 }
 
 resource "aws_iam_role_policy" "cognito_ses" {
-  count  = var.ses_source_arn != "" ? 1 : 0
-  name   = "AllowSESSend"
-  role   = aws_iam_role.cognito_ses[0].id
+  count = var.ses_source_arn != "" ? 1 : 0
+  name  = "AllowSESSend"
+  role  = aws_iam_role.cognito_ses[0].id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -73,9 +73,9 @@ resource "aws_cognito_user_pool" "main" {
   dynamic "email_configuration" {
     for_each = var.ses_source_arn != "" ? [1] : []
     content {
-      email_sending_account  = "DEVELOPER"
-      from_email_address     = var.ses_from_address
-      source_arn             = var.ses_source_arn
+      email_sending_account = "DEVELOPER"
+      from_email_address    = var.ses_from_address
+      source_arn            = var.ses_source_arn
     }
   }
 }
@@ -105,15 +105,15 @@ resource "aws_cognito_identity_provider" "google" {
   provider_type = "Google"
 
   provider_details = {
-    authorize_scopes = "email openid profile"
-    client_id        = var.google_client_id
-    client_secret    = var.google_client_secret
-    attributes_url   = "https://people.googleapis.com/v1/people/me?personFields="
+    authorize_scopes              = "email openid profile"
+    client_id                     = var.google_client_id
+    client_secret                 = var.google_client_secret
+    attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
     attributes_url_add_attributes = "false"
-    authorize_url    = "https://accounts.google.com/o/oauth2/v2/auth"
-    oidc_issuer      = "https://accounts.google.com"
-    token_request_method = "POST"
-    token_url        = "https://www.googleapis.com/oauth2/v4/token"
+    authorize_url                 = "https://accounts.google.com/o/oauth2/v2/auth"
+    oidc_issuer                   = "https://accounts.google.com"
+    token_request_method          = "POST"
+    token_url                     = "https://www.googleapis.com/oauth2/v4/token"
   }
 
   attribute_mapping = {

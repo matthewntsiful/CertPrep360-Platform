@@ -59,8 +59,6 @@ API Gateway (Regional, custom domain api.certprep360.com)
  ├── GET  /session/{certId}/{examId}    → Lambda: ManageSession
  ├── POST /session                      → Lambda: ManageSession
  ├── GET  /catalog (public)             → Lambda: GetCatalog
- ├── POST /payment/initialize           → Lambda: ProcessPayment
- ├── POST /payment/verify               → Lambda: ProcessPayment
  ├── GET  /admin/content                → Lambda: AdminManageContent
  ├── POST /admin/content                → Lambda: AdminManageContent
  ├── PATCH/DELETE /admin/content        → Lambda: AdminManageContent
@@ -177,8 +175,6 @@ Key functions:
 - `fetchDynamicQuiz(domain, certId, limit)` — single-domain quiz
 - `startAdaptiveQuiz(certId, limit)` — adaptive quiz using weak domain detection
 - `startMultiDomainQuiz(domains, certId, limit)` — multi-domain quiz
-- `initializePayment(amount)` — Paystack payment initialization
-- `verifyPayment(reference)` — Paystack payment verification
 
 `adminService.ts` — Admin-specific API calls for content management and analytics.
 
@@ -267,12 +263,9 @@ Saves and retrieves in-progress exam sessions. Item key: `USER#{userId}` / `SESS
 
 Returns available certifications and their exam lists. First checks for a pre-computed `METADATA#CATALOG` item. Falls back to scanning all `QUESTION` type items and aggregating by `cert_id` and `exam_id`. Returns structure: `{ [certId]: { totalQuestions, examCount, exams[] } }`.
 
-### ProcessPayment
+### Product Access
 
-**Route**: `POST /payment/initialize`, `POST /payment/verify`
-**Auth**: Cognito JWT required
-
-Integrates with Paystack. Secret key fetched from SSM Parameter Store on cold start and cached in Lambda memory. On initialize: creates a Paystack transaction with user email and metadata. On verify: confirms transaction status, validates `metadata.userId` matches the authenticated user, then updates `USER#{userId}#PROFILE` in DynamoDB with `isPremium = true`.
+CertPrep360 is currently a **free product**. The repository retains dormant payment implementation for a possible future commercial release, but it has no frontend caller, API Gateway route, Lambda deployment, SSM parameter, or CI packaging path. A future payment launch must be reintroduced through a reviewed infrastructure and product-access change.
 
 ### AdminManageContent
 
@@ -314,8 +307,6 @@ All authenticated routes require: `Authorization: Bearer {cognitoIdToken}`
 | POST | `/session` | JWT | ManageSession | Save in-progress session |
 | GET | `/session/{certId}/{examId}` | JWT | ManageSession | Restore in-progress session |
 | GET | `/catalog` | None | GetCatalog | Available certs and exams |
-| POST | `/payment/initialize` | JWT | ProcessPayment | Start Paystack transaction |
-| POST | `/payment/verify` | JWT | ProcessPayment | Verify Paystack transaction |
 | GET | `/admin/content` | JWT+Admin | AdminManageContent | List questions |
 | POST | `/admin/content` | JWT+Admin | AdminManageContent | Create question |
 | PATCH | `/admin/content` | JWT+Admin | AdminManageContent | Update question |
@@ -441,7 +432,7 @@ infrastructure/terraform/
     ├── dynamodb/     # Single table + GSI1
     ├── lambda/       # Function + IAM role + permissions
     ├── api-gateway/  # REST API + all routes + CORS + custom domain
-    ├── ssm/          # Secrets storage (Google OAuth, Paystack)
+    ├── ssm/          # Secrets storage (Google OAuth)
     ├── monitoring/   # CloudWatch alarms
     ├── github-oidc/  # OIDC role for GitHub Actions
     └── redirect/     # 301 redirect CloudFront distribution
@@ -496,7 +487,6 @@ infrastructure/terraform/
 | AIGenerateContent | 1024MB | PDF parsing + TF-IDF |
 | SubmitResults | 128MB | Simple write operation |
 | ManageSession | 128MB | Simple read/write |
-| ProcessPayment | 128MB | Simple HTTP + DynamoDB write |
 
 ### Redirect Module
 Handles 301 redirects from old domains to new domain. Creates:
@@ -688,11 +678,7 @@ AWS_PROFILE=BlakkBrotherInc-Startup terraform apply
 |-----------|-------------|-------------|
 | `/certprep360/dev/auth/google_client_id` | Dev | Google OAuth Client ID |
 | `/certprep360/dev/auth/google_client_secret` | Dev | Google OAuth Client Secret |
-| `/certprep360/dev/payments/paystack_secret_key` | Dev | Paystack secret key |
-| `/certprep360/dev/payments/paystack_public_key` | Dev | Paystack public key |
 | `/certprep360/prod/auth/google_client_id` | Prod | Google OAuth Client ID |
 | `/certprep360/prod/auth/google_client_secret` | Prod | Google OAuth Client Secret |
-| `/certprep360/prod/payments/paystack_secret_key` | Prod | Paystack secret key |
-| `/certprep360/prod/payments/paystack_public_key` | Prod | Paystack public key |
 
 All parameters are `SecureString` type (KMS encrypted). The SSM Terraform module uses `ignore_changes = [value]` — update values directly via `aws ssm put-parameter --overwrite`.

@@ -3,7 +3,9 @@
 *.tfstate
 *.tfstate.*
 *.tfvars
-.terraform.lock.hcl
+tfplan
+*.tfplan
+infrastructure/terraform/environments/*/build/
 crash.log
 override.tf
 override.tf.json
