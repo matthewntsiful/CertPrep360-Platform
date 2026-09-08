@@ -2,7 +2,7 @@
 
 > Complete practice exam application for AWS Solutions Architect Associate certification preparation.
 
-> **Product access:** CertPrep360 is currently free. No payment provider, payment API route, or payment Lambda is deployed.
+> **Product access:** CertPrep360 is currently free. Payment API routes (`POST /payment/initialize` and `POST /payment/verify`) and their Lambda integrations are provisioned in the infrastructure but the frontend payment flow is not active.
 
 [![AWS](https://img.shields.io/badge/AWS-SAA--C03-orange)](https://aws.amazon.com/certification/certified-solutions-architect-associate/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)

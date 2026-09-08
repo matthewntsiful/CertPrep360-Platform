@@ -201,6 +201,61 @@ resource "aws_api_gateway_integration" "session_get_lambda" {
   uri                     = var.manage_session_lambda_invoke_arn
 }
 
+# /payment
+resource "aws_api_gateway_resource" "payment" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
+  path_part   = "payment"
+}
+
+# /payment/initialize
+resource "aws_api_gateway_resource" "payment_initialize" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.payment.id
+  path_part   = "initialize"
+}
+
+resource "aws_api_gateway_method" "post_payment_initialize" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.payment_initialize.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "payment_initialize_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.payment_initialize.id
+  http_method             = aws_api_gateway_method.post_payment_initialize.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.process_payment_lambda_invoke_arn
+}
+
+# /payment/verify
+resource "aws_api_gateway_resource" "payment_verify" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.payment.id
+  path_part   = "verify"
+}
+
+resource "aws_api_gateway_method" "post_payment_verify" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.payment_verify.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "payment_verify_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.payment_verify.id
+  http_method             = aws_api_gateway_method.post_payment_verify.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.process_payment_lambda_invoke_arn
+}
+
 # /marketplace
 resource "aws_api_gateway_resource" "marketplace" {
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -889,6 +944,96 @@ resource "aws_api_gateway_integration_response" "options_session_exam" {
   }
 }
 
+# CORS Support for /payment/initialize
+resource "aws_api_gateway_method" "options_payment_initialize" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.payment_initialize.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_payment_initialize" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.payment_initialize.id
+  http_method = aws_api_gateway_method.options_payment_initialize.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_payment_initialize" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.payment_initialize.id
+  http_method = aws_api_gateway_method.options_payment_initialize.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_payment_initialize" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.payment_initialize.id
+  http_method = aws_api_gateway_method.options_payment_initialize.http_method
+  status_code = aws_api_gateway_method_response.options_payment_initialize.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS Support for /payment/verify
+resource "aws_api_gateway_method" "options_payment_verify" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.payment_verify.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_payment_verify" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.payment_verify.id
+  http_method = aws_api_gateway_method.options_payment_verify.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = "{ \"statusCode\": 200 }"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_payment_verify" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.payment_verify.id
+  http_method = aws_api_gateway_method.options_payment_verify.http_method
+  status_code = "200"
+  response_models = {
+    "application/json" = "Empty"
+  }
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_payment_verify" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.payment_verify.id
+  http_method = aws_api_gateway_method.options_payment_verify.http_method
+  status_code = aws_api_gateway_method_response.options_payment_verify.status_code
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE,PATCH'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
 # Global Gateway Responses for 4xx/5xx errors (CORS support for error states)
 resource "aws_api_gateway_gateway_response" "default_4xx" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
@@ -929,6 +1074,8 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.admin_ai_generate_lambda,
     aws_api_gateway_integration.session_post_lambda,
     aws_api_gateway_integration.session_get_lambda,
+    aws_api_gateway_integration.payment_initialize_lambda,
+    aws_api_gateway_integration.payment_verify_lambda,
     aws_api_gateway_integration.marketplace_register_lambda,
     aws_api_gateway_integration.marketplace_webhook_lambda,
     aws_api_gateway_integration.options_questions,
@@ -940,6 +1087,8 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.options_admin_ai,
     aws_api_gateway_integration.options_session,
     aws_api_gateway_integration.options_session_exam,
+    aws_api_gateway_integration.options_payment_initialize,
+    aws_api_gateway_integration.options_payment_verify,
     aws_api_gateway_gateway_response.default_4xx,
     aws_api_gateway_gateway_response.default_5xx
   ]
@@ -979,6 +1128,15 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.session_get_lambda.id,
       aws_api_gateway_method.options_session.id,
       aws_api_gateway_method.options_session_exam.id,
+      aws_api_gateway_resource.payment.id,
+      aws_api_gateway_resource.payment_initialize.id,
+      aws_api_gateway_method.post_payment_initialize.id,
+      aws_api_gateway_integration.payment_initialize_lambda.id,
+      aws_api_gateway_resource.payment_verify.id,
+      aws_api_gateway_method.post_payment_verify.id,
+      aws_api_gateway_integration.payment_verify_lambda.id,
+      aws_api_gateway_method.options_payment_initialize.id,
+      aws_api_gateway_method.options_payment_verify.id,
       aws_api_gateway_resource.marketplace.id,
       aws_api_gateway_resource.marketplace_register.id,
       aws_api_gateway_resource.marketplace_webhook.id,

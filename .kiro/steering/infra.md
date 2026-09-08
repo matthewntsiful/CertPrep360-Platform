@@ -15,9 +15,10 @@ Serverless, static-first architecture:
 | Branch | `develop` | `main` |
 | Domain | saa-exams-dev.blakkbrother.com | aws-exams.matthewntsiful.com |
 | S3 Bucket | certprep360-dev-website | certprep360-prod-website |
-| AWS Profile | Matthew_Cli | Matthew_Cli |
+| AWS Profile | BlakkBrotherInc-Startup | BlakkBrotherInc-Startup |
 
 ## Terraform Rules
+- **Always use `AWS_PROFILE=BlakkBrotherInc-Startup`** for all Terraform and AWS CLI commands — verify this profile is set before suggesting any command
 - Always run `terraform plan` before `apply`
 - State is remote: S3 bucket + DynamoDB lock table (set up in `infrastructure/terraform/backend/`)
 - Modules live in `infrastructure/terraform/modules/` — never duplicate resource definitions

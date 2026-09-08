@@ -63,7 +63,9 @@ API Gateway (Regional, custom domain api.certprep360.com)
  ├── POST /admin/content                → Lambda: AdminManageContent
  ├── PATCH/DELETE /admin/content        → Lambda: AdminManageContent
  ├── GET  /admin/stats                  → Lambda: AdminAnalytics
- └── POST /admin/ai/generate            → Lambda: AIGenerateContent
+ ├── POST /admin/ai/generate            → Lambda: AIGenerateContent
+ ├── POST /payment/initialize           → Lambda: ProcessPayment (provisioned; frontend not wired)
+ └── POST /payment/verify               → Lambda: ProcessPayment (provisioned; frontend not wired)
           │
           ▼
      DynamoDB (single-table: CertPrep360-{env}-Main)
@@ -265,7 +267,7 @@ Returns available certifications and their exam lists. First checks for a pre-co
 
 ### Product Access
 
-CertPrep360 is currently a **free product**. The repository retains dormant payment implementation for a possible future commercial release, but it has no frontend caller, API Gateway route, Lambda deployment, SSM parameter, or CI packaging path. A future payment launch must be reintroduced through a reviewed infrastructure and product-access change.
+CertPrep360 is currently a **free product**. The infrastructure provisions payment API Gateway routes (`POST /payment/initialize` and `POST /payment/verify`) backed by the `process-payment` Lambda, including full CORS OPTIONS preflight support. Paystack public and secret key variables are declared in the SSM Terraform module (`modules/ssm/variables.tf`) and provisioned as `SecureString` parameters at `/{project}/{env}/payments/paystack_public_key` and `.../paystack_secret_key` for each environment. The routes and Lambda are wired but there is no active frontend caller or CI packaging path for the payment Lambda. Activating payment requires wiring the frontend, adding the Lambda to the CI packaging step, and completing a product-access review.
 
 ### AdminManageContent
 
@@ -313,6 +315,8 @@ All authenticated routes require: `Authorization: Bearer {cognitoIdToken}`
 | DELETE | `/admin/content` | JWT+Admin | AdminManageContent | Delete question |
 | GET | `/admin/stats` | JWT+Admin | AdminAnalytics | Platform analytics |
 | POST | `/admin/ai/generate` | JWT+Admin | AIGenerateContent | AI question generation |
+| POST | `/payment/initialize` | JWT | ProcessPayment | Initialize Paystack payment (provisioned, frontend not wired) |
+| POST | `/payment/verify` | JWT | ProcessPayment | Verify Paystack payment (provisioned, frontend not wired) |
 
 **API Gateway configuration:**
 - Regional endpoint
@@ -680,5 +684,9 @@ AWS_PROFILE=BlakkBrotherInc-Startup terraform apply
 | `/certprep360/dev/auth/google_client_secret` | Dev | Google OAuth Client Secret |
 | `/certprep360/prod/auth/google_client_id` | Prod | Google OAuth Client ID |
 | `/certprep360/prod/auth/google_client_secret` | Prod | Google OAuth Client Secret |
+| `/certprep360/dev/payments/paystack_public_key` | Dev | Paystack public key (payment integration) |
+| `/certprep360/dev/payments/paystack_secret_key` | Dev | Paystack secret key (payment integration) |
+| `/certprep360/prod/payments/paystack_public_key` | Prod | Paystack public key (payment integration) |
+| `/certprep360/prod/payments/paystack_secret_key` | Prod | Paystack secret key (payment integration) |
 
 All parameters are `SecureString` type (KMS encrypted). The SSM Terraform module uses `ignore_changes = [value]` — update values directly via `aws ssm put-parameter --overwrite`.

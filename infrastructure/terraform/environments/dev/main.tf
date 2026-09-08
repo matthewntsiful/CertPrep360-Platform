@@ -31,7 +31,7 @@ locals {
   api_subdomain = "api.dev.${var.root_domain}"
   tags = {
     Environment = "dev"
-    Project     = "SAA-C03-Exams"
+    Project     = "CertPrep360-Platform"
     ManagedBy   = "Terraform"
   }
 }
@@ -117,6 +117,8 @@ module "ssm" {
   project_name         = "certprep360"
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret
+  paystack_public_key  = var.paystack_public_key
+  paystack_secret_key  = var.paystack_secret_key
   tags                 = local.tags
 }
 
@@ -261,6 +263,22 @@ module "lambda_manage_session" {
   tags = local.tags
 }
 
+module "lambda_process_payment" {
+  source                    = "../../modules/lambda"
+  function_name             = "CertPrep360-Dev-ProcessPayment"
+  handler                   = "index.handler"
+  zip_path                  = "${path.module}/build/process-payment.zip"
+  dynamodb_table_arn        = module.dynamodb.table_arn
+  api_gateway_execution_arn = module.api_gateway.execution_arn
+  ssm_parameter_arns        = module.ssm.payment_parameter_arns
+  memory_size               = 128
+  environment_variables = {
+    TABLE_NAME            = module.dynamodb.table_name
+    PAYSTACK_SECRET_PARAM = "/certprep360/dev/payments/paystack_secret_key"
+  }
+  tags = local.tags
+}
+
 module "lambda_get_catalog" {
   source                    = "../../modules/lambda"
   function_name             = "CertPrep360-Dev-GetCatalog"
@@ -318,6 +336,7 @@ module "api_gateway" {
   get_catalog_lambda_invoke_arn          = module.lambda_get_catalog.invoke_arn
   ai_generate_content_lambda_invoke_arn  = module.lambda_ai_generate_content.invoke_arn
   manage_session_lambda_invoke_arn       = module.lambda_manage_session.invoke_arn
+  process_payment_lambda_invoke_arn      = module.lambda_process_payment.invoke_arn
   marketplace_register_lambda_invoke_arn = module.lambda_marketplace_register.invoke_arn
   marketplace_webhook_lambda_invoke_arn  = module.lambda_marketplace_webhook.invoke_arn
   custom_domain_name                     = local.api_subdomain
