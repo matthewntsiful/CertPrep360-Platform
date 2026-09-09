@@ -5,7 +5,7 @@
  */
 export function normalizeAnswerKey(value) {
   const source = Array.isArray(value) ? value.join("") : String(value || "");
-  return [...new Set((source.toUpperCase().match(/[A-D]/g) || []))].sort();
+  return [...new Set((source.toUpperCase().match(/[A-F]/g) || []))].sort();
 }
 
 export function answerKeysMatch(selected, correct) {
