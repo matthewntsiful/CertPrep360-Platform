@@ -353,3 +353,70 @@ module "api_gateway" {
   certificate_arn                        = module.route53.api_certificate_arn
   tags                                   = local.tags
 }
+
+# ---------------------------------------------------------------------------
+# Import blocks for pre-existing CloudWatch log groups
+# Lambda auto-creates these on first invocation. These blocks ensure
+# Terraform adopts them rather than trying to create them (which would fail
+# with ResourceAlreadyExistsException).
+# ---------------------------------------------------------------------------
+
+import {
+  to = module.lambda_get_questions.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-GetQuestions"
+}
+
+import {
+  to = module.lambda_submit_results.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-SubmitResults"
+}
+
+import {
+  to = module.lambda_get_user_analytics.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-GetUserAnalytics"
+}
+
+import {
+  to = module.lambda_get_dynamic_quiz.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-GetDynamicQuiz"
+}
+
+import {
+  to = module.lambda_admin_manage_content.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-AdminManageContent"
+}
+
+import {
+  to = module.lambda_admin_analytics.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-AdminAnalytics"
+}
+
+import {
+  to = module.lambda_get_catalog.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-GetCatalog"
+}
+
+import {
+  to = module.lambda_ai_generate_content.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-AIGenerateContent"
+}
+
+import {
+  to = module.lambda_manage_session.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-ManageSession"
+}
+
+import {
+  to = module.lambda_process_payment.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-ProcessPayment"
+}
+
+import {
+  to = module.lambda_marketplace_register.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-MarketplaceRegister"
+}
+
+import {
+  to = module.lambda_marketplace_webhook.aws_cloudwatch_log_group.lambda
+  id = "/aws/lambda/CertPrep360-Prod-MarketplaceWebhook"
+}
