@@ -191,6 +191,7 @@ All Lambdas are Node.js ES modules (`type: module` in `package.json`), deployed 
 | File | Purpose |
 |------|---------|
 | `db.js` | DynamoDB DocumentClient singleton |
+| `answerKeys.js` | Answer key normalization and comparison utilities (see below) |
 | `domainScoring.js` | Computes per-domain accuracy from raw answers |
 | `weakPool.js` | Leitner box operations: `addToBox1`, `promote`, `demote`, `removeFromPool` |
 | `spacedScheduler.js` | Determines which weak pool questions are due based on session counter |
@@ -202,6 +203,18 @@ All Lambdas are Node.js ES modules (`type: module` in `package.json`), deployed 
 | `coverageTracker.js` | Tracks which questions a user has seen |
 | `qualityValidator.js` | Validates question structure and content quality |
 | `examGuideParser.js` | Parses AWS exam guide PDFs for AI content generation |
+
+#### `answerKeys.js` — Answer Key Utilities
+
+Provides canonical handling of answer values, which historically appear in multiple formats (`"AB"`, `"A,B"`, `["A", "B"]`).
+
+| Export | Signature | Description |
+|--------|-----------|-------------|
+| `normalizeAnswerKey(value)` | `string \| string[] → string[]` | Converts any answer representation to a sorted, deduplicated array of uppercase letters (A–F). |
+| `answerKeysMatch(selected, correct)` | `(any, any) → boolean` | Returns `true` if the normalized selected and correct answers are identical. Returns `false` if either is empty. |
+| `answerCount(value)` | `any → number` | Returns the number of distinct answer letters in a value. |
+
+All three functions accept arrays, comma-separated strings, or concatenated strings as input.
 
 ### GetQuestions
 
