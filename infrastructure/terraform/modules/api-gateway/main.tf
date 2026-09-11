@@ -201,6 +201,28 @@ resource "aws_api_gateway_integration" "session_get_lambda" {
   uri                     = var.manage_session_lambda_invoke_arn
 }
 
+# DELETE /session/{certId}/{examId} — clears a saved session on exam cancel
+resource "aws_api_gateway_method" "delete_session" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.session_exam_id.id
+  http_method   = "DELETE"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+  request_parameters = {
+    "method.request.path.certId" = true
+    "method.request.path.examId" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "session_delete_lambda" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.session_exam_id.id
+  http_method             = aws_api_gateway_method.delete_session.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.manage_session_lambda_invoke_arn
+}
+
 # /payment
 resource "aws_api_gateway_resource" "payment" {
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -1074,6 +1096,7 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.admin_ai_generate_lambda,
     aws_api_gateway_integration.session_post_lambda,
     aws_api_gateway_integration.session_get_lambda,
+    aws_api_gateway_integration.session_delete_lambda,
     aws_api_gateway_integration.payment_initialize_lambda,
     aws_api_gateway_integration.payment_verify_lambda,
     aws_api_gateway_integration.marketplace_register_lambda,
@@ -1124,7 +1147,10 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.session_exam_id.id,
       aws_api_gateway_method.post_session.id,
       aws_api_gateway_method.get_session.id,
+      aws_api_gateway_method.delete_session.id,
       aws_api_gateway_integration.session_post_lambda.id,
+      aws_api_gateway_integration.session_get_lambda.id,
+      aws_api_gateway_integration.session_delete_lambda.id,
       aws_api_gateway_integration.session_get_lambda.id,
       aws_api_gateway_method.options_session.id,
       aws_api_gateway_method.options_session_exam.id,

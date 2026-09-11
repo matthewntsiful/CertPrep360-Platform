@@ -3,6 +3,7 @@ import { Clock, BookOpen, Pause, Play, X, AlertTriangle } from 'lucide-react';
 import { useExamStore } from '../../store/useExamStore';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { deleteSession } from '../../services/api';
 
 const ExamHeader: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ const ExamHeader: React.FC = () => {
   };
 
   const handleCancel = () => {
+    // Clear the server-side session so the exam restarts from Q1 next time.
+    // Fire-and-forget — local reset and navigation happen immediately.
+    deleteSession(certId, examId);
     resetExam();
     navigate(`/certification/${certId.toLowerCase()}`);
   };

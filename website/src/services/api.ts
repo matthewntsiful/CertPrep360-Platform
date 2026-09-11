@@ -169,3 +169,18 @@ export async function startMultiDomainQuiz(
     `/dynamic-quiz?domain=${domainParam}&certId=${encodeURIComponent(certId)}&limit=${limit}`
   ) as DynamicQuizResponse;
 }
+
+/**
+ * Deletes a saved exam session so that cancelling an exam causes it to
+ * restart from question 1 next time, rather than resuming mid-way.
+ * Errors are swallowed — a failed delete is not fatal for the cancel flow.
+ */
+export async function deleteSession(certId: string, examId: string): Promise<void> {
+  try {
+    await authFetch(`/session/${encodeURIComponent(certId)}/${encodeURIComponent(examId)}`, {
+      method: 'DELETE',
+    });
+  } catch {
+    // Non-fatal — the exam store is already reset locally
+  }
+}

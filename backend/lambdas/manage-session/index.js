@@ -1,4 +1,4 @@
-import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, GetCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "./common/db.js";
 import { logError, logRequest, requireAuthenticatedUser } from "./common/security.js";
 
@@ -71,6 +71,32 @@ export const handler = async (event) => {
                 statusCode: 200,
                 headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
                 body: JSON.stringify({ session: result.Item || null }),
+            };
+        } else if (event.httpMethod === "DELETE") {
+            // Delete a saved session so a cancelled exam starts fresh next time
+            const certId = event.pathParameters?.certId;
+            const examId = event.pathParameters?.examId;
+
+            if (!certId || !examId) {
+                return {
+                    statusCode: 400,
+                    headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
+                    body: JSON.stringify({ message: "Missing path parameters" }),
+                };
+            }
+
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: {
+                    PK: `USER#${userId}`,
+                    SK: `SESSION#${certId}#${examId}`
+                }
+            }));
+
+            return {
+                statusCode: 200,
+                headers: { "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "https://aws-exams-dev.matthewntsiful.com" },
+                body: JSON.stringify({ message: "Session cleared" }),
             };
         }
     } catch (error) {
