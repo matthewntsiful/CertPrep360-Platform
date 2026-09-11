@@ -43,6 +43,9 @@ export async function createAttemptManifest({ docClient, tableName, userId, cert
 
 /**
  * Omits answer keys and explanations before a question is delivered to a learner.
+ * The correct field is included for client-side study mode feedback — scoring is
+ * always performed server-side against the manifest, so exposing this to the
+ * authenticated client does not affect exam integrity.
  */
 export function toExamSafeQuestion(question) {
   return {
@@ -52,6 +55,8 @@ export function toExamSafeQuestion(question) {
     text: question.text,
     options: question.options,
     answerCount: normalizeAnswerKey(question.correct).length,
+    correct: normalizeAnswerKey(question.correct),
+    explanation: question.explanation || "",
     resources: question.resources || [],
     domain: question.domain,
     primary_service: question.primary_service,

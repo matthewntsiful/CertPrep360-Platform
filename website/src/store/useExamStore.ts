@@ -105,6 +105,31 @@ const migratePersistedExamState = (persistedState: unknown) => {
   return { studyMode: state?.studyMode === true };
 };
 
+/**
+ * Ensures the runtime store state has the correct shapes for fields that can't
+ * survive a JSON round-trip or a partial rehydration from an older app version.
+ * Called once on page load after Zustand rehydrates from localStorage.
+ */
+const sanitizeRehydratedState = (state: ExamStore): void => {
+  let needsReset = false;
+
+  // questions must always be an array — a non-array here crashes every .map() call
+  if (!Array.isArray(state.questions)) needsReset = true;
+
+  // flaggedQuestions must be a Set — JSON.stringify(new Set()) → "{}", so if
+  // it ever got persisted or cloned through JSON it becomes a plain object
+  if (!(state.flaggedQuestions instanceof Set)) needsReset = true;
+
+  // answers must be a plain object
+  if (typeof state.answers !== 'object' || Array.isArray(state.answers) || state.answers === null) needsReset = true;
+
+  if (needsReset) {
+    // Preserve studyMode — the only intentionally persisted field
+    const studyMode = typeof state.studyMode === 'boolean' ? state.studyMode : false;
+    useExamStore.setState({ ...initialState, studyMode });
+  }
+};
+
 export const useExamStore = create<ExamStore>()(
   persist(
     (set) => ({
@@ -134,7 +159,9 @@ export const useExamStore = create<ExamStore>()(
             questions: response.questions,
             status: 'running',
             answers: session?.answers || {},
-            flaggedQuestions: session?.flaggedQuestions ? new Set(session.flaggedQuestions) : new Set(),
+            flaggedQuestions: session?.flaggedQuestions && Array.isArray(session.flaggedQuestions)
+              ? new Set<number>(session.flaggedQuestions)
+              : new Set<number>(),
             timeLeft: session?.timeLeft || Math.max(0, response.attempt.expiresAt - Math.floor(Date.now() / 1000)),
             currentQuestionIndex: session?.currentQuestionIndex || 0,
             startTime: Date.parse(response.attempt.startedAt),
@@ -251,6 +278,9 @@ export const useExamStore = create<ExamStore>()(
       // Never retain questions, answer keys, learner answers, or server attempts on a shared device.
       partialize: (state) => ({ studyMode: state.studyMode }),
       migrate: migratePersistedExamState,
+      onRehydrateStorage: () => (state) => {
+        if (state) sanitizeRehydratedState(state);
+      },
     },
   ),
 );

@@ -6,6 +6,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminLayout from './components/AdminLayout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // --- Lazy-loaded Pages ---
 const Home = lazy(() => import('./pages/Home'));
@@ -99,11 +100,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/exam/:certId/:examId",
-        element: <ProtectedRoute><Exam /></ProtectedRoute>,
+        element: <ProtectedRoute><ErrorBoundary><Exam /></ErrorBoundary></ProtectedRoute>,
       },
       {
         path: "/quiz/dynamic/:domain?",
-        element: <ProtectedRoute><DynamicQuizPage /></ProtectedRoute>,
+        element: <ProtectedRoute><ErrorBoundary><DynamicQuizPage /></ErrorBoundary></ProtectedRoute>,
       },
       { path: "/certification/:certId", element: <ExamHub /> },
       { path: "/privacy", element: <Privacy /> },

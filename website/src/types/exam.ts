@@ -9,11 +9,12 @@ export interface Question {
   exam_id: string;
   text: string;
   options: Record<string, string>;
-  /** Present only after server-scored completion or in an explicit study flow. */
+  /** Normalized correct answer letters, always present (used for study mode feedback). */
   correct?: string | string[];
   /** Number of selections required; safe to expose during an exam. */
   answerCount?: number;
   domain?: string;
+  /** Explanation always present from the backend. */
   explanation?: string;
   resources?: Resource[];
 }

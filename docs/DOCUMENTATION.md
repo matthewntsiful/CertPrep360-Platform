@@ -133,6 +133,8 @@ API Gateway (Regional, custom domain api.certprep360.com)
 
 Session sync is debounced — every user action (answer, flag, navigate) schedules a backend sync 2 seconds later. Dynamic quiz sessions (`examId` starts with `Dynamic-`) are never synced to the backend.
 
+**Persistence contract:** Only `studyMode` is written to `localStorage` (via Zustand `partialize`). Questions, answers, and flagged questions live in memory only. On page load, `onRehydrateStorage` calls `sanitizeRehydratedState`, which checks that `questions` is an array, `flaggedQuestions` is a `Set`, and `answers` is a plain object. If any field has an unexpected shape (e.g. from a JSON round-trip or an older app version), the store is reset to `initialState` with `studyMode` preserved. This prevents crashes from stale or malformed persisted state.
+
 **TanStack Query** (`QueryClient`) is used for all data fetching outside the exam session (analytics, history, catalog). Config: 5-minute stale time, 10-minute GC time, 1 retry, no refetch on window focus.
 
 ### Auth Context
@@ -262,7 +264,25 @@ Three quiz modes:
 
 3. **Adaptive** (`?mode=adaptive`) — queries user's historical domain performance, identifies 2+ weakest domains, allocates questions inversely proportional to performance. Falls back to all domains if user has fewer than 2 domains of history.
 
-All modes: fetch Weak Pool scheduled questions (via `spacedScheduler`), atomically increment session counter, deduplicate, shuffle (Fisher-Yates), and return clean question objects.
+All modes: fetch Weak Pool scheduled questions (via `spacedScheduler`), atomically increment session counter, deduplicate, shuffle (Fisher-Yates), and return client-safe question objects via `toExamSafeQuestion`.
+
+**Client question payload** (fields returned to the browser):
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `q_id` | string | Question identifier |
+| `cert_id` | string | Certification ID |
+| `exam_id` | string | Exam identifier |
+| `text` | string | Question text |
+| `options` | object | Answer options map |
+| `answerCount` | number | Number of correct answers to select |
+| `correct` | string[] | Correct answer letters (normalized array, e.g. `["A","B"]`) |
+| `explanation` | string | Answer explanation |
+| `resources` | string[] | Reference links |
+| `domain` | string | Exam domain |
+| `primary_service` | string | Primary AWS service |
+
+`correct` and `explanation` are intentionally included in the client payload to support study mode instant feedback. Authoritative scoring is always performed server-side against the stored attempt manifest, so these fields do not affect exam integrity.
 
 ### ManageSession
 

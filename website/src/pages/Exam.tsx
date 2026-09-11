@@ -44,7 +44,7 @@ const ExamPage: React.FC = () => {
     if (loadedRef.current === key) return; // already loaded this exam in this session
 
     // If the store already has this exam loaded (from localStorage persistence), don't re-fetch
-    if (storeExamId === examId && questions.length > 0 && (status === 'running' || status === 'paused')) {
+    if (storeExamId === examId && Array.isArray(questions) && questions.length > 0 && (status === 'running' || status === 'paused')) {
       loadedRef.current = key;
       return;
     }
@@ -73,7 +73,7 @@ const ExamPage: React.FC = () => {
   if (status === 'completed') return <ExamResults />;
 
   if (status === 'error') {
-    const canRetrySubmission = questions.length > 0;
+    const canRetrySubmission = Array.isArray(questions) && questions.length > 0;
     return (
       <div className="flex items-center justify-center min-h-[60vh] flex-col gap-4 text-center px-4">
         <p className="text-red-400 font-bold">{submissionError || 'Unable to continue this exam.'}</p>
@@ -88,7 +88,7 @@ const ExamPage: React.FC = () => {
     );
   }
 
-  if (status === 'loading' || status === 'idle' || (status === 'running' && questions.length === 0)) {
+  if (status === 'loading' || status === 'idle' || (status === 'running' && (!Array.isArray(questions) || questions.length === 0))) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] flex-col gap-4">
         <div className="w-10 h-10 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />

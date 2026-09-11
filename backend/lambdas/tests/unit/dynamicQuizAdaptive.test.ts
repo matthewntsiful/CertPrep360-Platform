@@ -645,7 +645,7 @@ describe('Dynamic Quiz - Response Shape', () => {
     expect(Array.isArray(body.domains)).toBe(true);
     expect(typeof body.count).toBe('number');
     expect(typeof body.weakPoolIncluded).toBe('number');
-    expect(body.questions.every((question: Record<string, unknown>) => !('correct' in question) && !('explanation' in question))).toBe(true);
+    expect(body.questions.every((question: Record<string, unknown>) => 'correct' in question && 'explanation' in question)).toBe(true);
   });
 
   it('returns 400 when neither domain nor mode=adaptive is provided', async () => {
