@@ -27,7 +27,8 @@ const QuestionView: React.FC = () => {
   const isMultiple = requiredAnswers > 1;
 
   const handleOptionToggle = (letter: string) => {
-    SoundEffects.playClick();
+    // Fire sound async so it never delays the state update
+    setTimeout(() => SoundEffects.playClick(), 0);
     if (isMultiple) {
       const existing = (currentAnswer as string[]) || [];
       // Don't allow selecting more than the required number of answers
@@ -115,12 +116,10 @@ const QuestionView: React.FC = () => {
             }
 
             return (
-              <motion.button
+              <button
                 key={letter}
                 onClick={() => handleOptionToggle(letter)}
-                animate={isSelected ? { scale: [1, 1.02, 1] } : { scale: 1 }}
-                transition={{ duration: 0.15 }}
-                className={`w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-4 group ${borderColor} ${bgColor} ${
+                className={`w-full text-left p-4 rounded-2xl border transition-colors flex items-start gap-4 group ${borderColor} ${bgColor} ${
                   isSelected ? 'ring-2 ring-orange-500/40 shadow-[0_0_20px_rgba(249,115,22,0.08)]' : ''
                 } ${!showFeedback && 'hover:border-slate-700'}`}
               >
@@ -130,7 +129,7 @@ const QuestionView: React.FC = () => {
                   {letter}
                 </div>
                 <span className={`text-sm leading-relaxed font-normal ${isSelected ? 'text-slate-100' : 'text-slate-300'}`}>{text}</span>
-              </motion.button>
+              </button>
             );
           })}
         </div>
